@@ -9,3 +9,6 @@ coverage/
 .convex/
 .vercel/
 test-results/
+
+# Personal detailed learning notes; intentionally local-only.
+/documents/phase-learning/
