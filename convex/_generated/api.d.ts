@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as ideas from "../ideas.js";
 import type * as lib_ownership from "../lib/ownership.js";
 import type * as model from "../model.js";
 import type * as tasks from "../tasks.js";
@@ -23,6 +24,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
+  ideas: typeof ideas;
   "lib/ownership": typeof lib_ownership;
   model: typeof model;
   tasks: typeof tasks;

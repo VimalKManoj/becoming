@@ -17,7 +17,7 @@ The core loop is **capture → choose → focus → reflect → collect proof �
 | Planned | Product direction, not a working feature yet. |
 | Optional later | Consider after real usage demonstrates a need. |
 
-At this checkpoint, **Work task list/create/edit and Today recommendation/focus/recap are live cloud** for signed-in users. Today uses temporary time/energy selections, while meaningful tasks and sessions live in Convex. Ideas, Proof, Journey and Settings are **local prototypes awaiting cloud migration**. Better Auth email/password works for development; verification and recovery email are planned. The old standalone HTML prototype is a design reference, not the live app.
+At this checkpoint, **Work task list/create/edit, Today recommendation/focus/recap, and Ideas capture/brainstorm/activation are live cloud** for signed-in users. Today uses temporary time/energy selections, while meaningful tasks, ideas and sessions live in Convex. Proof, Journey and Settings are **local prototypes awaiting cloud migration**. Better Auth email/password works for development; verification and recovery email are planned. The old standalone HTML prototype is a design reference, not the live app.
 
 ## Experience principles for your design
 
@@ -39,7 +39,7 @@ The current primary routes are `/today`, `/work`, `/ideas`, `/proof`, `/journey`
 | Account / welcome | Can I access my private work? | Sign up/in/out, identity state, first-run setup; later verification/recovery | Development sign-in live cloud; onboarding planned |
 | Today | What should I do now? | Time and energy check-in, one explained recommendation, alternatives, start/resume, focused session, recap | Signed-in cloud flow live; visual direction open |
 | Work | What have I committed to? | Projects, Showcases and Writing lanes; task list/detail; plan/edit; status and project context | Signed-in task list/create/edit live cloud; projects/status flow planned |
-| Ideas | What might I build later? | Fast capture, pasted scheduled assignment, brainstorm, references, deliberate activation | Local prototype; richer cloud notebook planned |
+| Ideas | What might I build later? | Fast capture, pasted scheduled assignment, brainstorm, references, deliberate activation | Basic private cloud notebook and linked task activation live; richer states planned |
 | Proof | What can I show? | Artifacts, source work, drafts, ready/published links and portfolio candidates | Basic local evidence links; workflow planned |
 | Journey | Am I becoming the engineer I want to be? | Sessions, weekly commitment, lane balance, streaks, milestones and skills evidenced | Basic local history/counts; cloud and richer progress planned |
 | Settings | What rhythm and data controls suit me? | Motive, timezone, weekly target/pause, preferences, export/restore/account controls | Local motive/export; remaining controls planned |
@@ -190,7 +190,7 @@ Today is a decision surface, Work is the commitment and planning surface, Ideas 
 
 ## What engineering will do next
 
-The Phase 2D backend and visible Today client now supply server-backed full-task and smaller-step start/cancel/recap with ownership and idempotency checks. Existing browser-local data has not been imported or deleted; the import choice and migration of Ideas, Proof, Journey and Settings remain for review. Projects, richer motivation, production auth and integrations remain later phases in `PLAN.md`.
+The Phase 2D backend and visible Today client supply server-backed full-task and smaller-step start/cancel/recap. The bounded Phase 3B Ideas flow captures, edits and deliberately activates a private cloud idea into a linked Ready task. The user chose a fresh Convex start and preservation of old browser data; no import or deletion occurred. Migration of Proof, Journey and Settings, richer projects/motivation, production auth and integrations remain later phases in `PLAN.md`.
 
 ## Questions to mark directly in your designs
 

@@ -6,7 +6,7 @@ export default function AccountPage() {
   return <main className="standalone panel stack">
     <Link href="/today">← Back to workspace</Link>
     <div><p className="eyebrow">Becoming · Account</p><h1>A place to begin.</h1></div>
-    <p className="notice">Development sign-in. Work tasks are saved privately to this account in Convex. Today, Ideas, Proof, Journey, and Settings still use this browser while their cloud migration is pending.</p>
+    <p className="notice">Development sign-in. Work, Today, and Ideas are saved privately to this account in Convex. Proof, Journey, and Settings still use this browser while their cloud migration is pending.</p>
     {process.env.NEXT_PUBLIC_CONVEX_URL && process.env.NEXT_PUBLIC_CONVEX_SITE_URL
       ? <AuthProvider><AccountScreen /></AuthProvider>
       : <p role="status">Account setup is incomplete. Follow documents/AUTH_SETUP.md to connect your development backend.</p>}

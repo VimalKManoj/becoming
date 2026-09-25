@@ -11,10 +11,11 @@ An independent design-engineering practice app: choose useful daily work, balanc
 | Area | Implementation | Verification | User review |
 |---|---|---|---|
 | Independent Next.js scaffold and documents | Present | Build/checks recorded 15 Sep | Walkthrough pending |
-| Earlier browser-local prototype | Ideas, Proof, Journey and Settings still use it; local Today is no longer routed | 8 historical prototype tests recorded 15 Sep | Migration pending |
+| Earlier browser-local prototype | Proof, Journey and Settings still use it; local Today/Ideas are no longer routed | 8 historical prototype tests recorded 15 Sep | Cloud migration pending |
 | Convex task persistence | `/work` uses owner-scoped paginated Convex list/create/edit | Unit authorization tests and two-account browser flow verified 24 Sep | User review pending |
 | Better Auth email/password | Implemented on /account in development | Browser flow and backend identity verified 17 Sep | Pending |
 | Cloud Today and session lifecycle | Signed-in Today recommends owned feasible Work tasks and calls Convex start/cancel/recap; time/energy are temporary UI state | 17 tests, development sync and live start/reload/cancel/recap check 24 Sep | User review pending |
+| Cloud Ideas | Signed-in notebook capture/edit and deliberate one-time task activation | 18 tests, development sync, and browser create/edit/reload/activate/Work checks 25 Sep | User review pending |
 | Full projects, streaks, sharing | Planned | Not verified | Future phases |
 
 Existing work is a starting point, not automatically accepted scope. Historical checks are not fresh verification. The prior roadmap is preserved as PLAN-2026-09-15.md.
@@ -94,7 +95,7 @@ Connect owner-scoped task create/list/edit queries and mutations. Use typed gene
 
 ### 2D — session parity and migration
 
-**Cloud Today slice status (24 September):** implemented and verified in development; user review pending. One active session per owner, start/cancel/recap, owner checks, status updates, replay-safe recap and optional evidence are in Convex. A Work task may have an optional smaller action, minutes and done condition. Today now recommends from owned cloud tasks, shows an active focus after reload, and saves or cancels through Convex. Capacity and energy are temporary screen state. The user chose Convex for meaningful app data. Existing browser-local data has not been imported or deleted; the import-versus-fresh-start choice remains open.
+**Cloud Today slice status (24 September):** implemented and verified in development; user review pending. One active session per owner, start/cancel/recap, owner checks, status updates, replay-safe recap and optional evidence are in Convex. A Work task may have an optional smaller action, minutes and done condition. Today now recommends from owned cloud tasks, shows an active focus after reload, and saves or cancels through Convex. Capacity and energy are temporary screen state. The user chose Convex for meaningful app data. Existing browser-local data was not imported or deleted; the fresh-start choice was settled on 25 September.
 
 Add server-backed start/cancel/recap, smaller-step snapshots, contribution evidence and transactional idempotency. Discuss whether to import local records or begin with an empty cloud workspace. An import requires ID mapping and batch deduplication, never an automatic raw upload.
 
@@ -111,6 +112,8 @@ Add create/edit/archive for projects and milestones, link tasks, derive understa
 **Gate:** archiving does not create dangling references or ready recommendations from archived projects. **Learn:** typed relationships and derived state.
 
 ### 3B — notebooks and ready work
+
+**Bounded Ideas slice status (25 September):** implemented and verified in development; user review pending. `/ideas` now requires sign-in and uses owner-scoped Convex pagination, capture, note edits and one-time activation into a linked Ready task. The user chose to start fresh in Convex and preserve old browser data; no import or deletion occurred. Broader idea states, reverse activation, project fields, smaller-step editing at activation and prerequisite-cycle editing remain proposed for later review.
 
 Persist brainstorm fields/references, reversible activation and links to original ideas. Add editable tasks, smaller steps and prerequisite-cycle validation. Split the initial large screen component into focused feature modules while changing these flows.
 
@@ -190,7 +193,7 @@ Structured assignment import, context export for ChatGPT, scheduled-task integra
 - [ ] One exercise or manual check provided.
 - [ ] User review received before the next subphase begins.
 
-**Current checkpoint:** review the cloud Today flow and its connection to Work. Use EXPERIENCE_MAP.md to redesign the dashboard and flows. The next proposed slice is deliberate handling of existing local data, followed by moving Ideas, Proof, Journey and Settings to Convex in bounded subphases. The local folder is still named form; a branding/folder rename has not been performed. R1–R4 are not retroactively marked reviewed.
+**Current checkpoint:** review the cloud Ideas flow from capture to linked Work task, alongside Today. Use EXPERIENCE_MAP.md to redesign the dashboard and flows. The next proposed slices move Proof, Journey and Settings to Convex separately. The old browser workspace is preserved, with no import planned for the fresh-start path. The local folder is still named form; a branding/folder rename has not been performed. R1–R4 are not retroactively marked reviewed.
 
 ## Detailed learning handoffs
 

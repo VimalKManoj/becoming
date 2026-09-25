@@ -33,7 +33,7 @@ Separate implementation from user review: code can exist and pass tests without 
 
 - Form is an independent app and Git repository, separate from portfolio_website.
 - Current stack: Next.js, React, TypeScript, Tailwind CSS, Zod, Lucide, ESLint and Vitest. Explain each dependency when it becomes relevant.
-- Convex is the selected source of truth for meaningful app data. Development authentication, Work tasks and Today focus sessions use it; Ideas, Proof, Journey and Settings still have browser-local prototypes pending migration.
+- Convex is the selected source of truth for meaningful app data. Development authentication, Work tasks, Today focus sessions and Ideas use it; Proof, Journey and Settings still have browser-local prototypes pending migration.
 - Browser-local learning mode must remain clearly labelled until cloud integration is verified. Do not call it cloud persistence.
 - Better Auth with Convex is selected for authentication; TanStack is excluded for now. See documents/STACK_DECISIONS.md. Production hosting and open-source license remain undecided.
 - Future friends should have private owner-scoped data. Public source code does not mean public personal data.
@@ -52,7 +52,7 @@ Treat prototypes and plans as references, not proof of implementation. Record pr
 
 ## Current checkpoint
 
-The user selected Better Auth with Convex and approved the proposed stack direction. They clarified that all meaningful app data should live in Convex; browser state is for temporary UI selections only. Phase 2B authentication, Phase 2C owner-scoped Work tasks and Phase 2D cloud Today focus sessions are implemented and verified in development; user review is pending. `/work` and `/today` require sign-in and use Convex. Ideas, Proof, Journey and Settings remain browser-local prototypes and must move in bounded later slices. Existing local data has not been imported or deleted; the import-versus-fresh-start choice is pending. Email verification/recovery and production readiness remain incomplete. Pause before the next implementation slice for user review.
+The user selected Better Auth with Convex and approved the proposed stack direction. They clarified that all meaningful app data should live in Convex; browser state is for temporary UI selections only. Phase 2B authentication, Phase 2C owner-scoped Work tasks, Phase 2D cloud Today focus sessions and a bounded Phase 3B Ideas slice are implemented and verified in development; user review is pending. `/work`, `/today` and `/ideas` require sign-in and use Convex. Proof, Journey and Settings remain browser-local prototypes and must move in bounded later slices. The user chose a fresh Convex start and preservation of the old browser copy; no local data was imported or deleted. Email verification/recovery and production readiness remain incomplete. Pause before the next implementation slice for user review.
 
 ## Detailed phase learning notebook
 
