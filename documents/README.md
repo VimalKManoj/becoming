@@ -3,6 +3,7 @@
 | Document | What you learn |
 |---|---|
 | [PRD](PRD.md) | What problem we solve and how the complete product behaves |
+| [Experience map](EXPERIENCE_MAP.md) | Screen features, user journeys, states and design priorities, with implementation status |
 | [Prototype](prototype.html) | Original clickable interface; open in a browser |
 | [Prototype source](prototype.fragment.html) | Original editable fragment, retained for reference |
 | [System design](SYSTEM_DESIGN.md) | Which layer owns each responsibility |

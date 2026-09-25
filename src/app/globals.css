@@ -8,3 +8,4 @@
 @media(pointer:coarse){button,nav a{min-height:44px}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 .auth-fields{border:0;padding:0;margin:0;min-width:0}.auth-fields:disabled{opacity:.65}button:disabled{cursor:wait;opacity:.65}
+.button-link{display:inline-flex;align-items:center;justify-content:center;width:fit-content;background:var(--accent);color:var(--on-accent);border:1px solid var(--accent);border-radius:8px;padding:10px 15px;min-height:42px;text-decoration:none}.button-link:hover{filter:brightness(.95)}

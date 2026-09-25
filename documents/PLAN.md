@@ -1,6 +1,6 @@
 # Becoming — full app plan and learning checkpoints
 
-Updated: 17 September 2026. Follow ../agent.md for the working agreement.
+Updated: 24 September 2026. Follow ../agent.md for the working agreement.
 
 ## Product direction
 
@@ -11,10 +11,11 @@ An independent design-engineering practice app: choose useful daily work, balanc
 | Area | Implementation | Verification | User review |
 |---|---|---|---|
 | Independent Next.js scaffold and documents | Present | Build/checks recorded 15 Sep | Walkthrough pending |
-| Local Today, tasks, ideas, sessions, proof links and history | Present | 8 tests and browser checks recorded 15 Sep | Walkthrough pending |
-| Convex schema and starter functions | Synced to development; task UI still local | Authenticated read and anonymous rejection verified 17 Sep | Pending |
+| Earlier browser-local prototype | Ideas, Proof, Journey and Settings still use it; local Today is no longer routed | 8 historical prototype tests recorded 15 Sep | Migration pending |
+| Convex task persistence | `/work` uses owner-scoped paginated Convex list/create/edit | Unit authorization tests and two-account browser flow verified 24 Sep | User review pending |
 | Better Auth email/password | Implemented on /account in development | Browser flow and backend identity verified 17 Sep | Pending |
-| Cloud task UI, full projects, streaks, sharing | Planned | Not verified | Future phases |
+| Cloud Today and session lifecycle | Signed-in Today recommends owned feasible Work tasks and calls Convex start/cancel/recap; time/energy are temporary UI state | 17 tests, development sync and live start/reload/cancel/recap check 24 Sep | User review pending |
+| Full projects, streaks, sharing | Planned | Not verified | Future phases |
 
 Existing work is a starting point, not automatically accepted scope. Historical checks are not fresh verification. The prior roadmap is preserved as PLAN-2026-09-15.md.
 
@@ -85,11 +86,15 @@ Create/configure the user's development deployment through their account, genera
 
 ### 2C — tasks with real persistence
 
+**Status (24 September):** implemented and verified in development; user review pending. `/work` requires a valid Better Auth/Convex identity and is the only cloud task source. It supports reactive paginated listing plus create/edit for title, lane, effort, energy, done condition and an optional three-part smaller step. New tasks start `Ready`. Status changes and focused sessions remain Phase 2D.
+
 Connect owner-scoped task create/list/edit queries and mutations. Use typed generated API references, server-side validation and useful error messages. Add pagination rather than treating the starter 200-record cap as complete behaviour.
 
-**Gate:** one user sees reactive updates across tabs; another cannot read or mutate those records. Test foreign project references as well. **Exercise:** trace a task form through the mutation to the subscription update.
+**Gate evidence:** reload persistence and two-tab reactive updates verified; Account B cannot list Account A's records, the backend rejects a foreign edit and foreign project reference, and pagination was tested. Signing out also changed the other open Work tab to its account gate. **Exercise:** trace a task form through the mutation to the subscription update.
 
 ### 2D — session parity and migration
+
+**Cloud Today slice status (24 September):** implemented and verified in development; user review pending. One active session per owner, start/cancel/recap, owner checks, status updates, replay-safe recap and optional evidence are in Convex. A Work task may have an optional smaller action, minutes and done condition. Today now recommends from owned cloud tasks, shows an active focus after reload, and saves or cancels through Convex. Capacity and energy are temporary screen state. The user chose Convex for meaningful app data. Existing browser-local data has not been imported or deleted; the import-versus-fresh-start choice remains open.
 
 Add server-backed start/cancel/recap, smaller-step snapshots, contribution evidence and transactional idempotency. Discuss whether to import local records or begin with an empty cloud workspace. An import requires ID mapping and batch deduplication, never an automatic raw upload.
 
@@ -185,8 +190,8 @@ Structured assignment import, context export for ChatGPT, scheduled-task integra
 - [ ] One exercise or manual check provided.
 - [ ] User review received before the next subphase begins.
 
-**Current checkpoint:** review the completed Phase 2B development email/password flow at /account using AUTH_SETUP.md. Next proposed work is 2C: real task persistence, after user review. Task subscriptions and local-data migration remain 2C/2D. The local folder is still named form; a branding/folder rename has not been performed. R1–R4 are not retroactively marked reviewed.
+**Current checkpoint:** review the cloud Today flow and its connection to Work. Use EXPERIENCE_MAP.md to redesign the dashboard and flows. The next proposed slice is deliberate handling of existing local data, followed by moving Ideas, Proof, Journey and Settings to Convex in bounded subphases. The local folder is still named form; a branding/folder rename has not been performed. R1–R4 are not retroactively marked reviewed.
 
 ## Detailed learning handoffs
 
-As requested on 17 September, each phase also requires a detailed local chapter under documents/phase-learning/. Use PHASE-TEMPLATE.md: explain all changed files, important code, decisions/alternatives, complete flows, checks and exercises. Backfilled historical chapters are labelled from recorded evidence; future chapters are proposals. Preserve personal notes. The notebook is ignored by Git. This documentation update does not start Phase 2C or mark any pending user review complete.
+As requested on 17 September, each phase also requires a detailed local chapter under documents/phase-learning/. Use PHASE-TEMPLATE.md: explain all changed files, important code, decisions/alternatives, complete flows, checks and exercises. Backfilled historical chapters are labelled from recorded evidence; future chapters are proposals. Preserve personal notes. The notebook is ignored by Git. Phase 2C's chapter records its actual implementation; user review is still pending.

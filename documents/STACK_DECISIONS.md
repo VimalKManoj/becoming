@@ -10,13 +10,14 @@ Decision date: 16 September 2026. User accepted the proposed stack, excluded Tan
 | Tailwind and design tokens | Customisable styling | Installed |
 | Zod | Runtime validation and forms | Installed |
 | Lucide | Icons | Installed |
-| Convex | Backend, database and reactive queries | Linked to becoming development deployment; starter backend synced; UI still local |
+| Convex | Backend, database and reactive queries | Linked to becoming development deployment; `/work` task slice is live |
 | Better Auth + Convex component | Authentication | Installed; development email/password verified; production verification/recovery deferred |
 | React Hook Form + Zod resolver | Form state and field errors | Approved direction; add in the form phase |
 | Selected shadcn/ui components | Editable interaction primitives | Approved direction; add component by component |
 | Motion for React | Richer interaction transitions | Approved direction; defer until polish |
 | Vitest / ESLint | Behaviour tests and lint | Installed |
-| convex-test / Playwright + axe | Backend and browser checks | Planned project dependencies for relevant testing phases |
+| convex-test | In-memory Convex function and authorization tests | Installed in Phase 2C |
+| Playwright + axe | Browser and accessibility automation | Not installed as project dependencies; browser checks currently use external tooling |
 | TanStack tools / ORM | No current requirement | Do not add now |
 
 ## Why Better Auth with Convex
@@ -73,3 +74,15 @@ Sources checked 16 September 2026: https://labs.convex.dev/better-auth/framework
 - Identity lookup returns null for missing/revoked sessions so sign-out can complete while a reactive query is still subscribed. Task queries still reject unauthenticated access. Profile responses expose only name/email.
 
 Final verification: nine tests, lint, typecheck, production build, deployed auth flow, and zero reported npm audit vulnerabilities. No production deployment or two-account task isolation test is claimed.
+
+## 24 September — Phase 2C implementation decisions
+
+- Require sign-in for `/work`; do not show a second local task board there.
+- Use Convex's existing React hooks rather than adding TanStack Query. Convex already owns subscriptions, request state and generated API types.
+- Add `convex-test` 0.0.56 as a development dependency. It runs functions against the real schema/modules with synthetic trusted identities, which makes authorization and pagination tests meaningful without writing to the remote deployment.
+- Keep native React forms for this small task contract. React Hook Form/Zod resolver remain deferred until form complexity creates a concrete need.
+- New cloud tasks always start `Ready`. Editing is limited to title, lane, minutes, energy and done condition. Status transitions, next-step updates and focused session records remain Phase 2D.
+- Start with an empty cloud workspace and do not auto-upload local seed/user data. The local and Convex ID models need an explicit migration design.
+- Paginate with `paginationOptsValidator` and `usePaginatedQuery`, initially 12 records and 12 per explicit load. Map the server result to omit the owner token.
+
+Verification on 24 September: TypeScript, ESLint and 11 Vitest tests passed; the production build and Convex development sync succeeded; signed-out gating, Account A create/edit/reload, Account B isolation, two-tab reactive updates and cross-tab sign-out passed in the live browser. User review remains open.

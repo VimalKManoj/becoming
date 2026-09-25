@@ -13,12 +13,19 @@ export default defineSchema({
     owner: v.string(), title: v.string(), lane, status: taskStatus,
     projectId: v.optional(v.id("projects")), ideaId: v.optional(v.id("ideas")),
     minutes: v.number(), energy: v.number(), doneWhen: v.string(), nextStep: v.string(),
+    smallerStep: v.optional(v.string()), smallerDone: v.optional(v.string()), smallerMinutes: v.optional(v.number()),
     dependencies: v.array(v.id("tasks")),
   }).index("by_owner", ["owner"]).index("by_owner_status", ["owner", "status"]),
+  activeSessions: defineTable({
+    owner: v.string(), taskId: v.id("tasks"), startedAt: v.number(),
+    smaller: v.optional(v.boolean()), taskTitle: v.optional(v.string()), lane: v.optional(lane),
+    focusTitle: v.optional(v.string()), focusDoneWhen: v.optional(v.string()), focusMinutes: v.optional(v.number()),
+  }).index("by_owner", ["owner"]),
   sessions: defineTable({
     owner: v.string(), taskId: v.id("tasks"), key: v.string(), lane, title: v.string(),
     outcome, contribution: v.string(), nextStep: v.string(), evidence: v.string(),
-    endedAt: v.number(),
+    startedAt: v.optional(v.number()), endedAt: v.number(),
+    smaller: v.optional(v.boolean()), doneWhen: v.optional(v.string()),
   }).index("by_owner_endedAt", ["owner", "endedAt"]).index("by_owner_key", ["owner", "key"]),
   artifacts: defineTable({
     owner: v.string(), sessionId: v.id("sessions"), title: v.string(), url: v.string(),
