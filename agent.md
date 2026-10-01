@@ -31,10 +31,10 @@ Separate implementation from user review: code can exist and pass tests without 
 
 ## Project boundaries
 
-- Form is an independent app and Git repository, separate from portfolio_website.
-- Current stack: Next.js, React, TypeScript, Tailwind CSS, Zod, Lucide, ESLint and Vitest. Explain each dependency when it becomes relevant.
-- Convex is the selected source of truth for meaningful app data. Development authentication, Work tasks, Today focus sessions and Ideas use it; Proof, Journey and Settings still have browser-local prototypes pending migration.
-- Browser-local learning mode must remain clearly labelled until cloud integration is verified. Do not call it cloud persistence.
+- Becoming (folder `form`) is an independent app and Git repository, separate from portfolio_website.
+- Current stack: Next.js, React, TypeScript, Tailwind CSS, Lucide, ESLint and Vitest, with Zod installed for the planned forms phase (currently unused). Explain each dependency when it becomes relevant.
+- Convex is the selected source of truth for meaningful app data. Development authentication, Work tasks, Today focus sessions, Ideas, Journey history, Proof evidence gallery and Settings motive use it. All six routed workspace screens are cloud-backed. The old browser-local code was removed on 2 October with the user's approval (it is still in Git history); data already in a browser profile is untouched.
+- Browser-local historical code/data must remain clearly distinguished from working cloud features. Do not call a browser-only export a cloud backup.
 - Better Auth with Convex is selected for authentication; TanStack is excluded for now. See documents/STACK_DECISIONS.md. Production hosting and open-source license remain undecided.
 - Future friends should have private owner-scoped data. Public source code does not mean public personal data.
 - ChatGPT connections and automatic publishing are deferred. No model API is needed for the core workflow.
@@ -52,7 +52,19 @@ Treat prototypes and plans as references, not proof of implementation. Record pr
 
 ## Current checkpoint
 
-The user selected Better Auth with Convex and approved the proposed stack direction. They clarified that all meaningful app data should live in Convex; browser state is for temporary UI selections only. Phase 2B authentication, Phase 2C owner-scoped Work tasks, Phase 2D cloud Today focus sessions and a bounded Phase 3B Ideas slice are implemented and verified in development; user review is pending. `/work`, `/today` and `/ideas` require sign-in and use Convex. Proof, Journey and Settings remain browser-local prototypes and must move in bounded later slices. The user chose a fresh Convex start and preservation of the old browser copy; no local data was imported or deleted. Email verification/recovery and production readiness remain incomplete. Pause before the next implementation slice for user review.
+The user selected Better Auth with Convex and approved the proposed stack direction. They clarified that all meaningful app data should live in Convex; browser state is for temporary UI selections only. Phase 2B authentication, Phase 2C owner-scoped Work tasks, Phase 2D cloud Today focus sessions, a bounded Phase 3B Ideas slice, Phase 2E Journey history, a bounded Phase 4B Proof gallery, and Phase 2F Settings motive are implemented in development; user review is pending. All six workspace routes require sign-in and use Convex. Journey shows paginated saved recaps and counts over loaded pages; Proof shows owned evidence links with source session context; Settings saves a private motive shown across the sidebar. Weekly targets/timezone policy, streaks, cloud export and Proof publishing controls are future work. The user chose a fresh Convex start and preservation of the old browser copy; no local data was imported or deleted. Email verification/recovery and production readiness remain incomplete.
+
+On 1–2 October the agreed review-fixes phase was implemented, verified by checks, and synced to development; user review is pending. Its scope:
+
+- One Convex client and a persistent `(workspace)` shell.
+- Task views, plus unblock, reopen, archive and restore for tasks.
+- Idea archive and restore.
+- One tested ranking module with friendlier reasons.
+- Today and recap focus fixes, and a clearable motive.
+- Next.js 16.3.8.
+- Removal of the unrouted local code.
+
+The user chose the name Becoming and asked for no commits, so 2E, 4B, 2F and the review fixes are all uncommitted. Pause before the next implementation slice for user review.
 
 ## Detailed phase learning notebook
 

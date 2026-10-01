@@ -1,6 +1,6 @@
 # Becoming — full app plan and learning checkpoints
 
-Updated: 24 September 2026. Follow ../agent.md for the working agreement.
+Updated: 2 October 2026. Follow ../agent.md for the working agreement.
 
 ## Product direction
 
@@ -11,11 +11,16 @@ An independent design-engineering practice app: choose useful daily work, balanc
 | Area | Implementation | Verification | User review |
 |---|---|---|---|
 | Independent Next.js scaffold and documents | Present | Build/checks recorded 15 Sep | Walkthrough pending |
-| Earlier browser-local prototype | Proof, Journey and Settings still use it; local Today/Ideas are no longer routed | 8 historical prototype tests recorded 15 Sep | Cloud migration pending |
+| Earlier browser-local prototype | Source removed 2 Oct with your approval (still in Git history at 542b6f3); data already in a browser profile is untouched | 8 historical prototype tests recorded 15 Sep | No import planned for fresh cloud start |
 | Convex task persistence | `/work` uses owner-scoped paginated Convex list/create/edit | Unit authorization tests and two-account browser flow verified 24 Sep | User review pending |
+| Shared client and workspace shell | One Convex client for the whole app (root layout); a `(workspace)` route-group layout holds the sidebar, top bar and one sign-in gate; per-section tab titles; name is Becoming | Browser, signed out, 2 Oct: same client and sidebar across five navigations; build passes | User review pending |
+| Task and idea lifecycle | Work views (Active/Blocked/Done/Archived); unblock, reopen, archive/restore tasks; archive/restore ideas | 33 tests, build and development sync 2 Oct; signed-in browser review pending | User review pending |
 | Better Auth email/password | Implemented on /account in development | Browser flow and backend identity verified 17 Sep | Pending |
 | Cloud Today and session lifecycle | Signed-in Today recommends owned feasible Work tasks and calls Convex start/cancel/recap; time/energy are temporary UI state | 17 tests, development sync and live start/reload/cancel/recap check 24 Sep | User review pending |
 | Cloud Ideas | Signed-in notebook capture/edit and deliberate one-time task activation | 18 tests, development sync, and browser create/edit/reload/activate/Work checks 25 Sep | User review pending |
+| Cloud Journey history | Signed-in, paginated saved recaps with lane counts over visible results | 19 tests and development sync 29 Sep; browser review pending | User review pending |
+| Cloud Proof gallery | Signed-in, paginated recap evidence with linked session context | 21 tests and development sync 29 Sep; browser review pending | User review pending |
+| Cloud Settings motive | Signed-in profile motive saved in Convex and shown across the sidebar | 22 tests, development sync and build 29 Sep; browser review pending | User review pending |
 | Full projects, streaks, sharing | Planned | Not verified | Future phases |
 
 Existing work is a starting point, not automatically accepted scope. Historical checks are not fresh verification. The prior roadmap is preserved as PLAN-2026-09-15.md.
@@ -29,17 +34,32 @@ Each numbered subphase is one small delivery: explain → discuss → implement 
 **Outcome:** you can explain what is already built and decide what to keep.
 
 - [ ] R1: walk through package.json, routes, layout, styling and the difference between the app and prototype.
-- [ ] R2: trace one session from the screen to domain rules to browser storage, then reload it.
+- [ ] R2: trace one session from Today through `tasks.startSession` and `tasks.recordSession` to Journey, then reload it. (Until 2 Oct this traced the browser-local store, which has since been removed.)
 - [ ] R3: review the Convex schema and clearly separate prepared code from working cloud features.
 - [ ] R4: agree on the next subphase and record accepted changes or simplifications.
 
-**Files:** src/app/layout.tsx, src/app/[section]/page.tsx, src/components/workspace-screen.tsx, src/domain/workspace.ts, src/lib/local-store.ts, convex/schema.ts.
+**Files:** src/app/layout.tsx, src/app/(workspace)/layout.tsx, src/app/(workspace)/[section]/page.tsx, src/components/workspace-shell.tsx, src/components/cloud-today-screen.tsx, convex/tasks.ts, convex/lib/recommend.ts, convex/schema.ts.
 
 **Decisions:** keep or simplify the initial UI; identify what the user wants to implement themselves. No new dependencies or accounts.
 
 **Exercise:** explain where a session is saved and why completing a smaller step leaves its parent unfinished.
 
 **Review gate:** the user understands the foundation and explicitly chooses the next subphase. No implementation is required to complete this walkthrough.
+
+## Review fixes — 1–2 October 2026 (implemented; user review pending)
+
+**Outcome:** the fourteen issues from the 1 October review are fixed, and the task loop has no dead ends. The user chose the name Becoming, no commits, and all four optional parts: lifecycle and archive, removing the old browser-local code, the Next.js patch, and syncing to Convex development.
+
+- One Convex client for the whole app, instead of a new one on every section change (verified in the browser). The `(workspace)` route-group layout keeps the sidebar and the single sign-in gate mounted across sections.
+- Work views: Active, Blocked, Done, Archived. Tasks can be unblocked (to Ready, with a next step), reopened (to In progress), archived and restored (to their previous status). Ideas can be archived and restored, and an archived idea can't be activated.
+- Today keeps its controls on screen while results update. The recap keeps your text on Back and resets for each session. Reasons come from one tested ranking module, `convex/lib/recommend.ts`. Finishing a smaller step asks for the parent's real next step.
+- The motive can be cleared. A shared error helper reads `ConvexError` data. Next.js 16.3.8 fixes a critical audit advisory. `model.ts` and the unrouted local workspace are gone; `weekKey` moved to `convex/lib/time.ts`.
+
+**Schema:** additive only. Task status gains `Archived`, plus optional `tasks.archivedFrom` and `ideas.archivedAt`. No migration.
+
+**Verification (2 Oct):** TypeScript, ESLint and 33 tests pass, the build passes, and the development deployment is synced. Signed-out browser checks were run. Signed-in screens still need your walkthrough.
+
+**Exercise:** recap a disposable session as Blocked, unblock it in Work, and confirm Today offers it again while Journey still shows the blocker. The details are in the ignored `documents/phase-learning/phase-review-fixes.md`.
 
 ## 0 — foundation and visual ownership
 
@@ -101,6 +121,18 @@ Add server-backed start/cancel/recap, smaller-step snapshots, contribution evide
 
 **Gate:** full local-session behaviour works on Convex; duplicate/invalid writes are rejected; migration is deliberate; two-account and reload checks pass. **Evidence:** diagram and demo of a reactive, authenticated session flow.
 
+### 2E — cloud Journey history foundation
+
+**Status (29 September):** implemented and verified by static checks, owner-isolation/pagination tests, and development sync; browser review pending. `/journey` now requires sign-in and reads saved Convex recaps. The screen shows recent contributions and lane counts for the sessions loaded so far; it does not claim an all-time total, weekly target, or streak. Cancelled sessions create no recap and do not appear. No schema or dependency change was needed.
+
+**Gate:** a Today recap appears for its owner in Journey, older pages load, and another account cannot see it. **Exercise:** finish a disposable session in Today, open Journey, then sign out and confirm the account gate appears.
+
+### 2F — cloud Settings motive foundation
+
+**Status (29 September):** implemented and verified by static checks, owner-scoped profile tests, development sync and local build; signed-in browser review pending. `/settings` requires sign-in and saves the motive to an owner-scoped Convex profile. The shared sidebar subscribes to that motive across all six workspace screens. `profiles.timezone` and `weeklyTarget` became optional so a new account does not receive invented defaults; existing values remain untouched. The old browser workspace is preserved but no longer mounted. The browser-only export button was removed from the routed Settings page because it did not export cloud work.
+
+**Gate:** save motive, reload and navigate; the same account sees it while another account does not. The UI must not imply weekly targets or cloud export work yet. **Exercise:** trace `CloudSettingsScreen` → `settings.saveMotive` → `profiles` → `WorkspaceSidebar`.
+
 ## 3 — projects, ideas and recommendation refinement
 
 **Status:** planned; local idea/task baseline already exists.
@@ -136,6 +168,8 @@ Agree on what counts as a session, week boundaries, planned pauses and target ef
 **Gate:** changing a target does not rewrite past awards; rest creates no overdue backlog or fake progress. **Learn:** temporal data modelling. **Exercise:** explain a paused-week example.
 
 ### 4B — proof and publishing workflow
+
+**Bounded cloud Proof gallery status (29 September):** implemented and verified by static checks, owner-isolation/pagination tests and development sync; browser review pending. `/proof` now requires sign-in and reads owned Draft artifacts created from Today evidence links, with contribution, lane, outcome and date from the owned source session. It does not edit artifacts or mark them Ready/Published. The old browser-local Proof remains preserved but is no longer routed. No new schema field or dependency was needed.
 
 Build artifact editing, draft/ready/published status, publication links, portfolio candidates and links to originating sessions/projects. Publication status is tracking, not an external posting action.
 
@@ -193,7 +227,20 @@ Structured assignment import, context export for ChatGPT, scheduled-task integra
 - [ ] One exercise or manual check provided.
 - [ ] User review received before the next subphase begins.
 
-**Current checkpoint:** review the cloud Ideas flow from capture to linked Work task, alongside Today. Use EXPERIENCE_MAP.md to redesign the dashboard and flows. The next proposed slices move Proof, Journey and Settings to Convex separately. The old browser workspace is preserved, with no import planned for the fresh-start path. The local folder is still named form; a branding/folder rename has not been performed. R1–R4 are not retroactively marked reviewed.
+**Current checkpoint (2 October):** review the signed-in screens after the review fixes:
+
+- Work views, and unblock/reopen/archive/restore.
+- Today's time and energy changes, and the recap's Back behaviour.
+- Ideas archive.
+- Clearing the motive.
+
+Then review Journey and Proof against a recap containing evidence. Nothing from 2E, 4B, 2F or the review fixes is committed yet; you chose to commit after reviewing.
+
+Next proposed work is Phase 4A weekly rhythm, then the two-week personal trial (5C). Projects/milestones and full Proof publishing remain options. Cloud export/account controls and auth production gates remain planned.
+
+- The app and tab titles now say Becoming. The folder and package name are still `form` / `form-workspace`.
+- Old browser data stays in its browser profile. Its source code is removed, and no import is planned.
+- R1–R4 are not retroactively marked reviewed.
 
 ## Detailed learning handoffs
 

@@ -32,7 +32,7 @@ npm run backend
 
 Follow the Convex CLI login/project prompts. Keep the resulting deployment variables in `.env.local`. The CLI manages generated types in `convex/_generated`. Do not paste secrets into source, screenshots or documents. Do not copy the portfolio's environment file.
 
-The bootstrap `convex/model.ts` uses Convex public generic builders and inferred schema types. After code generation, migrate its imports to the official `_generated/server` helpers as a learning exercise, then use `_generated/api` in the React integration.
+The bootstrap `convex/model.ts` used Convex public generic builders and inferred schema types before code generation existed. That migration was completed on 2 October: every module now imports from the official `_generated/server` helpers, `model.ts` was removed, and React uses `_generated/api`.
 
 ## 3. Decide authentication before wiring private data
 

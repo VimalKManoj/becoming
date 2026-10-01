@@ -1,5 +1,7 @@
 # Phase 2B — development email/password authentication
 
+> **Current state (2 October 2026):** every workspace screen now uses Convex and requires sign-in. The provider wraps the whole app from `src/app/layout.tsx`, with one shared client. The sentences below about browser-local task screens describe the original 17 September checkpoint.
+
 This checkpoint adds real sign-up, sign-in, sign-out and an authenticated identity query at `/account`. It does not connect the task screens to Convex. Those screens still use browser-local storage shared by accounts using that browser profile; signing out does not erase it.
 
 ## Request flow and files
@@ -8,7 +10,7 @@ This checkpoint adds real sign-up, sign-in, sign-out and an authenticated identi
 2. `src/app/api/auth/[...all]/route.ts` forwards auth requests through `src/lib/auth-server.ts` to Convex's HTTP site. The same-origin route allows the browser to use session cookies.
 3. `convex/http.ts` registers Better Auth routes. `convex/auth.ts` configures email/password authentication using the component's database adapter.
 4. `convex/convex.config.ts` installs the component. It owns its own user, account, session and verification tables, separate from our task schema. We do not add passwords to profiles or install an ORM.
-5. `src/components/auth-provider.tsx` connects the session to Convex's authenticated React client. It currently wraps only `/account`; local workspace routes do not need auth yet.
+5. `src/components/auth-provider.tsx` connects the session to Convex's authenticated React client. Since 2 October it holds one module-level client and wraps the root layout, so `/account` and all workspace routes share one connection. At the original checkpoint it wrapped only `/account`.
 6. `auth.getCurrentUser` checks the Better Auth session and returns null when it is missing/revoked; for a valid session it checks the trusted identity through `requireOwner` and returns only name/email. The UI says “Convex identity confirmed” only after this query succeeds.
 
 ## Development setup

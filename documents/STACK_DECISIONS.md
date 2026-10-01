@@ -86,3 +86,11 @@ Final verification: nine tests, lint, typecheck, production build, deployed auth
 - Paginate with `paginationOptsValidator` and `usePaginatedQuery`, initially 12 records and 12 per explicit load. Map the server result to omit the owner token.
 
 Verification on 24 September: TypeScript, ESLint and 11 Vitest tests passed; the production build and Convex development sync succeeded; signed-out gating, Account A create/edit/reload, Account B isolation, two-tab reactive updates and cross-tab sign-out passed in the live browser. User review remains open.
+
+## 2 October — review fixes
+
+- **Next.js and eslint-config-next 16.3.5 → 16.3.8**, still pinned exactly. This follows `npm audit` critical advisory GHSA-vcvr-r3jv-pc5j (RCE in `next/og` `ImageResponse`, affecting 16.2.0–16.3.5). The app doesn't import `next/og`; 16.3.8 is a patch release, and the audit is now clean. The user approved this.
+- **No dependency added.** `zod` became unused when the unrouted browser-local code was removed. It stays installed for the approved React Hook Form + Zod direction.
+- **Vitest config.** `vitest.config.ts` was renamed to `vitest.config.mts` with the same content. This removes Vite's "ESM syntax in a file loaded as CommonJS" notice.
+- **Lint rules.** `eslint-plugin-react-hooks` 7 runs the React Compiler rules (`refs`, `set-state-in-render`, …) through `eslint-config-next`. Today's "keep the last result" hook therefore stores the previous value in state, conditionally during render, instead of reading a ref during render.
+- **Unchanged.** The `@ts-expect-error` for better-auth issue #420 is still required (TypeScript would report it as unused otherwise). better-auth 1.7.x and convex 1.46 exist; upgrading them is a separate decision.
