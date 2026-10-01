@@ -1,99 +1,132 @@
 "use client";
 
-import Link from "next/link";
-import { useState, type FormEvent, type ReactNode } from "react";
-import { useConvexAuth, useMutation, usePaginatedQuery } from "convex/react";
+import { useState, type FormEvent } from "react";
+import { useMutation, usePaginatedQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
-import { authClient } from "@/lib/auth-client";
-import { WorkspaceSidebar } from "@/components/workspace-sidebar";
+import { Notice } from "@/components/notice";
+import { readableError } from "@/lib/errors";
 
 const lanes = ["Projects", "Showcases", "Writing"] as const;
 type Lane = typeof lanes[number];
+const views = [
+  { id: "active", label: "Active", empty: "Nothing active yet. Add a task, or make an idea active." },
+  { id: "blocked", label: "Blocked", empty: "Nothing is blocked." },
+  { id: "done", label: "Done", empty: "No finished tasks yet." },
+  { id: "archived", label: "Archived", empty: "Nothing archived. Archiving hides a task without deleting its history." },
+] as const;
+type View = typeof views[number]["id"];
+type Task = FunctionReturnType<typeof api.tasks.listPage>["page"][number];
+type Panel = { taskId: Id<"tasks">; kind: "edit" | "unblock" | "reopen" };
+type Message = { text: string; undo?: { taskId: Id<"tasks">; title: string } };
 
-function formText(data: FormData, name: string) {
-  return String(data.get(name) || "").trim();
-}
-
-function readableError(error: unknown) {
-  if (!(error instanceof Error)) return "Could not save the task. Please try again.";
-  const convexMessage = error.message.match(/Uncaught ConvexError: ([^\n]+)/)?.[1];
-  return convexMessage || error.message.split("\n")[0] || "Could not save the task. Please try again.";
-}
+const formText = (data: FormData, name: string) => String(data.get(name) || "").trim();
+// A callback ref runs when the element mounts: focus lands in a form the moment it opens.
+const focusOnMount = (node: HTMLElement | null) => node?.focus();
+const focusById = (id: string) => requestAnimationFrame(() => document.getElementById(id)?.focus());
 
 export function CloudWorkScreen() {
-  const { data: session, isPending: sessionPending, error: sessionError, refetch } = authClient.useSession();
-  const { isAuthenticated, isLoading } = useConvexAuth();
-
-  if (sessionPending || (session && isLoading)) return <CloudWorkShell><p role="status">Opening your private workspace…</p></CloudWorkShell>;
-  if (sessionError) return <CloudWorkShell><div className="stack"><p role="alert">Could not check your session.</p><button onClick={() => void refetch()}>Try again</button></div></CloudWorkShell>;
-  if (!session) return <CloudWorkShell><section className="panel empty stack"><h1>Sign in to see your work.</h1><p className="muted">Cloud tasks are private to your Becoming account.</p><Link className="button-link" href="/account">Open account</Link></section></CloudWorkShell>;
-  if (!isAuthenticated) return <CloudWorkShell><div className="stack"><p role="status">Your account session is active. Confirming it with Convex…</p><Link href="/account">Check account status</Link></div></CloudWorkShell>;
-
-  return <CloudWorkShell><CloudTasks /></CloudWorkShell>;
-}
-
-function CloudWorkShell({ children }: { children: ReactNode }) {
-  return <div className="app-shell">
-    <a className="skip-link" href="#main">Skip to content</a>
-    <WorkspaceSidebar section="work" northStar="Build a body of work that shows thoughtful design engineering." />
-    <main id="main" className="main">
-      <header className="topbar"><span className="eyebrow">Personal workspace / work</span><div className="row"><span className="badge">Cloud workspace</span><Link href="/account">Account</Link></div></header>
-      <p className="mode-note">Saved privately in Convex · changes update across signed-in tabs.</p>
-      {children}
-    </main>
-  </div>;
-}
-
-function CloudTasks() {
-  const { results, status, loadMore } = usePaginatedQuery(api.tasks.listPage, {}, { initialNumItems: 12 });
+  const [view, setView] = useState<View>("active");
+  const { results, status, loadMore } = usePaginatedQuery(api.tasks.listPage, { view }, { initialNumItems: 24 });
   const createTask = useMutation(api.tasks.create);
   const updateTask = useMutation(api.tasks.update);
+  const unblockTask = useMutation(api.tasks.unblock);
+  const reopenTask = useMutation(api.tasks.reopen);
+  const archiveTask = useMutation(api.tasks.archive);
+  const restoreTask = useMutation(api.tasks.restore);
   const [adding, setAdding] = useState(false);
-  const [editingId, setEditingId] = useState<Id<"tasks"> | null>(null);
+  const [panel, setPanel] = useState<Panel | null>(null);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<Message | null>(null);
   const [error, setError] = useState("");
-  const editing = results.find(task => task._id === editingId);
+  const current = views.find(item => item.id === view)!;
+  // Work already in motion comes first within each lane; otherwise newest first.
+  const ordered = [...results].sort((a, b) => Number(b.status === "In progress") - Number(a.status === "In progress"));
+
+  async function save(action: () => Promise<unknown>, success: Message) {
+    setBusy(true); setError(""); setMessage(null);
+    try { await action(); setMessage(success); return true; }
+    catch (caught) { setError(readableError(caught)); return false; }
+    finally { setBusy(false); }
+  }
+
+  function close(taskId: Id<"tasks">) {
+    setPanel(null); setError("");
+    focusById(`task-${taskId}`);
+  }
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    const data = new FormData(form);
-    setBusy(true); setError(""); setMessage("");
-    try {
-      await createTask(taskValues(data));
-      form.reset(); setAdding(false); setMessage("Task saved to your private cloud workspace.");
-    } catch (caught) { setError(readableError(caught)); }
-    finally { setBusy(false); }
+    const values = taskValues(new FormData(form));
+    if (await save(() => createTask(values), { text: "Task added. It's Ready and can appear in Today." })) {
+      form.reset(); setAdding(false); setView("active");
+    }
   }
 
-  async function update(event: FormEvent<HTMLFormElement>) {
+  async function update(event: FormEvent<HTMLFormElement>, task: Task) {
     event.preventDefault();
-    if (!editingId) return;
-    const data = new FormData(event.currentTarget);
-    setBusy(true); setError(""); setMessage("");
-    try {
-      await updateTask({ taskId: editingId, ...taskValues(data) });
-      setEditingId(null); setMessage("Task changes saved.");
-    } catch (caught) { setError(readableError(caught)); }
-    finally { setBusy(false); }
+    const values = taskValues(new FormData(event.currentTarget));
+    if (await save(() => updateTask({ taskId: task._id, ...values }), { text: "Task changes saved." })) close(task._id);
   }
+
+  // Unblocking and reopening both ask for the step that moves the task forward again.
+  async function moveOn(event: FormEvent<HTMLFormElement>, task: Task, kind: "unblock" | "reopen") {
+    event.preventDefault();
+    const nextStep = formText(new FormData(event.currentTarget), "nextStep");
+    const saved = kind === "unblock"
+      ? await save(() => unblockTask({ taskId: task._id, nextStep }), { text: `“${task.title}” is Ready again and can appear in Today.` })
+      : await save(() => reopenTask({ taskId: task._id, nextStep }), { text: `“${task.title}” is back in progress.` });
+    if (saved) { setPanel(null); focusById("work-notice"); }
+  }
+
+  async function archive(task: Task) {
+    if (await save(() => archiveTask({ taskId: task._id }), { text: `Archived “${task.title}”. Its history is kept.`, undo: { taskId: task._id, title: task.title } })) focusById("work-notice");
+  }
+
+  async function restore(taskId: Id<"tasks">, title: string) {
+    if (await save(() => restoreTask({ taskId }), { text: `Restored “${title}”.` })) focusById("work-notice");
+  }
+
+  const undo = message?.undo;
 
   return <>
-    <div className="heading"><div><p className="eyebrow">Your commitments</p><h1>Small steps. Substantial work.</h1><p className="muted">These tasks belong to your signed-in account.</p></div><button onClick={() => { setAdding(true); setEditingId(null); setError(""); }}>Add task</button></div>
-    {message && <div role="status" className="notice">{message}<button className="text-button" onClick={() => setMessage("")}>Dismiss</button></div>}
-    {error && <div role="alert" className="notice">{error}<button className="text-button" onClick={() => setError("")}>Dismiss</button></div>}
+    <div className="heading"><div><p className="eyebrow">Your commitments</p><h1>Small steps. Substantial work.</h1><p className="muted">Plan, unblock and finish the work you’ve chosen.</p></div><button onClick={() => { setAdding(true); setPanel(null); setError(""); }}>Add task</button></div>
+    {message && <Notice id="work-notice" onDismiss={() => setMessage(null)} action={undo ? { label: "Undo", onClick: () => void restore(undo.taskId, undo.title) } : undefined}>{message.text}</Notice>}
+    {error && <Notice tone="alert" onDismiss={() => setError("")}>{error}</Notice>}
     {adding && <TaskForm title="Add a useful next step" busy={busy} onSubmit={create} onCancel={() => { setAdding(false); setError(""); }} />}
-    {editing && <TaskForm key={editing._id} title="Edit this task" busy={busy} task={editing} onSubmit={update} onCancel={() => { setEditingId(null); setError(""); }} />}
-    {status === "LoadingFirstPage" ? <p role="status" className="panel">Loading your tasks…</p> : results.length === 0 ? <section className="panel empty"><h2>Your cloud workspace is ready.</h2><p className="muted space">Add the first task you want to move forward.</p></section> : <div className="lanes space">
-      {lanes.map(lane => <section className="lane" key={lane}><h2>{lane}</h2>{results.filter(task => task.lane === lane).map(task => <article className="panel stack space" key={task._id}>
-        <span className="badge">{task.status}</span><h3>{task.title}</h3><p className="muted">{task.minutes} min · Energy {task.energy}/3</p><p>{task.doneWhen}</p>{task.nextStep && <p className="small">Next: {task.nextStep}</p>}
-        {task.smallerStep && <div className="rule"><p className="eyebrow">Smaller step · {task.smallerMinutes} min</p><p>{task.smallerStep}</p><p className="small">Done when: {task.smallerDone}</p></div>}
-        <button className="secondary" onClick={() => { setEditingId(task._id); setAdding(false); setError(""); }}>Edit task</button>
-      </article>)}</section>)}
-    </div>}
-    {(status === "CanLoadMore" || status === "LoadingMore") && <button className="secondary space" disabled={status === "LoadingMore"} onClick={() => loadMore(12)}>{status === "LoadingMore" ? "Loading more…" : "Load more tasks"}</button>}
+    <div className="row space" role="group" aria-label="Show tasks">{views.map(item => <button key={item.id} className="chip" aria-pressed={view === item.id} onClick={() => { setView(item.id); setPanel(null); }}>{item.label}</button>)}</div>
+    {status === "LoadingFirstPage" ? <p role="status" className="panel space">Loading your tasks…</p>
+      : results.length === 0 ? <section className="panel empty space"><p className="muted">{current.empty}</p></section>
+        : <div className="lanes space">{lanes.map(lane => {
+          const laneTasks = ordered.filter(task => task.lane === lane);
+          return <section className="lane" key={lane}><h2>{lane}</h2>
+            {laneTasks.length === 0 && <p className="small muted space">Nothing here.</p>}
+            {laneTasks.map(task => {
+              const open = panel?.taskId === task._id ? panel.kind : null;
+              return <article className="panel stack space" key={task._id} id={`task-${task._id}`} tabIndex={-1} aria-label={task.title}>
+                {open === "edit" ? <TaskForm title={`Edit “${task.title}”`} busy={busy} task={task} onSubmit={event => void update(event, task)} onCancel={() => close(task._id)} /> : <>
+                  <span className="badge">{task.status === "Archived" ? `Archived · was ${task.archivedFrom ?? "Ready"}` : task.status}</span>
+                  <h3>{task.title}</h3><p className="muted">{task.minutes} min · Energy {task.energy}/3</p><p>{task.doneWhen}</p>
+                  {task.nextStep && <p className="small">{task.status === "Blocked" ? "Blocked by" : "Next"}: {task.nextStep}</p>}
+                  {task.smallerStep && <div className="rule"><p className="eyebrow">Smaller step · {task.smallerMinutes} min</p><p>{task.smallerStep}</p><p className="small">Done when: {task.smallerDone}</p></div>}
+                  {open === "unblock" || open === "reopen"
+                    ? <NextStepForm kind={open} busy={busy} onSubmit={event => void moveOn(event, task, open)} onCancel={() => close(task._id)} />
+                    : <div className="row">
+                      {task.status === "Blocked" && <button disabled={busy} onClick={() => setPanel({ taskId: task._id, kind: "unblock" })}>Unblock</button>}
+                      {task.status === "Done" && <button disabled={busy} onClick={() => setPanel({ taskId: task._id, kind: "reopen" })}>Reopen</button>}
+                      {task.status !== "Done" && task.status !== "Archived" && <button className="secondary" disabled={busy} onClick={() => { setPanel({ taskId: task._id, kind: "edit" }); setAdding(false); setError(""); }}>Edit task</button>}
+                      {task.status === "Archived"
+                        ? <button className="secondary" disabled={busy} onClick={() => void restore(task._id, task.title)}>Restore</button>
+                        : <button className="secondary" disabled={busy} onClick={() => void archive(task)}>Archive</button>}
+                    </div>}
+                </>}
+              </article>;
+            })}
+          </section>;
+        })}</div>}
+    {(status === "CanLoadMore" || status === "LoadingMore") && <button className="secondary space" disabled={status === "LoadingMore"} onClick={() => loadMore(24)}>{status === "LoadingMore" ? "Loading more…" : "Load more tasks"}</button>}
   </>;
 }
 
@@ -125,11 +158,11 @@ type EditableTask = {
 };
 
 function TaskForm({ title, task, busy, onSubmit, onCancel }: { title: string; task?: EditableTask; busy: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onCancel: () => void }) {
-  return <form className="panel stack" onSubmit={onSubmit} aria-busy={busy}>
+  return <form className="panel stack" onSubmit={onSubmit} aria-busy={busy} aria-label={title}>
     <h2>{title}</h2>
     <fieldset className="auth-fields stack" disabled={busy}>
       <legend className="sr-only">Task details</legend>
-      <label>Task title<input name="title" required maxLength={160} defaultValue={task?.title} /></label>
+      <label>Task title<input ref={focusOnMount} name="title" required maxLength={160} defaultValue={task?.title} /></label>
       <div className="grid">
         <label>Lane<select name="lane" defaultValue={task?.lane || "Projects"}>{lanes.map(lane => <option key={lane}>{lane}</option>)}</select></label>
         <label>Minutes<input name="minutes" type="number" min="5" max="240" step="5" required defaultValue={task?.minutes || 30} /></label>
@@ -141,6 +174,16 @@ function TaskForm({ title, task, busy, onSubmit, onCancel }: { title: string; ta
         <div className="grid"><label>Smaller minutes<input name="smallerMinutes" type="number" min="5" max="240" step="1" defaultValue={task?.smallerMinutes} /></label><label>Smaller step done when<input name="smallerDone" maxLength={1000} defaultValue={task?.smallerDone} /></label></div>
       </fieldset>
       <div className="row"><button type="submit">{busy ? "Saving…" : "Save task"}</button><button type="button" className="secondary" onClick={onCancel}>Cancel</button></div>
+    </fieldset>
+  </form>;
+}
+
+function NextStepForm({ kind, busy, onSubmit, onCancel }: { kind: "unblock" | "reopen"; busy: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onCancel: () => void }) {
+  return <form className="stack" onSubmit={onSubmit} aria-busy={busy}>
+    <fieldset className="auth-fields stack" disabled={busy}>
+      <legend className="sr-only">{kind === "unblock" ? "Unblock this task" : "Reopen this task"}</legend>
+      <label>{kind === "unblock" ? "What's the next step now that it's unblocked?" : "What's the next step?"}<textarea ref={focusOnMount} name="nextStep" required maxLength={2000} /></label>
+      <div className="row"><button type="submit">{busy ? "Saving…" : kind === "unblock" ? "Mark as ready" : "Reopen task"}</button><button type="button" className="secondary" onClick={onCancel}>Cancel</button></div>
     </fieldset>
   </form>;
 }
