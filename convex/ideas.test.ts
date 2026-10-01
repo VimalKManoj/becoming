@@ -30,4 +30,28 @@ describe("cloud Ideas", () => {
     expect(state.task).toMatchObject({ ideaId, lane: "Showcases", status: "Ready", title: "Build motion study" });
     expect(state.tasks).toHaveLength(1);
   });
+
+  it("archives and restores an idea without losing its notes, and won't activate it while archived", async () => {
+    const t = convexTest(schema, modules);
+    const asA = t.withIdentity({ subject: "user-a", issuer: "https://auth.example.test" });
+    const asB = t.withIdentity({ subject: "user-b", issuer: "https://auth.example.test" });
+    const ideaId = await asA.mutation(api.ideas.create, { title: "Reading corner", lane: "Projects", notes: "Calm typography." });
+    const view = (name: "notebook" | "archived") => asA.query(api.ideas.listPage, { view: name, paginationOpts: { numItems: 10, cursor: null } }).then(result => result.page.map(idea => idea.title));
+
+    await expect(asB.mutation(api.ideas.archive, { ideaId })).rejects.toThrow("Record not found");
+    await asA.mutation(api.ideas.archive, { ideaId });
+    await asA.mutation(api.ideas.archive, { ideaId });
+    expect(await view("notebook")).toEqual([]);
+    expect(await view("archived")).toEqual(["Reading corner"]);
+    await expect(asA.mutation(api.ideas.activate, { ideaId, title: "Explore it", minutes: 30, energy: 2, doneWhen: "A sketch exists" })).rejects.toThrow("Restore this idea");
+    expect(await t.run(ctx => ctx.db.query("tasks").collect())).toHaveLength(0);
+
+    await expect(asB.mutation(api.ideas.restore, { ideaId })).rejects.toThrow("Record not found");
+    await asA.mutation(api.ideas.restore, { ideaId });
+    expect(await view("notebook")).toEqual(["Reading corner"]);
+    expect(await view("archived")).toEqual([]);
+    const restored = await t.run(ctx => ctx.db.get(ideaId));
+    expect(restored).toMatchObject({ notes: "Calm typography." });
+    expect(restored).not.toHaveProperty("archivedAt");
+  });
 });

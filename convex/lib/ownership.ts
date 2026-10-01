@@ -1,5 +1,5 @@
 import { ConvexError } from "convex/values";
-import type { QueryCtx } from "../model";
+import type { QueryCtx } from "../_generated/server";
 
 export async function requireOwner(ctx: Pick<QueryCtx, "auth">) {
   const identity = await ctx.auth.getUserIdentity();
