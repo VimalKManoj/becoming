@@ -64,7 +64,7 @@ On 1–2 October the agreed review-fixes phase was implemented, verified by chec
 - Next.js 16.3.8.
 - Removal of the unrouted local code.
 
-The user chose the name Becoming and asked for no commits, so 2E, 4B, 2F and the review fixes are all uncommitted. Pause before the next implementation slice for user review.
+The user chose the name Becoming. On 2 October, 2E, 4B, 2F and the review fixes were committed in six logical groups and pushed (e0a16c5 to 287e948); nothing is deployed. Pause before the next implementation slice for user review.
 
 ## Detailed phase learning notebook
 
