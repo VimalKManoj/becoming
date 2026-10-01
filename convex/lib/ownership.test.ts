@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { assertOwner, nonempty, requireOwner } from "../../convex/lib/ownership";
+import { assertOwner, nonempty, requireOwner } from "./ownership";
 it("rejects another user's records and missing records identically", () => {
   expect(() => assertOwner({ owner: "user-a" }, "user-b")).toThrow("Record not found");
   expect(() => assertOwner(null, "user-b")).toThrow("Record not found");
