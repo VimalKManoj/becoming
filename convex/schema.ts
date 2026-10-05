@@ -2,15 +2,19 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export const lane = v.union(v.literal("Projects"), v.literal("Showcases"), v.literal("Writing"));
-export const taskStatus = v.union(v.literal("Ready"), v.literal("In progress"), v.literal("Blocked"), v.literal("Done"));
+// Archived is a reversible hide: the task leaves Work's active views and Today, and keeps its history.
+export const workingStatus = v.union(v.literal("Ready"), v.literal("In progress"), v.literal("Blocked"), v.literal("Done"));
+export const taskStatus = v.union(v.literal("Ready"), v.literal("In progress"), v.literal("Blocked"), v.literal("Done"), v.literal("Archived"));
 export const outcome = v.union(v.literal("Finished"), v.literal("Made progress"), v.literal("Blocked"));
 
 export default defineSchema({
-  profiles: defineTable({ owner: v.string(), motive: v.string(), timezone: v.string(), weeklyTarget: v.number() }).index("by_owner", ["owner"]),
+  profiles: defineTable({ owner: v.string(), motive: v.string(), timezone: v.optional(v.string()), weeklyTarget: v.optional(v.number()) }).index("by_owner", ["owner"]),
   projects: defineTable({ owner: v.string(), title: v.string(), purpose: v.string(), status: v.union(v.literal("Active"), v.literal("Archived"), v.literal("Done")) }).index("by_owner", ["owner"]),
-  ideas: defineTable({ owner: v.string(), title: v.string(), notes: v.string(), lane, taskId: v.optional(v.id("tasks")) }).index("by_owner", ["owner"]),
+  ideas: defineTable({ owner: v.string(), title: v.string(), notes: v.string(), lane, taskId: v.optional(v.id("tasks")), archivedAt: v.optional(v.number()) }).index("by_owner", ["owner"]),
   tasks: defineTable({
     owner: v.string(), title: v.string(), lane, status: taskStatus,
+    // The status to return to when an archived task is restored.
+    archivedFrom: v.optional(workingStatus),
     projectId: v.optional(v.id("projects")), ideaId: v.optional(v.id("ideas")),
     minutes: v.number(), energy: v.number(), doneWhen: v.string(), nextStep: v.string(),
     smallerStep: v.optional(v.string()), smallerDone: v.optional(v.string()), smallerMinutes: v.optional(v.number()),

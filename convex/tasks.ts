@@ -1,10 +1,17 @@
 import { paginationOptsValidator } from "convex/server";
 import { v, ConvexError } from "convex/values";
-import { query, mutation } from "./model";
+import { query, mutation } from "./_generated/server";
 import { lane, outcome } from "./schema";
 import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
+import { rankFocuses } from "./lib/recommend";
 
 type SmallerStepInput = { smallerStep?: string; smallerDone?: string; smallerMinutes?: number };
+
+function nextStepValue(value: string) {
+  const step = value.trim();
+  if (!step || step.length > 2000) throw new ConvexError("Add a next step (up to 2000 characters).");
+  return step;
+}
 
 function smallerStepValues(args: SmallerStepInput) {
   const step = args.smallerStep?.trim() || undefined;
@@ -16,15 +23,20 @@ function smallerStepValues(args: SmallerStepInput) {
   return { smallerStep: nonempty(step, 1000), smallerDone: nonempty(done, 1000), smallerMinutes: minutes };
 }
 
+// Work shows one view at a time so finished and archived tasks don't crowd active work.
+const taskView = v.union(v.literal("active"), v.literal("blocked"), v.literal("done"), v.literal("archived"));
+const viewStatus = { blocked: "Blocked", done: "Done", archived: "Archived" } as const;
+
 export const listPage = query({
-  args: { paginationOpts: paginationOptsValidator },
+  args: { paginationOpts: paginationOptsValidator, view: v.optional(taskView) },
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
-    const result = await ctx.db
-      .query("tasks")
-      .withIndex("by_owner", q => q.eq("owner", owner))
-      .order("desc")
-      .paginate(args.paginationOpts);
+    const view = args.view ?? "active";
+    const tasks = view === "active"
+      ? ctx.db.query("tasks").withIndex("by_owner", q => q.eq("owner", owner))
+        .filter(q => q.or(q.eq(q.field("status"), "Ready"), q.eq(q.field("status"), "In progress")))
+      : ctx.db.query("tasks").withIndex("by_owner_status", q => q.eq("owner", owner).eq("status", viewStatus[view]));
+    const result = await tasks.order("desc").paginate(args.paginationOpts);
     return {
       ...result,
       // Ownership is an authorization detail; the task UI does not need the token identifier.
@@ -44,6 +56,7 @@ export const listPage = query({
         smallerDone: task.smallerDone,
         smallerMinutes: task.smallerMinutes,
         dependencies: task.dependencies,
+        archivedFrom: task.archivedFrom,
       })),
     };
   },
@@ -90,6 +103,59 @@ export const update = mutation({
   },
 });
 
+// A blocked task returns to Ready with the action that moves it forward again.
+// The blocker itself stays in the session history that recorded it.
+export const unblock = mutation({
+  args: { taskId: v.id("tasks"), nextStep: v.string() },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const task = await ctx.db.get(args.taskId);
+    assertOwner(task, owner);
+    if (task.status !== "Blocked") throw new ConvexError("Only a blocked task can be unblocked.");
+    await ctx.db.patch(task._id, { status: "Ready", nextStep: nextStepValue(args.nextStep) });
+    return task._id;
+  },
+});
+
+export const reopen = mutation({
+  args: { taskId: v.id("tasks"), nextStep: v.string() },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const task = await ctx.db.get(args.taskId);
+    assertOwner(task, owner);
+    if (task.status !== "Done") throw new ConvexError("Only a finished task can be reopened.");
+    await ctx.db.patch(task._id, { status: "In progress", nextStep: nextStepValue(args.nextStep) });
+    return task._id;
+  },
+});
+
+// Archive is reversible and keeps every session. Repeating it is harmless.
+export const archive = mutation({
+  args: { taskId: v.id("tasks") },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const task = await ctx.db.get(args.taskId);
+    assertOwner(task, owner);
+    if (task.status === "Archived") return task._id;
+    const active = await ctx.db.query("activeSessions").withIndex("by_owner", q => q.eq("owner", owner)).unique();
+    if (active?.taskId === task._id) throw new ConvexError("Finish or cancel this task's session before archiving it.");
+    await ctx.db.patch(task._id, { status: "Archived", archivedFrom: task.status });
+    return task._id;
+  },
+});
+
+export const restore = mutation({
+  args: { taskId: v.id("tasks") },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const task = await ctx.db.get(args.taskId);
+    assertOwner(task, owner);
+    if (task.status !== "Archived") return task._id;
+    await ctx.db.patch(task._id, { status: task.archivedFrom ?? "Ready", archivedFrom: undefined });
+    return task._id;
+  },
+});
+
 export const getActiveSession = query({
   args: {},
   handler: async ctx => {
@@ -117,32 +183,9 @@ export const todayOverview = query({
     const dependencyIds = [...new Set(candidates.flatMap(task => task.dependencies))];
     const dependencies = await Promise.all(dependencyIds.map(id => ctx.db.get(id)));
     const dependencyStatus = new Map(dependencyIds.map((id, i) => [String(id), dependencies[i]?.owner === owner && dependencies[i]?.status === "Done"]));
-    const laneCount = (selected: typeof candidates[number]["lane"]) => recent.filter(session => session.lane === selected).length;
-    const repeatedLane = recent.length >= 2 && recent[0].lane === recent[1].lane ? recent[0].lane : null;
-    const choices = candidates
-      .filter(task => task.dependencies.every(id => dependencyStatus.get(String(id))))
-      .flatMap(task => {
-        const smaller = task.minutes > args.minutes || task.energy > args.energy;
-        if (smaller && !(task.smallerStep && task.smallerDone && task.smallerMinutes && task.smallerMinutes <= args.minutes)) return [];
-        return [{
-          taskId: task._id, title: smaller ? task.smallerStep! : task.title, taskTitle: task.title,
-          lane: task.lane, status: task.status, minutes: smaller ? task.smallerMinutes! : task.minutes,
-          doneWhen: smaller ? task.smallerDone! : task.doneWhen, nextStep: task.nextStep, smaller,
-          reason: `${task.lane} has ${laneCount(task.lane)} of your last ${recent.length} sessions. ${smaller ? "This defined smaller step fits your capacity." : "This next step fits your capacity."}`,
-          createdAt: task._creationTime,
-        }];
-      })
-      .sort((a, b) => Number(a.lane === repeatedLane) - Number(b.lane === repeatedLane)
-        || laneCount(a.lane) - laneCount(b.lane)
-        || Number(b.status === "In progress") - Number(a.status === "In progress")
-        || a.createdAt - b.createdAt)
-      .slice(0, 3)
-      .map(choice => ({
-        taskId: choice.taskId, title: choice.title, taskTitle: choice.taskTitle,
-        lane: choice.lane, status: choice.status, minutes: choice.minutes,
-        doneWhen: choice.doneWhen, nextStep: choice.nextStep,
-        smaller: choice.smaller, reason: choice.reason,
-      }));
+    const eligible = candidates.filter(task => task.dependencies.every(id => dependencyStatus.get(String(id))));
+    // The ranking and its plain-language reasons live in lib/recommend.ts and are tested there.
+    const choices = rankFocuses(eligible, recent.map(session => session.lane), { minutes: args.minutes, energy: args.energy });
     const activeTask = active ? await ctx.db.get(active.taskId) : null;
     return {
       choices,
@@ -172,7 +215,7 @@ export const startSession = mutation({
       if (current.taskId === task._id && (current.smaller ?? false) === smaller) return current._id;
       throw new ConvexError("Finish or cancel your current session first.");
     }
-    if (task.status === "Done" || task.status === "Blocked") throw new ConvexError("This task is not ready for a session.");
+    if (task.status !== "Ready" && task.status !== "In progress") throw new ConvexError("This task is not ready for a session.");
     if (smaller && (!task.smallerStep || !task.smallerDone || !task.smallerMinutes)) throw new ConvexError("Define a smaller step before starting it.");
     for (const id of task.dependencies) {
       const dependency = await ctx.db.get(id);
@@ -213,7 +256,7 @@ export const recordSession = mutation({
     const task = await ctx.db.get(active.taskId);
     assertOwner(task, owner);
     const smaller = active.smaller ?? false;
-    if (task.status === "Done" || task.status === "Blocked") throw new ConvexError("This task is not ready for a session.");
+    if (task.status !== "Ready" && task.status !== "In progress") throw new ConvexError("This task is not ready for a session.");
     for (const id of task.dependencies) {
       const dependency = await ctx.db.get(id);
       assertOwner(dependency, owner);
@@ -221,7 +264,10 @@ export const recordSession = mutation({
     }
     const contribution = nonempty(args.contribution, 4000);
     const nextStep = args.nextStep.trim();
-    if (nextStep.length > 2000 || (args.outcome !== "Finished" && !nextStep)) throw new ConvexError("Add a next step or blocker (up to 2000 characters).");
+    // Unfinished work needs a way back in. A finished smaller step also leaves its parent
+    // task in progress, so it asks for the parent's real next step instead of filler text.
+    const needsNextStep = args.outcome !== "Finished" || smaller;
+    if (nextStep.length > 2000 || (needsNextStep && !nextStep)) throw new ConvexError("Add a next step or blocker (up to 2000 characters).");
     const evidence = args.evidence.trim();
     if (evidence) {
       let valid = false;
@@ -234,7 +280,7 @@ export const recordSession = mutation({
     const sameSmallerStep = finishedSmaller && task.smallerStep === active.focusTitle && task.smallerDone === active.focusDoneWhen && task.smallerMinutes === active.focusMinutes;
     await ctx.db.patch(task._id, {
       status: args.outcome === "Blocked" ? "Blocked" : args.outcome === "Finished" && !smaller ? "Done" : "In progress",
-      nextStep: nextStep || (finishedSmaller ? "Continue from your last recorded contribution." : ""),
+      nextStep,
       ...(sameSmallerStep ? { smallerStep: undefined, smallerDone: undefined, smallerMinutes: undefined } : {}),
     });
     if (evidence) await ctx.db.insert("artifacts", { owner, sessionId: id, title: focusTitle, url: evidence, status: "Draft", portfolioCandidate: false });

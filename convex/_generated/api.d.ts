@@ -11,8 +11,12 @@
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as ideas from "../ideas.js";
+import type * as journey from "../journey.js";
 import type * as lib_ownership from "../lib/ownership.js";
-import type * as model from "../model.js";
+import type * as lib_recommend from "../lib/recommend.js";
+import type * as lib_time from "../lib/time.js";
+import type * as proof from "../proof.js";
+import type * as settings from "../settings.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -25,8 +29,12 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   http: typeof http;
   ideas: typeof ideas;
+  journey: typeof journey;
   "lib/ownership": typeof lib_ownership;
-  model: typeof model;
+  "lib/recommend": typeof lib_recommend;
+  "lib/time": typeof lib_time;
+  proof: typeof proof;
+  settings: typeof settings;
   tasks: typeof tasks;
 }>;
 
