@@ -219,7 +219,7 @@ Made `profiles.timezone` and `weeklyTarget` optional so a new profile can save j
 
 ## 2 October 2026 — review fixes and task lifecycle
 
-**Objective:** fix the fourteen issues from the 1 October review, as one agreed phase. The user chose the name Becoming and no commits, and included all four optional parts: task lifecycle and archive, removing the old browser-local code, the Next.js patch, and syncing to Convex development.
+**Objective:** fix the fourteen issues from the 1 October review, as one agreed phase. The user chose the name Becoming, wanted to review before anything was committed, and included all four optional parts: task lifecycle and archive, removing the old browser-local code, the Next.js patch, and syncing to Convex development.
 
 - **One client.** Each section page used to mount its own `AuthProvider`. Next 16 keeps only the current page mounted (its router bfcache holds one entry unless `cacheComponents` is on), so every sidebar click built a new `ConvexReactClient` and never closed the old one. In the browser, three sections gave three distinct clients. Now one module-level client lives in the root layout. A `(workspace)` route-group layout keeps the sidebar, top bar and a single sign-in gate mounted, so the six copy-pasted gates are gone. URLs are unchanged. `(workspace)/not-found.tsx` shows unknown addresses inside the shell.
 - **Task lifecycle.** `tasks.listPage` takes a view (active/blocked/done/archived). New mutations: `unblock` (Blocked → Ready with a required next step), `reopen` (Done → In progress), and `archive`/`restore` (`archivedFrom` remembers the earlier status; archiving is refused while that task's session is open). Ideas gained archive/restore and a notebook/archived view; activation refuses an archived idea. Sessions now start or record only for Ready or In-progress tasks.
@@ -244,3 +244,5 @@ Made `profiles.timezone` and `weeklyTarget` optional so a new profile can save j
 Earlier problems, each fixed: stale generated route types, a nullable test id, one unescaped apostrophe, and a not-found message hidden behind the sign-in gate. Signed-in screens were not clicked through by Claude; that walkthrough is the user's review.
 
 **Learning check:** recap a disposable session as Blocked, open Work → Blocked → Unblock, give a next step, and confirm Today offers it while Journey keeps the Blocked recap. Then read `rankFocuses` and explain why two recent Projects sessions move a Writing task ahead. Detailed ledger and exercises are in the ignored `documents/phase-learning/phase-review-fixes.md`.
+
+**Commits:** after reviewing the proposed grouping, the user had the work committed in six groups and pushed on 2 October. They are `e0a16c5` (Next.js 16.3.8), `0a85850` (Vitest config), `b1368d8` (backend), `bbd3ce8` (frontend), `88eacb0` (local code removal) and `287e948` (docs). Nothing is deployed.

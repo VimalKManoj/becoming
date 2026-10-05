@@ -48,7 +48,7 @@ Each numbered subphase is one small delivery: explain → discuss → implement 
 
 ## Review fixes — 1–2 October 2026 (implemented; user review pending)
 
-**Outcome:** the fourteen issues from the 1 October review are fixed, and the task loop has no dead ends. The user chose the name Becoming, no commits, and all four optional parts: lifecycle and archive, removing the old browser-local code, the Next.js patch, and syncing to Convex development.
+**Outcome:** the fourteen issues from the 1 October review are fixed, and the task loop has no dead ends. The user chose the name Becoming and all four optional parts: lifecycle and archive, removing the old browser-local code, the Next.js patch, and syncing to Convex development. Together with the pending 2E/4B/2F work, it was committed in six logical groups and pushed on 2 October (e0a16c5 to 287e948).
 
 - One Convex client for the whole app, instead of a new one on every section change (verified in the browser). The `(workspace)` route-group layout keeps the sidebar and the single sign-in gate mounted across sections.
 - Work views: Active, Blocked, Done, Archived. Tasks can be unblocked (to Ready, with a next step), reopened (to In progress), archived and restored (to their previous status). Ideas can be archived and restored, and an archived idea can't be activated.
@@ -234,7 +234,7 @@ Structured assignment import, context export for ChatGPT, scheduled-task integra
 - Ideas archive.
 - Clearing the motive.
 
-Then review Journey and Proof against a recap containing evidence. Nothing from 2E, 4B, 2F or the review fixes is committed yet; you chose to commit after reviewing.
+Then review Journey and Proof against a recap containing evidence. The 2E, 4B, 2F and review-fix work is committed and pushed (e0a16c5 to 287e948). The signed-in walkthrough is still your review, and nothing is deployed.
 
 Next proposed work is Phase 4A weekly rhythm, then the two-week personal trial (5C). Projects/milestones and full Proof publishing remain options. Cloud export/account controls and auth production gates remain planned.
 
