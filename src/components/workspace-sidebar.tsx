@@ -1,29 +1,27 @@
+"use client";
+
 import Link from "next/link";
-import { ImageIcon, Layers, Leaf, Lightbulb, Settings, Sprout, Sun } from "lucide-react";
+import { Leaf } from "lucide-react";
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { sectionDetails, workspaceSections, type WorkspaceSection } from "@/components/workspace-sections";
 
-export type WorkspaceSection = "today" | "work" | "ideas" | "proof" | "journey" | "settings";
-
-const navigation = [
-  { href: "today", label: "Today", icon: Sun },
-  { href: "work", label: "Work", icon: Layers },
-  { href: "ideas", label: "Ideas", icon: Lightbulb },
-  { href: "proof", label: "Proof", icon: ImageIcon },
-  { href: "journey", label: "Journey", icon: Sprout },
-  { href: "settings", label: "Settings", icon: Settings },
-] as const;
-
-export function WorkspaceSidebar({ section, northStar }: { section: WorkspaceSection; northStar?: string }) {
+export function WorkspaceSidebar({ section }: { section: WorkspaceSection | null }) {
+  const { isAuthenticated } = useConvexAuth();
+  const profile = useQuery(api.settings.getProfile, isAuthenticated ? {} : "skip");
   return <aside className="sidebar">
-    <Link href="/today" className="brand"><Leaf aria-hidden="true" />form.</Link>
+    <Link href="/today" className="brand"><Leaf aria-hidden="true" />becoming.</Link>
     <nav aria-label="Main navigation">
-      {navigation.map(item => <Link key={item.href} href={`/${item.href}`} aria-current={section === item.href ? "page" : undefined}>
-        <item.icon size={17} aria-hidden="true" />{item.label}
-      </Link>)}
+      {workspaceSections.map(id => {
+        const { label, icon: Icon } = sectionDetails[id];
+        return <Link key={id} href={`/${id}`} aria-current={section === id ? "page" : undefined}>
+          <Icon size={17} aria-hidden="true" />{label}
+        </Link>;
+      })}
     </nav>
-    {northStar && <div className="north-star">
+    {isAuthenticated && profile !== undefined && <div className="north-star">
       <p className="eyebrow">Your north star</p>
-      <p>{northStar}</p>
-      <span className="muted">One useful session at a time.</span>
+      {profile?.motive ? <><p>{profile.motive}</p><span className="muted">One useful session at a time.</span></> : <Link href="/settings">Set your motive in Settings</Link>}
     </div>}
   </aside>;
 }
