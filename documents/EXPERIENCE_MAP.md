@@ -1,6 +1,6 @@
 # Becoming — product features and experience map
 
-Updated: 24 September 2026. This is the design handoff for the independent Becoming app. It describes the intended experience and labels the implementation status. Use it to redesign the dashboard and flows; the route structure, hierarchy and visual treatment are open to revision.
+Updated: 2 October 2026. This is the design handoff for the independent Becoming app. It describes the intended experience and labels the implementation status. Use it to redesign the dashboard and flows; the route structure, hierarchy and visual treatment are open to revision.
 
 ## The product in one sentence
 
@@ -17,7 +17,7 @@ The core loop is **capture → choose → focus → reflect → collect proof �
 | Planned | Product direction, not a working feature yet. |
 | Optional later | Consider after real usage demonstrates a need. |
 
-At this checkpoint, **Work task list/create/edit, Today recommendation/focus/recap, and Ideas capture/brainstorm/activation are live cloud** for signed-in users. Today uses temporary time/energy selections, while meaningful tasks, ideas and sessions live in Convex. Proof, Journey and Settings are **local prototypes awaiting cloud migration**. Better Auth email/password works for development; verification and recovery email are planned. The old standalone HTML prototype is a design reference, not the live app.
+At this checkpoint, **Work task views (Active/Blocked/Done/Archived) with create/edit/unblock/reopen/archive/restore, Today recommendation/focus/recap, Ideas capture/brainstorm/activation/archive, Journey saved-recap history, Proof evidence gallery, and Settings motive are live cloud** for signed-in users. Today uses temporary time/energy selections, while meaningful tasks, ideas, sessions, evidence links and the motive live in Convex. Journey lane counts cover currently loaded history, not an all-time or weekly commitment. Proof shows private Draft evidence; editing and publishing states are planned. Settings does not yet set weekly targets/timezone or export cloud data. The old browser-local workspace code was removed on 2 October; data already in a browser profile is untouched and not imported. Better Auth email/password works for development; verification and recovery email are planned. The standalone HTML prototype is a design reference, not the live app.
 
 ## Experience principles for your design
 
@@ -38,11 +38,11 @@ The current primary routes are `/today`, `/work`, `/ideas`, `/proof`, `/journey`
 |---|---|---|---|
 | Account / welcome | Can I access my private work? | Sign up/in/out, identity state, first-run setup; later verification/recovery | Development sign-in live cloud; onboarding planned |
 | Today | What should I do now? | Time and energy check-in, one explained recommendation, alternatives, start/resume, focused session, recap | Signed-in cloud flow live; visual direction open |
-| Work | What have I committed to? | Projects, Showcases and Writing lanes; task list/detail; plan/edit; status and project context | Signed-in task list/create/edit live cloud; projects/status flow planned |
-| Ideas | What might I build later? | Fast capture, pasted scheduled assignment, brainstorm, references, deliberate activation | Basic private cloud notebook and linked task activation live; richer states planned |
-| Proof | What can I show? | Artifacts, source work, drafts, ready/published links and portfolio candidates | Basic local evidence links; workflow planned |
-| Journey | Am I becoming the engineer I want to be? | Sessions, weekly commitment, lane balance, streaks, milestones and skills evidenced | Basic local history/counts; cloud and richer progress planned |
-| Settings | What rhythm and data controls suit me? | Motive, timezone, weekly target/pause, preferences, export/restore/account controls | Local motive/export; remaining controls planned |
+| Work | What have I committed to? | Projects, Showcases and Writing lanes; task list/detail; plan/edit; status and project context | Signed-in task views, create/edit, unblock, reopen, archive and restore live cloud; projects planned |
+| Ideas | What might I build later? | Fast capture, pasted scheduled assignment, brainstorm, references, deliberate activation | Private cloud notebook, archive/restore and linked task activation live; richer states planned |
+| Proof | What can I show? | Artifacts, source work, drafts, ready/published links and portfolio candidates | Private paginated cloud evidence gallery live; editing/publishing workflow planned |
+| Journey | Am I becoming the engineer I want to be? | Sessions, weekly commitment, lane balance, streaks, milestones and skills evidenced | Private paginated cloud recap history and loaded-session lane counts live; commitments/streaks planned |
+| Settings | What rhythm and data controls suit me? | Motive, timezone, weekly target/pause, preferences, export/restore/account controls | Private cloud motive and shared sidebar live; rhythm and data controls planned |
 
 ## Suggested dashboard hierarchy: Today
 
@@ -144,13 +144,13 @@ A week is Monday–Sunday in the saved timezone. A target change applies prospec
 | Object | States | Meaningful transition |
 |---|---|---|
 | Idea | Captured, Brainstorming, Active, Archived | `Make active` creates/links a ready task only after review |
-| Task | Ready, In progress, Blocked, Done | Recap and explicit unblock controls change status |
+| Task | Ready, In progress, Blocked, Done, Archived | Recap sets Finished/Progress/Blocked outcomes; Work unblocks (→ Ready), reopens (→ In progress), archives and restores (to the previous status) |
 | Focus session | Active, Cancelled, Finished recap | Cancel awards no progress; recap saves one contribution |
 | Artifact | Draft, Ready to share, Published | Published needs a real URL/date; no external posting occurs |
 | Project | Active, Archived, Done | Archive preserves linked history |
 | Week | In progress, Met target, Missed, Planned pause | Derived from session records and the historical target |
 
-Some state names here express the intended experience rather than current database fields. In particular, the present idea schema does not yet store all four idea states. Convex now stores active sessions and smaller-step snapshots, and the visible Today UI reads them from the signed-in account. Design can anticipate the full experience; code will arrive phase by phase.
+Some state names here express the intended experience rather than current database fields. In particular, the idea schema stores Active (a linked task) and Archived (`archivedAt`) but does not yet distinguish Captured from Brainstorming. Convex now stores active sessions and smaller-step snapshots, and the visible Today UI reads them from the signed-in account. Design can anticipate the full experience; code will arrive phase by phase.
 
 ## Important cross-screen relationships
 
@@ -190,7 +190,7 @@ Today is a decision surface, Work is the commitment and planning surface, Ideas 
 
 ## What engineering will do next
 
-The Phase 2D backend and visible Today client supply server-backed full-task and smaller-step start/cancel/recap. The bounded Phase 3B Ideas flow captures, edits and deliberately activates a private cloud idea into a linked Ready task. The user chose a fresh Convex start and preservation of old browser data; no import or deletion occurred. Migration of Proof, Journey and Settings, richer projects/motivation, production auth and integrations remain later phases in `PLAN.md`.
+The Phase 2D backend and visible Today client supply server-backed full-task and smaller-step start/cancel/recap. The bounded Phase 3B Ideas flow captures, edits and deliberately activates a private cloud idea into a linked Ready task. Phase 2E Journey reads saved recaps, the bounded Phase 4B Proof gallery reads evidence links and source session context, and Phase 2F Settings saves a private motive shown across the sidebar. The user chose a fresh Convex start and preservation of old browser data; no import or deletion occurred. Weekly motivation, richer Proof publishing/projects, cloud data control, production auth and integrations remain later phases in `PLAN.md`.
 
 ## Questions to mark directly in your designs
 

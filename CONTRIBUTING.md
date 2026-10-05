@@ -1,6 +1,6 @@
-# Contributing to Form
+# Contributing to Becoming
 
-Form is being built as a learning project, with an open-source release planned. Start with the README and documents/PLAN.md. Discuss changes that alter product direction before expanding scope.
+Becoming is being built as a learning project, with an open-source release planned. Start with the README and documents/PLAN.md. Discuss changes that alter product direction before expanding scope.
 
 Keep changes small and explain the user-visible problem, the result and how you checked it. Update the learning log when introducing a new architectural concept. Keep design tokens separate from domain rules. Use fictional fixtures and never commit environment files, personal session exports or private screenshots.
 

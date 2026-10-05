@@ -186,3 +186,61 @@ Added `convex/ideas.ts` with an owner-scoped paginated list, capture, notes upda
 **Limits:** the cloud notebook supports one linked task per idea and note edits, but not rich reference fields, multiple steps, reverse activation or archival. Proof/Journey/Settings remain browser-local and cannot display cloud records yet. The old local workspace remains on the browser profile. No production deployment, email flow or ChatGPT integration changed.
 
 **Exercise:** capture a short assignment in Ideas, leave it unactivated, then check Today. Return, press Make active, define the first task, and check Work. Trace `CloudIdeasScreen` → `ideas.activate` → both link fields → `tasks.todayOverview`.
+
+## 29 September 2026 — Phase 2E cloud Journey history foundation
+
+**Objective:** replace Journey's browser-local session history with saved recaps from the signed-in Convex account. This was the one bounded phase agreed after the cloud Ideas handoff. Weekly commitments, streaks, Proof and Settings remain outside it.
+
+Added `journey.listPage`, an authenticated, owner-indexed, newest-first paginated query over saved `sessions`. It returns the focus snapshot, outcome, contribution, next step and date without exposing the internal owner token. The new `CloudJourneyScreen` gates Better Auth and Convex identity, subscribes to 12 recaps at a time, shows lane counts for the loaded records and offers an explicit older-page action. It labels counts as loaded-session counts; it makes no all-time or weekly claim. `WorkspaceScreen` routes Journey to this screen before the browser-local hook. No schema field or dependency changed, and the old browser copy remains untouched.
+
+**Verification:** `convex dev --once` synced the query to the existing development deployment and regenerated API types. The first typecheck before codegen failed because `api.journey` was absent; after sync, TypeScript and ESLint passed. Vitest was blocked by Windows sandbox process spawning, then passed outside the sandbox: 5 files, 19 tests, including anonymous rejection, two-account isolation, cancelled-focus exclusion and pagination. The first production build was similarly blocked by sandbox process spawning; the rerun outside the sandbox passed compilation, TypeScript and route generation. Browser UI and user review remain pending; a production deployment was not performed.
+
+**Learning check:** finish a disposable Today focus, open Journey and verify its contribution and outcome. Sign out and verify that Journey shows the account gate. Then inspect `journey.listPage` to explain why a second account sees no records. See the ignored `documents/phase-learning/phase-2E-cloud-journey.md` for the full file ledger, annotated code and exercises.
+
+## 29 September 2026 — bounded Phase 4B cloud Proof gallery
+
+**Objective:** connect Proof to the existing Convex Draft artifacts created when a Today recap includes an evidence URL. This follows the user's request to connect Proof after the Journey handoff. Editing, Ready/Published transitions, portfolio flags and external posting are outside this slice.
+
+Added `proof.listPage`: a trusted-owner, paginated query over `artifacts.by_owner`. For each evidence item it reads its source session and includes contribution, lane, outcome and date only if that session has the same owner. A malformed cross-owner link returns no source details. Added `CloudProofScreen` with account/loading/empty states and a paginated private evidence gallery. `/proof` now takes this route before the browser-local hook; the old local Proof code is no longer rendered, while its browser data remains untouched. No new schema field or dependency was needed.
+
+**Verification:** `convex dev --once` synced the function and regenerated API types against the development deployment. `npm run check` passed TypeScript, ESLint and 21 tests, including anonymous rejection, two-account isolation, cancelled-focus exclusion, pagination and malformed-link source privacy. The production build and signed-in browser Proof flow are separate checks recorded in the private phase guide; no production deployment or external post occurred.
+
+**Learning check:** finish a disposable Today session with an HTTPS evidence URL, then open Proof. Confirm the link and contribution story match that recap. Sign out and confirm the account gate. Read `proof.listPage` and explain both owner checks: artifact index and linked session.
+
+## 29 September 2026 — Phase 2F cloud Settings motive
+
+**Objective:** replace the last routed browser-local Settings screen with a private account-backed motive. The user asked what remained while this phase was in progress; this entry records the completed bounded result. Weekly target/timezone rules and full cloud export were deliberately excluded.
+
+Made `profiles.timezone` and `weeklyTarget` optional so a new profile can save just the motive without fabricated defaults. Added `settings.getProfile` and `saveMotive`: both derive owner from auth; save trims and validates 1–1000 characters, creates the first profile or patches only its motive. Added a signed-in cloud Settings form and connected the shared sidebar to the same reactive profile query. `WorkspaceScreen` now routes all six sections under `AuthProvider`, with no local-store screen mounted. The old browser copy was not imported or deleted. The routed Settings page no longer offers the old browser-only export as though it backed up the cloud account. No new dependency was added.
+
+**Verification:** `convex dev --once` synced the schema/function and regenerated API types in the development project. `npm run check` passed TypeScript, ESLint and 22 tests; the new profile test covers anonymous rejection, A/B isolation, empty/oversize input, create/update, and preservation of existing timezone/target fields. `npm run build` passed compilation, TypeScript and route generation. Signed-in browser review and production deployment remain pending. See ignored `documents/phase-learning/phase-2F-cloud-settings.md` for the detailed ledger and exercises.
+
+**Learning check:** save a motive in Settings, reload, then open Today and verify the same text in the sidebar. Sign out, sign in with a second account, and verify that account sees its own empty Settings. Trace `CloudSettingsScreen` → `settings.saveMotive` → `profiles.by_owner` → `WorkspaceSidebar`.
+
+## 2 October 2026 — review fixes and task lifecycle
+
+**Objective:** fix the fourteen issues from the 1 October review, as one agreed phase. The user chose the name Becoming and no commits, and included all four optional parts: task lifecycle and archive, removing the old browser-local code, the Next.js patch, and syncing to Convex development.
+
+- **One client.** Each section page used to mount its own `AuthProvider`. Next 16 keeps only the current page mounted (its router bfcache holds one entry unless `cacheComponents` is on), so every sidebar click built a new `ConvexReactClient` and never closed the old one. In the browser, three sections gave three distinct clients. Now one module-level client lives in the root layout. A `(workspace)` route-group layout keeps the sidebar, top bar and a single sign-in gate mounted, so the six copy-pasted gates are gone. URLs are unchanged. `(workspace)/not-found.tsx` shows unknown addresses inside the shell.
+- **Task lifecycle.** `tasks.listPage` takes a view (active/blocked/done/archived). New mutations: `unblock` (Blocked → Ready with a required next step), `reopen` (Done → In progress), and `archive`/`restore` (`archivedFrom` remembers the earlier status; archiving is refused while that task's session is open). Ideas gained archive/restore and a notebook/archived view; activation refuses an archived idea. Sessions now start or record only for Ready or In-progress tasks.
+- **Today.** The ranking moved into a pure, tested `convex/lib/recommend.ts`, with plain-language reasons; a new account no longer sees "0 of your last 0 sessions". The screen keeps the previous answer while new capacity results load, so the controls stay mounted and keep focus. The recap is keyed by session and keeps its text on Back. Finishing a smaller step now requires the parent's real next step instead of saving filler text.
+- **Other fixes.**
+  - The motive can be cleared.
+  - One `readableError` helper reads `ConvexError.data`, and one `Notice` component (with optional Undo) replaces repeated markup.
+  - Work, Brainstorm and Make active forms open inside their card, and focus moves into them.
+  - Account, error, README and mode-note copy is current, and tab titles read "Today · Becoming" and so on.
+  - Next.js went to 16.3.8 (critical GHSA-vcvr-r3jv-pc5j); audit is clean.
+  - `convex/model.ts` was replaced by the generated server helpers.
+  - The unrouted `src/domain/*` and `src/lib/local-store.ts` were deleted (still in Git at 542b6f3), and `weekKey` moved to `convex/lib/time.ts`.
+  - `vitest.config.ts` became `.mts`.
+  - README's UTF-16 last line was replaced; its NUL bytes made Git treat the file as binary.
+
+**Verification:**
+
+- `npm run check` passed: TypeScript, ESLint and 33 tests in 8 files. New tests cover the ranking rules, reasons, views, unblock/reopen, archive/restore with active-session protection, unsafe evidence links, idea archive and motive clearing.
+- `npm run build` passed. `npx convex dev --once` synced the development deployment, and the additive schema was accepted.
+- Browser, signed out: the same Convex client and sidebar across five section navigations; per-section titles; brand fit at 1280px and 1000px; no horizontal scroll at 320px; the in-shell not-found page.
+
+Earlier problems, each fixed: stale generated route types, a nullable test id, one unescaped apostrophe, and a not-found message hidden behind the sign-in gate. Signed-in screens were not clicked through by Claude; that walkthrough is the user's review.
+
+**Learning check:** recap a disposable session as Blocked, open Work → Blocked → Unblock, give a next step, and confirm Today offers it while Journey keeps the Blocked recap. Then read `rankFocuses` and explain why two recent Projects sessions move a Writing task ahead. Detailed ledger and exercises are in the ignored `documents/phase-learning/phase-review-fixes.md`.
