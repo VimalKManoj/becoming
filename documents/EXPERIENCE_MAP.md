@@ -1,6 +1,6 @@
 # Becoming — product features and experience map
 
-Updated: 2 October 2026. This is the design handoff for the independent Becoming app. It describes the intended experience and labels the implementation status. Use it to redesign the dashboard and flows; the route structure, hierarchy and visual treatment are open to revision.
+Updated: 2 October 2026 (product phases). This is the design handoff for the independent Becoming app. It describes the intended experience and labels the implementation status. Use it to redesign the dashboard and flows; the route structure, hierarchy and visual treatment are open to revision.
 
 ## The product in one sentence
 
@@ -17,7 +17,7 @@ The core loop is **capture → choose → focus → reflect → collect proof �
 | Planned | Product direction, not a working feature yet. |
 | Optional later | Consider after real usage demonstrates a need. |
 
-At this checkpoint, **Work task views (Active/Blocked/Done/Archived) with create/edit/unblock/reopen/archive/restore, Today recommendation/focus/recap, Ideas capture/brainstorm/activation/archive, Journey saved-recap history, Proof evidence gallery, and Settings motive are live cloud** for signed-in users. Today uses temporary time/energy selections, while meaningful tasks, ideas, sessions, evidence links and the motive live in Convex. Journey lane counts cover currently loaded history, not an all-time or weekly commitment. Proof shows private Draft evidence; editing and publishing states are planned. Settings does not yet set weekly targets/timezone or export cloud data. The old browser-local workspace code was removed on 2 October; data already in a browser profile is untouched and not imported. Better Auth email/password works for development; verification and recovery email are planned. The standalone HTML prototype is a design reference, not the live app.
+At this checkpoint, **all six screens are live cloud** for signed-in users, and the product phases through 5B are implemented. Your signed-in review is pending. Today has honest empty states, pinning, swap reasons, a week strip and the last saved contribution. Work has task views, prerequisites and Projects with milestones and a case-study draft. Ideas has a structured brainstorm, stages, activation with project and smaller step, and move-back. Proof has the Draft → Ready → Published workflow, candidates and screenshots. Journey has weeks, streaks, reflections, firsts, an activity calendar and insights. Settings has rhythm, lane preference and export, restore and deletion. The old browser-local workspace code was removed on 2 October; data already in a browser profile is untouched and not imported. Email verification and recovery remain planned (production).
 
 ## Experience principles for your design
 
@@ -32,17 +32,17 @@ At this checkpoint, **Work task views (Active/Blocked/Done/Archived) with create
 
 ## Navigation and main screen contract
 
-The current primary routes are `/today`, `/work`, `/ideas`, `/proof`, `/journey`, `/settings`, plus `/account`. Your design may reorganize their layout or names. Preserve the underlying user questions until a better flow is deliberately chosen.
+The current primary routes are `/today`, `/work`, `/ideas`, `/journey` (with Proof as its second tab; `/proof` redirects there) and `/settings`, plus `/account`. Your design may reorganize their layout or names. Preserve the underlying user questions until a better flow is deliberately chosen.
 
 | Area | User question | Main content and actions | Status |
 |---|---|---|---|
-| Account / welcome | Can I access my private work? | Sign up/in/out, identity state, first-run setup; later verification/recovery | Development sign-in live cloud; onboarding planned |
-| Today | What should I do now? | Time and energy check-in, one explained recommendation, alternatives, start/resume, focused session, recap | Signed-in cloud flow live; visual direction open |
-| Work | What have I committed to? | Projects, Showcases and Writing lanes; task list/detail; plan/edit; status and project context | Signed-in task views, create/edit, unblock, reopen, archive and restore live cloud; projects planned |
-| Ideas | What might I build later? | Fast capture, pasted scheduled assignment, brainstorm, references, deliberate activation | Private cloud notebook, archive/restore and linked task activation live; richer states planned |
-| Proof | What can I show? | Artifacts, source work, drafts, ready/published links and portfolio candidates | Private paginated cloud evidence gallery live; editing/publishing workflow planned |
-| Journey | Am I becoming the engineer I want to be? | Sessions, weekly commitment, lane balance, streaks, milestones and skills evidenced | Private paginated cloud recap history and loaded-session lane counts live; commitments/streaks planned |
-| Settings | What rhythm and data controls suit me? | Motive, timezone, weekly target/pause, preferences, export/restore/account controls | Private cloud motive and shared sidebar live; rhythm and data controls planned |
+| Account / welcome | Can I access my private work? | Sign up/in/out, identity state, first-run setup; later verification/recovery | Development sign-in and account deletion live cloud; guided onboarding and email recovery planned |
+| Today | What should I do now? | Time and energy check-in, one explained recommendation, alternatives, start/resume, focused session, recap | Live cloud: honest empty states, last time, pick-up-here, pin, swap reasons, elapsed time, week strip |
+| Work | What have I committed to? | Projects, Showcases and Writing lanes; task list/detail; plan/edit; status and project context | Live cloud: task views and lifecycle, prerequisites, pin for Today, Projects with milestones and case-study draft |
+| Ideas | What might I build later? | Fast capture, pasted scheduled assignment, brainstorm, references, deliberate activation | Live cloud: structured brainstorm, stages, activation with project and smaller step, move back, archive |
+| Proof | What can I show? | Artifacts, source work, drafts, ready/published links and portfolio candidates | Live cloud: status workflow, publication link and date, candidates, notes, skills, screenshots |
+| Journey | Am I becoming the engineer I want to be? | Sessions, weekly commitment, lane balance, streaks, milestones and skills | Live cloud: weeks, streaks, reflections, firsts, lifetime counts, activity calendar, estimates and suggestion insights |
+| Settings | What rhythm and data controls suit me? | Motive, timezone, weekly target/pause, preferences, export/restore/account controls | Live cloud: motive, timezone and target, pauses, lane preference, export, restore, delete data or account |
 
 ## Suggested dashboard hierarchy: Today
 
@@ -143,12 +143,12 @@ A week is Monday–Sunday in the saved timezone. A target change applies prospec
 
 | Object | States | Meaningful transition |
 |---|---|---|
-| Idea | Captured, Brainstorming, Active, Archived | `Make active` creates/links a ready task only after review |
+| Idea | Captured, Brainstorming, Active, Archived | Derived from records. `Make active` creates and links a ready task only after review; `Move back to Ideas` archives open work |
 | Task | Ready, In progress, Blocked, Done, Archived | Recap sets Finished/Progress/Blocked outcomes; Work unblocks (→ Ready), reopens (→ In progress), archives and restores (to the previous status) |
 | Focus session | Active, Cancelled, Finished recap | Cancel awards no progress; recap saves one contribution |
-| Artifact | Draft, Ready to share, Published | Published needs a real URL/date; no external posting occurs |
-| Project | Active, Archived, Done | Archive preserves linked history |
-| Week | In progress, Met target, Missed, Planned pause | Derived from session records and the historical target |
+| Artifact | Draft, Ready to share, Published | Published needs a real URL and date; moving back clears them; nothing is posted externally |
+| Project | Active, Archived, Done | Done and Archived keep their history and stop feeding Today; milestone completion is derived from tasks |
+| Week | In progress, Met target, Missed, Planned pause | Derived in the browser from session records and the target in force; changes apply from next Monday |
 
 Some state names here express the intended experience rather than current database fields. In particular, the idea schema stores Active (a linked task) and Archived (`archivedAt`) but does not yet distinguish Captured from Brainstorming. Convex now stores active sessions and smaller-step snapshots, and the visible Today UI reads them from the signed-in account. Design can anticipate the full experience; code will arrive phase by phase.
 
@@ -190,7 +190,7 @@ Today is a decision surface, Work is the commitment and planning surface, Ideas 
 
 ## What engineering will do next
 
-The Phase 2D backend and visible Today client supply server-backed full-task and smaller-step start/cancel/recap. The bounded Phase 3B Ideas flow captures, edits and deliberately activates a private cloud idea into a linked Ready task. Phase 2E Journey reads saved recaps, the bounded Phase 4B Proof gallery reads evidence links and source session context, and Phase 2F Settings saves a private motive shown across the sidebar. The user chose a fresh Convex start and preservation of old browser data; no import or deletion occurred. Weekly motivation, richer Proof publishing/projects, cloud data control, production auth and integrations remain later phases in `PLAN.md`.
+The product phases through 5B are implemented and waiting for your signed-in walkthrough. Next comes the two-week personal trial (`TRIAL_GUIDE.md`), and after that focused changes based on what you observe. Phase 6 (open-source readiness, production deployment with email verification and recovery, the friend pilot) is deliberately not started.
 
 ## Questions to mark directly in your designs
 

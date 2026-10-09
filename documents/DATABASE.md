@@ -8,14 +8,21 @@ Convex stores documents in tables. Each document has `_id` and `_creationTime`. 
 
 | Table | Important fields | Index and use |
 |---|---|---|
-| profiles | owner, motive; optional timezone and weeklyTarget | by_owner: retrieve private motive; later rhythm settings |
-| projects | owner, title, purpose, status | by_owner: project list |
-| ideas | owner, title, notes, lane, optional taskId, optional archivedAt | by_owner: notebook and archived views |
-| tasks | owner, title, lane, status (Ready / In progress / Blocked / Done / Archived), optional archivedFrom, projectId, ideaId, minutes, energy, doneWhen, nextStep, dependencies, optional smaller action/done condition/minutes | by_owner: Active view; by_owner_status: Today candidates and the Blocked/Done/Archived views |
-| activeSessions | owner, taskId, startedAt, optional chosen-focus snapshots | by_owner: one active session per account |
-| sessions | owner, taskId, key, lane/title/done-condition snapshots, outcome, contribution, nextStep, evidence, endedAt | by_owner_endedAt: history; by_owner_key: idempotency |
-| artifacts | owner, sessionId, title, url, status, portfolioCandidate | by_owner: proof gallery |
-| weeklyCommitments | owner, week, target, paused | by_owner_week: historical weekly target |
+| profiles | owner, motive; optional timezone, weeklyTarget (legacy, unused), pinnedTaskId, laneFocus, onboardedAt, focusQuotes, focusMusic, reminderOn, reminderTime, reminderDays | by_owner: motive, timezone, pin, lane and focus/reminder preferences, onboarding |
+| projects | owner, title, purpose, status (Active / Done / Archived); optional outcome, ideaId (originating idea) | by_owner: options; by_owner_status: project lists |
+| milestones | owner, projectId, title, order; optional doneWhen, completedAt | by_project (projectId, order): ordered milestones; by_owner: firsts, export |
+| ideas | owner, title, notes, lane; optional taskId, archivedAt, brainstorm (problem, audience, hook, smallestBuild, skills, references, openQuestions, decisions) | by_owner: notebook and archived views |
+| tasks | owner, title, lane, status (Ready / In progress / Blocked / Done / Archived), minutes, energy, doneWhen, nextStep, dependencies; optional archivedFrom, archivedWithProject, projectId, milestoneId, ideaId, smaller action/done condition/minutes | by_owner; by_owner_status: Today candidates and Work views (Active is the "In progress"–"Ready" range); by_project; by_milestone |
+| activeSessions | owner, taskId, startedAt; optional chosen-focus snapshots, recommended, swapReason | by_owner: one active session per account |
+| sessions | owner, taskId, key, lane/title/done-condition snapshots, outcome, contribution, nextStep, evidence, endedAt; optional startedAt, plannedMinutes, projectId snapshot, recommended, swapReason | by_owner_endedAt: history and rhythm windows; by_owner_key: idempotency; by_task and by_owner_project: case studies |
+| artifacts | owner, sessionId, title, url, status (Draft / Ready to share / Published), portfolioCandidate; optional notes, skills, publishedUrl, publishedOn, imageId, candidateSince | by_owner; by_owner_status and by_owner_candidate: Proof views; by_session: Journey evidence; by_image: one owner per uploaded file |
+| weeklyCommitments | owner, week (Monday key), target, paused | by_owner_week: target in force from a week; a pause applies to its own week only |
+| reflections | owner, week, learning, intention | by_owner_week: one private reflection per week |
+| weekPlans | owner, week (Monday key), intention, taskIds | by_owner_week: the steps lined up in the weekly review, one plan per week |
+| apiTokens | owner, name, hash (SHA-256), prefix; optional lastUsedAt | by_hash: the MCP endpoint finds the owner; by_owner: Settings → Assistants |
+| inbox | owner, source (token name), proposal (session / task / idea / milestone / nextStep) | by_owner: the Inbox on Today; nothing counts until approved |
+| pushSubscriptions | owner, endpoint, p256dh, auth | by_owner: a person's devices; by_endpoint: one row per browser |
+| taskEvents | owner, taskId, kind, at, source; optional projectId, note | by_task (taskId, at): a task's timeline; by_owner_at: the activity feed and deletion |
 
 Indexes in Convex are not declared uniqueness constraints. Application code uses an indexed read and insert in one mutation when uniqueness is required. The current recap mutation derives its `(owner, key)` retry identity from an owned active-session ID.
 
@@ -39,13 +46,13 @@ The diagram expresses intended logical ownership; it is not database-enforced ca
 
 ## Planned schema additions
 
-- Milestones with explicit task membership and archive semantics.
-- Separate completed-step history or multi-step sequencing beyond the current optional step. Historical sessions preserve completed smaller-step snapshots.
-- Source/reference fields for ideas and flexible skill tags.
-- Artifact asset IDs when image/video upload ships.
-- Effective-date preferences and immutable weekly target snapshots.
+Implemented on 2 October (see "Product phases" below):
+- milestones with explicit task membership and archive semantics;
+- idea brainstorm and reference fields, and skill tags on evidence;
+- artifact image IDs;
+- effective-dated weekly commitments.
 
-These fields are not claimed as implemented by the current schema.
+Still planned: a separate history of completed smaller steps (sessions already snapshot each finished step), and multi-step sequencing beyond one optional smaller step.
 
 ## Query and growth policy
 
@@ -67,7 +74,14 @@ These fields are not claimed as implemented by the current schema.
 
 Store timestamps in UTC milliseconds. Derive Monday-start weeks using each user's saved timezone. Snapshot weekly targets so later edits do not rewrite streak history. The local baseline shows week counts only; it does not award historical streaks.
 
-Prefer archive states for projects and ideas with history. Do not delete a parent while leaving dangling child references. Add authenticated account export/deletion explicitly before public release.
+Prefer archive states for projects and ideas with history. Do not delete a parent while leaving dangling child references.
+
+**Archiving a project** (`projects.setStatus`, from 9 October 2026) also archives its open tasks (Ready, In progress, Blocked) through the same helper as a task's own Archive (`lib/taskArchive.ts`): `archivedFrom` keeps each status, and `tasks.archivedWithProject` marks them. Archived prerequisites stop blocking, so work elsewhere that waited on them can reach Today. Leaving Archived (Make active, or Done) restores exactly the marked tasks; tasks archived on their own before stay archived. Done tasks are untouched. Backups carry the marker.
+
+**Deleting a project** (`projects.remove`, 9 October 2026; `projects.deletePreview` counts it first):
+- **Deleted:** the project, its milestones, phases and docs, its tasks, their `taskEvents`, their sessions (a session's `taskId` is required), and those sessions' artifacts with their screenshots.
+- **Unlinked:** prerequisites on the deleted tasks, other tasks' links to the deleted milestones, the `projectId` snapshot on sessions whose task moved to another project, `ideas.taskId` (the idea goes back to Brainstorming and keeps its research), week-plan steps, the pin, and Inbox proposals that name a deleted record.
+- **Refused** while a focus session runs on one of its tasks. It all happens in one transaction. Add authenticated account export/deletion explicitly before public release.
 
 Local demo IDs are strings, not Convex IDs. The user chose to begin fresh in Convex and preserve the old browser copy. No automatic migration is planned. If an import is requested later, it must create owner-scoped records, map old IDs to new Convex IDs, rewrite references and deduplicate batches; raw browser snapshots must not be sent directly to database inserts.
 
@@ -117,7 +131,126 @@ The schema change is additive, so existing documents stay valid and no migration
 How the views and rules read this data:
 
 - **Views.** `tasks.listPage(view)` reads Active through `by_owner` with a status filter (Ready or In progress), and the other views through `by_owner_status`. `ideas.listPage(view)` filters on whether `archivedAt` is missing; Convex filter equality accepts `undefined` for a missing field.
-- **Sessions.** `startSession` and `recordSession` accept only Ready or In-progress tasks. An archived prerequisite still blocks its dependents, because a prerequisite must be Done.
+- **Sessions.** `startSession` and `recordSession` accept only Ready or In-progress tasks. A prerequisite must be Done or archived (set aside) before its dependents can start; restoring an archived prerequisite makes it block again.
 - **Motive.** An empty motive now clears an existing profile's motive. A new account that saves nothing gets no profile.
 
 Tests cover each transition, views, ownership rejection, idempotency, active-session protection, and exclusion from Today.
+
+## Product phases — 2 October 2026
+
+Every change below is additive: new tables, new optional fields and new indexes. Existing documents stay valid, so no migration is needed. Run `npm run backend` to push the schema to your development deployment.
+
+**Weekly rhythm (4A).** A `weeklyCommitments` document means "from this week on, the target is N". The target in force for a week is the latest commitment at or before it, while `paused` applies only to that document's own week.
+- The first target applies to the current week.
+- Later changes create a document for next week, so a finished week keeps its target and its result.
+- `rhythm.setRhythm` and `setPause` accept only the person's current week: the key must match the week in their timezone (the one being saved, or the saved one for pauses), allowing 5 minutes of clock difference. If the server runtime doesn't know that timezone, the fallback is a week that is current somewhere on Earth (Monday up to 14 hours ahead of the server clock, or up to 7 days 12 hours behind). A finished week's target can't be edited. Results are derived in the saved timezone, so changing the timezone can regroup sessions near midnight into a neighbouring day or week.
+- `reflections` holds one learning and one intention per week; empty text deletes the reflection.
+- Week results and streaks aren't stored. The browser derives them from commitments and session end times in the person's timezone (see SYSTEM_DESIGN).
+
+**Proof workflow (4B).** Artifacts gain `notes`, `skills`, `publishedUrl` and `publishedOn` (a date key), `imageId` (Convex file storage) and `candidateSince`.
+- Published requires a valid http(s) link and a date that isn't in the future. Moving back to Draft or Ready clears both, so the record never claims a publication that isn't true.
+- An upload is accepted only if its stored metadata says PNG, JPEG, WebP or GIF of up to 5 MB, and no other artifact already uses it (`by_image`). Convex measures the size itself; the content type is the one the browser declared, so this refuses ordinary mistakes but doesn't prove the bytes are an image. Screenshot URLs are unguessable, but anyone holding one can open it.
+- A rejected file is deleted and the reason *returned*, because throwing would roll the deletion back.
+- `proof.addToSession` creates a Draft for an owned past session.
+
+**Projects and milestones (3A).** Milestones are ordered per project. `completedAt` is maintained by `lib/projects.refreshMilestone` after every change to a linked task: create, edit, recap, reopen, archive, restore and idea deactivation. A milestone is complete when it has at least one task that isn't archived and all of them are Done.
+- Task links are checked by `lib/projects.taskLinks`. A milestone implies its project, and new links need an Active project; an existing link to a finished project is kept on edit.
+- Only tasks with no project, or an Active one, reach Today or can start a session.
+- Sessions snapshot the task's `projectId`, so a case study keeps its history if a task later moves.
+- `projects.caseStudy` reads snapshot sessions plus older sessions found through `by_task`.
+
+**Ideas and prerequisites (3B).**
+- Ideas gain an optional `brainstorm` object; its references must be http(s) links, and there are at most 10 skills and 10 references.
+- The stage is derived, not stored: Archived, then Active (linked task), then Brainstorming (any structured field), then Captured.
+- `ideas.activate` can add a smaller step and link a project or milestone, or start a new project (`projects.ideaId`).
+- `ideas.deactivate` archives the linked task (unless it's Done), clears the pin if it pointed at that task, and unlinks it.
+- Prerequisites are checked by `lib/taskRules.dependencyValues`: owned, at most 10, never the task itself, and never a loop (found by a walk through what the chosen tasks wait on). A newly added prerequisite can't be archived; one the task already had may stay after it is archived.
+- A prerequisite stops holding a task back when it is Done **or Archived** (`lib/taskRules.prerequisiteCleared`), so a task is never hidden from Today behind work that was set aside. Restoring the prerequisite makes it block again.
+- `tasks.listPage` returns each task's prerequisites with title and status. `tasks.prerequisiteOptions({ taskId? })` returns the newest 300 tasks that aren't archived plus, when editing, that task's own prerequisites, so a form never drops one it didn't show.
+
+**Recommendations (3C).**
+- `profiles.pinnedTaskId` is set by `tasks.pin` and cleared automatically when that task finishes or is archived.
+- `profiles.laneFocus` favours one lane by counting it one session fewer.
+- `activeSessions`/`sessions` record `recommended` and an optional `swapReason`, a fixed list of five.
+- Today reads at most the 200 oldest Ready and 200 oldest In-progress tasks, always plus the pinned one.
+
+**Delight (4C).** `journey.summary` derives lifetime counts and "firsts" from records each time it's read: first session, first showcase and writing sessions, first completed milestone, first portfolio candidate (from `candidateSince`) and first published piece. Nothing is stored as an award, so nothing can be granted twice, and a first disappears if its record does.
+
+**Data control (5A).**
+- `data.exportAll` returns every owned record (except active sessions and image files) with original IDs, so links can be rebuilt.
+- `data.importBackup` checks every field and refuses another format, another version, more than 4,000 records, or a workspace that isn't empty. It runs as one transaction, so a backup with a missing reference changes nothing.
+- `data.deleteBatch` deletes up to 400 owned documents per call, artifacts first with their image files and profiles last. The browser repeats it until `done`.
+- Account deletion then removes the Better Auth user (see AUTH_SETUP).
+
+## Ember Glass redesign — 2 October 2026
+
+The redesign needs three small, additive backend changes. Existing documents stay valid. Run `npm run backend` to push them and regenerate `convex/_generated`.
+
+- **`sessions.skills`** (optional string array) holds the skills practised, chosen in the recap. `tasks.recordSession({ …, skills? })` takes up to 5 skills of up to 40 characters each, compared case-insensitively (the first spelling is kept). They travel in export and restore.
+- **`journey.bloom({ since, until? })`** returns the Mind Bloom: up to eight skills from sessions saved in the window, through `by_owner_endedAt` (newest 1,000). A session counts once per skill, whether the skill was tagged on the session or on any of its evidence. Each petal takes the lane most of its sessions were in, and the newest session's lane wins a tie. It also returns `sessions` and `tagged`. Pure logic and tests: `lib/bloom.ts`.
+- **`journey.skillSuggestions`** returns your 12 most-used skills, offered as chips in the recap.
+- **`proof.pipeline`** returns the Draft, Ready to share and Published counts (each capped at 1,000) and the newest piece that isn't published yet, for Today's proof card.
+- **Read additions:**
+  - `tasks.todayOverview` choices carry `projectId` and `energy`.
+  - `journey.listPage` returns `skills` on each session and on its artifacts.
+  - `ideas.listPage` returns `task: { title, status } | null` for an active idea's linked task.
+
+## Ritual redesign — 6 October 2026
+
+The Ritual design (documents/DESIGN_SYSTEM.md) needs these additive changes. Existing documents stay valid. Run `npm run backend` to push them to the development deployment and regenerate `convex/_generated`.
+
+- **Schema:** `profiles` gains optional `onboardedAt`, `focusQuotes`, `focusMusic`, `reminderOn`, `reminderTime` and `reminderDays`. The new `weekPlans` table holds each week's intention and lined-up task ids.
+- **Mind Bloom:** `lib/bloom.ts` now has eight fixed skills (Frontend, Interaction, Motion, Visual, Writing, Research, Systems, Shipping), each tied to a lane and full at 12 sessions. `journey.skillSuggestions` is gone; the recap offers the eight skills.
+- **Today:** `tasks.todayOverview({ minutes, energy, lane?, projectId?, taskId?, week? })` (ids arrive as strings from links; one that isn't a valid id matches nothing) scopes the choices to an intent, and returns `alternatives` (the best fit from each other lane, at most two), `spark` (newest unlinked idea title), `intention` (this week's plan), `readyToShare` and `linedUpCount`. Tasks lined up in this week's plan rank right after the pinned task (`lib/recommend.ts`). `lastSession` carries `startedAt` and `taskId`.
+- **Settings and onboarding:** `settings.getProfile` returns the preferences with defaults, and `needsOnboarding: true` for a brand-new account. New `settings.savePreferences`, `settings.completeOnboarding` and `settings.pinnedTask`.
+- **Weekly review:** `rhythm.saveWeekPlan({ currentWeek, week, intention, taskIds })` saves the plan for this week or next (owned, open tasks only). `rhythm.overview` returns the latest four `plans` and each session's `startedAt`, `lane` and `skills`.
+- **Journey:** `journey.activity({ since })` returns session end times (newest 5,000) for the contributions graph.
+- **Projects:** `projects.list` returns `nextTask`, `lane` and `lastWorkedAt`; `projects.get` returns the same. `projects.createWithFirstStep` creates a project and its first task together.
+- **Single reads for deep links:** `tasks.get`, `ideas.get` (for `/ideas?idea=`) and `proof.get` (for `/journey?tab=proof&publish=`) return one owned item in the list shape, or null. `ideas.activate` takes an optional `lane`.
+- **Data:** export, restore and delete include `weekPlans` and the new profile fields. Restore maps plan task ids to the new task ids and refuses duplicate plan weeks.
+
+## Assistants and the Inbox — 9 October 2026
+
+See [ASSISTANTS.md](ASSISTANTS.md).
+- **New tables:** `apiTokens` and `inbox`. `sessions.source` (optional) records where an approved session came from.
+- **Reads for one owner, shared with the app:** `tasks.todayFor`, `projects.projectsFor` and `projects.projectFor`.
+- **Writes for one owner, shared with the app:** `tasks.createTaskFor`, `ideas.createIdeaFor`, `projects.addMilestoneFor` and `tasks.saveLoggedSession` (a session logged after the fact, with the recap's rules).
+- **Data:** export and restore carry `sessions.source`. `deleteBatch` also removes `inbox` and `apiTokens`. Tokens and pending proposals aren't exported.
+
+## Evening reminders — 9 October 2026
+
+- **profiles** gains `reminderEmail` (default on) and `lastReminderDay` (the local day the last reminder went out).
+- **New table** `pushSubscriptions`.
+- **Functions:**
+  - `push.config`, `push.subscribe`, `push.unsubscribe` and `push.test`
+  - `reminders.due` (internal: who is due now) and `reminders.sendDue` (internal action, run every 15 minutes by `crons.ts`)
+- **Data:** backups carry `reminderEmail`; "Delete workspace data" removes devices too. See AUTH_SETUP.md for the keys.
+
+## Moving tasks freely — Phase 1, 9 October 2026
+
+See [PLAN-tasks-and-focus.md](PLAN-tasks-and-focus.md).
+- **tasks** gains `startedAt`, `completedAt` and `skills`.
+- **`tasks.setStatus({ taskId, status, note?, skills? })`** moves a task with no timer. Ready, In progress, Blocked and Done are allowed, with these rules:
+  - **Blocked** needs a reason, which becomes the next step.
+  - **Leaving Blocked or Done** needs a next step.
+  - **Done** records `completedAt`, merges up to 5 skills, clears the pin and refreshes the milestone.
+  - A task with a running focus session is refused, and so is an archived one.
+- **`taskEvents`** is written by create, setStatus, unblock, reopen, archive, restore, the focus recap ("focused" plus the status it caused) and approved logged work ("logged").
+- **The bloom** also counts a task finished in the window, once per skill, unless one of its sessions in the window already counted that skill. It returns `finished`.
+- **Data:** backups carry the new task fields. Events aren't exported yet (Phase 2). "Delete workspace data" removes them.
+
+## The project constellation — 9 October 2026
+
+See [PLAN-project-constellation.md](PLAN-project-constellation.md) and, for the assistant side, [ASSISTANTS.md](ASSISTANTS.md).
+- **New tables:**
+  - `phases`: a project's plan, phase by phase (`projectId`, `order`, `name`, optional goal, next step and done-when).
+  - `projectDocs`: the documents a plan stands on. A code (1 to 4 letters or digits, unique in the project), title, summary, sections, a link (an https address or a repo path), the phases it feeds (`phaseIds`), next edit, done-when, `writtenAt` (absent while only planned), `updatedAt` and `source`.
+  - `research`: an idea's research threads, each with its sources (`kind` read, interview, tried or brief, and `by`: "app" or the assistant's token name).
+  - `reports`: one per idea, with findings and an optional `decision` (verdict, rule, kept, dropped).
+- **Changed:** `milestones.phaseId` (optional; none means outside any phase) and `tasks.plannedSessions` (optional, 1 to 100).
+- **Reads:** `constellation.get({ projectId })` derives the whole map from records: phase numbers from order ("00", "01"), milestone codes from order within the phase ("0A"), task codes ("0A·1"), % and state per phase, loose milestones and tasks, each doc's feeds and the tasks it informs, genesis through `projects.ideaId`, and activity from `taskEvents`. Nothing is stored twice.
+- **Rules:** every helper checks the owner. A milestone's phase and a doc's phases must be in the same project. Removing a phase keeps its milestones (they move outside any phase) and removes it from every doc's feeds. A project has at most 40 phases and 40 docs. A doc link is `http(s)://…` or a repo path; any other scheme is refused.
+- **Data:**
+  - Export carries all four tables plus `milestones.phaseId` and `tasks.plannedSessions`. The new arrays are optional, so older backups still restore.
+  - Restore maps project, phase and idea ids. It refuses a milestone or doc linked to another project's phase, a missing phase or idea, repeated doc codes in one project, two reports for one idea, more than 40 phases or docs in a project, and unsafe links. The summary counts `phases`, `docs`, `research` and `reports`.
+  - "Delete workspace data" removes all four tables.

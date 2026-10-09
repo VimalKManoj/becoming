@@ -246,3 +246,170 @@ Earlier problems, each fixed: stale generated route types, a nullable test id, o
 **Learning check:** recap a disposable session as Blocked, open Work → Blocked → Unblock, give a next step, and confirm Today offers it while Journey keeps the Blocked recap. Then read `rankFocuses` and explain why two recent Projects sessions move a Writing task ahead. Detailed ledger and exercises are in the ignored `documents/phase-learning/phase-review-fixes.md`.
 
 **Commits:** after reviewing the proposed grouping, the user had the work committed in six groups and pushed on 2 October. They are `e0a16c5` (Next.js 16.3.8), `0a85850` (Vitest config), `b1368d8` (backend), `bbd3ce8` (frontend), `88eacb0` (local code removal) and `287e948` (docs). Nothing is deployed.
+
+## 2 October 2026 — product phases: gaps, quick wins, 4A, 4B, 3A, 3B, 3C, 4C, 5A, 5B
+
+**Objective:** the user asked for everything before friends and production, without commits: the small gaps first, then the recommended order (4A, 4B, 3A, 3B, 3C, 4C), the quick wins, and the data and interface phases (5A, 5B). They will test signed in once everything is done. 5C (the two-week trial) is the user's to run and now has a guide. Phase 6 (open source, production, friend pilot) is deliberately not started. No dependency was added; everything uses Convex built-ins and browser APIs. Each chapter in the ignored `documents/phase-learning/` folder has the detailed ledger.
+
+**Small gaps and quick wins.**
+- `tasks.todayOverview` now names its state (first-run, blocked-only, waiting, nothing-open, nothing-fits, ready), so each empty Today is honest and points to the right next action.
+- The Active Work view uses one index range (status "In progress" through "Ready", ascending), so finished work isn't scanned and in-progress tasks come first.
+- Today shows the last saved contribution and its next step, a "Pick up here" for started work, elapsed time during a session, and remembers tonight's time and energy for the tab (sessionStorage only).
+- Sessions store `plannedMinutes`, so Journey compares planned with actual time. Journey also shows each session's evidence.
+
+**4A weekly rhythm.** Weeks run Monday to Sunday in the saved timezone.
+- The first target applies to the current week. Later changes start next Monday, so finished weeks keep their target and result.
+- Pauses cover this week or next; a paused week neither adds to nor breaks a streak.
+- The browser derives week results and streaks from commitments and session end times, using tested pure functions (`lib/time.ts`, `lib/rhythm.ts`) that cover daylight-saving weeks in New York and Auckland. That's because a cached Convex query doesn't move with the clock, and the runtime's timezone data couldn't be verified.
+- Today has a week strip; Journey has weeks, streaks and private weekly reflections.
+
+**4B Proof workflow.**
+- Views: All, Drafts, Ready to share, Published, Portfolio candidates. Details are editable: title, link, notes, skills.
+- Published requires a link and a date that isn't in the future, and moving back clears both.
+- Screenshots go to Convex storage with server-side type and size checks and one-owner-per-file. A rejected file is deleted and its reason returned, not thrown, because throwing rolled the deletion back; a test caught this.
+- Journey can add evidence to a past session.
+
+**3A projects and milestones.**
+- Work has a Projects view with project status, ordered milestones and tasks grouped by milestone.
+- Milestone completion is derived from linked tasks, and `completedAt` is refreshed after every task change.
+- Only Active projects feed Today or can start a session, and sessions snapshot their project.
+- A case-study draft (Markdown, copy or download) is assembled from the project's sessions, milestones, evidence and open steps (`lib/caseStudy.ts`).
+
+**3B ideas and prerequisites.**
+- Ideas have structured brainstorm fields and a derived stage. Activation can add a smaller step and link a project or milestone, or start a new project from the idea. "Move back to Ideas" archives open work.
+- Tasks have editable prerequisites: owned, at most 10, and no self-links or loops (walked on the server). (Later the same day: archived work stops blocking and may stay linked; see the hardening pass.)
+
+**3C recommendations.**
+- Pins come first whenever they fit, and are explained when they don't. A pin clears itself when its task finishes or is archived.
+- Choosing an alternative records an optional swap reason, and every session records whether it followed the top suggestion. Journey summarises both.
+- A lane can be favoured slightly; it counts as one session fewer.
+- Today reads a bounded candidate pool: the 200 oldest of each open status, plus the pin.
+
+**4C delight.**
+- Journey shows lifetime counts and a "firsts" timeline derived from records each time it's read (nothing stored as an award).
+- A 12-week activity calendar is an accessible table with a text label on every day.
+- Saving a session shows a short check-mark celebration, disabled under reduced motion.
+
+**5A data control.**
+- JSON export.
+- Restore into an empty workspace only, as one transaction, rebuilding every link from original IDs and refusing other formats, other versions, broken references, unsafe links and duplicates.
+- Batched deletion, including screenshots.
+- Account deletion that confirms the password, deletes data, then deletes the Better Auth user (`user.deleteUser.enabled`).
+
+**5B interface quality.**
+- Measured WCAG contrast. Light muted text moved to `#5b6b5f` (4.73:1 on the softest background), and a new `--field-line` (#768478 light, #809181 dark) gives fields, chips and secondary buttons a 3:1 boundary on every background in both themes.
+- Phone navigation is one scrolling row, 124px instead of 186px, and keeps the current section in view.
+- An offline notice appears when the Convex connection drops.
+
+**Verification:**
+- `npm run check`: TypeScript, ESLint and 105 tests in 20 files (77 before the review passes below).
+- `npm run build`: passes, routes unchanged.
+- Browser checks while signed out: every route renders with its title and no runtime errors; at 320px there's no sideways scroll and the current section stays in view.
+
+**Review pass (same day).** An independent read-through of the uncommitted changes found eight issues; seven are fixed and one is documented.
+- Restore now applies the forms' own rules (smaller-step titles up to 1000 characters, brainstorm links, publication dates, lengths) and refuses prerequisite loops, self-links, more than 10 prerequisites and duplicate weeks. Text that is too long is refused, not cut short.
+- Today forgets a chosen alternative and its swap reason after a session starts, or when that choice is no longer offered or has become the recommendation, so the "followed the suggestion" record stays honest.
+- The task form's milestone select is controlled, so a milestone prefilled from a project survives the project list loading late. Saving waits for that list when the task has a project.
+- Moving an idea back clears a pin on its task, and Work shows "Pinned for Today" only on Ready or In-progress tasks.
+- The current-week window is now exact for UTC−12 to UTC+14: 14 hours ahead to 7 days 12 hours behind (it previously let the whole previous week through). A test pins the clock to fixed instants.
+- Downloads release their temporary object URL a second after starting, not immediately.
+**Second review pass (while writing the chapters).** Reading every line for the notebook found more small gaps; these are fixed:
+- Evidence titles are limited to 1000 characters everywhere (the Proof edit form, Journey's add-evidence field and `addToSession` still used 160).
+- `prerequisiteOptions` now includes every task that is currently named as a prerequisite, even an old or archived one, so editing a task can't drop one silently. (Superseded by the hardening pass: Work now reads prerequisites from `listPage`, and the form asks for its own task’s.)
+- Restore also refuses a milestone from another project, an idea pointing at another idea's task and a future publication date, and checks each milestone's completion date against its restored tasks (keeping a true date). Settings and restore share one timezone-name rule (`lib/validate.timezoneValue`). The restore prompt says that profile settings will be replaced.
+- `--field-line` reaches 3:1 on the soft background too (the swap chips, Cancel session and milestone buttons sit on it).
+- Today now clears a stale choice outright, so an old swap reason can't reappear, and the save check mark no longer lingers on later messages.
+- Copy: "Move back to Ideas" no longer claims a finished task was archived; Journey no longer says sessions "only ever add up" (deleting data removes them); the trial guide says which panels count only the loaded sessions.
+- Comments and docs now say plainly that the image type is the browser's declared type.
+
+**Hardening pass (the owner asked for the best fix of each item).**
+- *Finished weeks:* the server now checks the week key against the person's own timezone (`weekKey` with 5 minutes of clock tolerance) whenever its runtime knows that timezone, and keeps the "current somewhere on Earth" window only as a fallback. The window alone still let, say, Kolkata edit last week early on Monday. Three tests cover the exact check, the fallback edges and both mutations.
+- *Prerequisites:* an archived prerequisite no longer blocks (Done or Archived clears it; restoring it blocks again). Before, a task waiting on set-aside work silently vanished from Today. Existing archived links are kept on edit; new ones are refused by name. Work reads prerequisites from `listPage` itself, and the edit form asks for its own task's prerequisites, so neither depends on a capped list.
+- *Today's swap reason:* the choice and its reason are one state, resolved by a pure, tested helper (`src/lib/today-choice.ts`).
+- *Milestone links:* the task form submits project and milestone from state through hidden fields, so a loading list or a disabled select can't drop them, and Save no longer waits. `taskValues` has its own tests.
+- *Contrast:* `src/lib/contrast.test.ts` reads the colour tokens from `globals.css` and fails if text drops below 4.5:1 or borders below 3:1 on any background, in either theme.
+- *Restore* and *restored completion dates* were already the best fit; they gained no code, only the consistent archived-prerequisite rule.
+
+Documented, not changed: a case study also includes sessions saved before a task joined the project (they have no project snapshot); dates in Journey entries and the case-study header use the browser's timezone, while weeks use the saved one; account deletion and the offline notice have no automated test.
+
+- Documented, not changed: if `attachImage` fails for a reason other than a rejected file (for example the connection drops), the uploaded file stays in storage without a record. It is invisible and harmless; a periodic clean-up could remove it later.
+
+Earlier problems, each fixed: an unescaped apostrophe (lint), a test-helper type, and the upload rollback above. One documentation script deleted part of DATABASE.md because of mixed line endings; it was restored from HEAD and re-applied. Signed-in screens were not clicked through by Claude: signing in would send a password to the cloud deployment. The development deployment was **not** synced this time. Run `npm run backend` before testing.
+
+**Learning check:**
+1. Set a weekly target, save two sessions, then change the target. Explain why this week's result doesn't change.
+2. Create a project with one milestone and two tasks, finish both, and read `refreshMilestone` to explain when `completedAt` is set and cleared.
+3. Export a backup and read `importBackup` to explain why restoring twice can't duplicate anything.
+
+## Ember Glass redesign — 2 October 2026
+
+The owner designed the app in claude.ai/design ("Becoming App Design"). The Claude Design connector failed to connect (HTTP 403), so the design was exported as a bundled HTML file and unpacked locally (assets base64 and gzip). It covers Today's screens (1a–1e) and a component library (1f–1k). Every other screen was designed in the same system. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+
+**What changed**
+- **Foundation:**
+  - New tokens (dark Ember Glass), with fonts self-hosted from the design export.
+  - Shell: icon rail, phone pill, and a header with quick capture.
+  - Primitives in `ui.tsx` and `visuals.tsx` (Mind Bloom, capacity dial, focus gauge, week dots).
+- **Today** was rebuilt to the design: dial, focus card, alternatives, Rest tonight, focus orb, outcome tiles, skills in the recap, a save-failed state, and the three-column desktop dashboard.
+- **Work, Ideas, Proof, Journey, Settings and Account** were rebuilt in the same system by five parallel builders, each owning its own files and stylesheet. Every feature was kept.
+- **Additions that make the flow useful:**
+  - links between screens (`?new=task`, `?view=`, `?project=`)
+  - the bloom by month (`until`)
+  - skills in Journey history
+  - an active idea names its task
+- **Backend (additive):** `sessions.skills`, `journey.bloom`, `journey.skillSuggestions`, `proof.pipeline`, and the read additions listed in DATABASE.md.
+
+**Review pass.** An independent read-through found 10 issues; all were fixed except one item kept by choice.
+- The timer and the recap rendered together. A display rule beat `hidden`; this also existed before the redesign. A global `[hidden]` rule fixes it.
+- Proof ignored `?view=` on client-side links. It now uses `useSearchParams`.
+- Today and Journey styles collided. Today's are now scoped.
+- Focus was lost after Start and after quick capture.
+- A Ready task's next step was hidden.
+- Minutes allowed only steps of 5.
+- "+ Task" appeared on finished projects.
+- Several ARIA attributes were wrong.
+- Work forgot its task view after visiting Projects.
+- Kept by choice: the first-run EXAMPLE chip. It is in the owner's design and is labelled EXAMPLE.
+
+**Verification**
+- `npm run check`: TypeScript, ESLint and 113 tests in 23 files. `npm run build` passes.
+- The preview pages were checked in the browser: desktop at 1440px, and every page at 360px with no horizontal scroll.
+- Not checked by Claude: signed-in screens (signing in would send a password to the cloud deployment).
+- The development deployment was **not** synced. Run `npm run backend` before testing; sessions now accept `skills`.
+
+**Learning check**
+1. Tag two skills in a recap, then tag one of them again on that session's evidence in Proof. Read `lib/bloom.ts` and explain why the petal grows by one, not two.
+2. Open `/design-preview` and `/design-preview/journey` at phone width. Find where the shell switches from rail to pill (`globals.css`, 899px).
+3. Open Work at `?view=projects&tasks=blocked`, return to Tasks, and read `workRoute` to explain why Blocked is still selected.
+
+**Loading skeletons (6 October 2026).** Every text loading state is now a skeleton in the design system (`src/components/skeleton.tsx`). Each one mirrors its screen’s layout and breathes softly, its pieces slightly out of step; it holds still with reduced motion. Each still announces its loading text to screen readers. The workspace sign-in check shows the skeleton of the section being opened. Dev-only preview: `/design-preview/skeletons`.
+
+**Ritual redesign (6 October 2026).** The owner drew the whole evening as one flow (*Becoming Ritual*, direction 2a), and the app now follows it.
+- **Today** asks one question, "What's on your mind tonight?", and each answer narrows the suggestion: Build → which project → time and energy → one focus, with up to two alternatives from other lanes. Then the focus overlay, the recap, the bloom growing, and "Tonight is done."
+- **New around it:** five-step onboarding, a quick-capture sheet (idea, task, project, pasted assignment), a new-project sheet, a gap card after three days away, and a Sunday card for the weekly review.
+- **Screens rebuilt:** Work (lanes, project page, a task sheet holding every lifecycle action), Ideas (brainstorm, Make active), Journey (contributions graph, bloom, week; Proof as a tab with a three-step publish flow; the three-step weekly review that lines up next week's steps) and Settings (side nav, reminder and focus preferences).
+- **Backend:** additive only — a `weekPlans` table, profile preferences, scoped `todayOverview`, and a few single-item reads for deep links (DATABASE.md).
+- **Kept but moved:** everything the prototype didn't draw (prerequisites, smaller steps, pinning, archive, milestones, case study, full history, insights, data controls) is still reachable from sheets, footers and "All sessions".
+- **Honest gaps:** reminders are saved but not sent; where a post went (X, LinkedIn…) isn't stored; Done and Blocked still come only from a recap.
+
+**Verification**
+- `npm run check`: TypeScript, ESLint and 126 tests in 24 files. `npm run build` passes.
+- Browser: signed-out shell at desktop and phone width, no console errors. Not checked by Claude: signed-in screens (signing in would send a password to the cloud deployment).
+- Run `npm run backend` before testing: the schema changed.
+
+**Learning check**
+1. On Today, pick Build, then a project. Read `scope` in `cloud-today-screen.tsx` and `inScope` in `convex/tasks.ts`: what does the server receive, and why are the alternatives drawn from the whole pool?
+2. Save a weekly plan, then read `lib/recommend.ts`: where does a lined-up task rank against a pinned one?
+3. Open `/journey?tab=proof&publish=<id>` with an id from another account. Read `proof.get` and explain why the page says "This evidence isn't here." instead of crashing.
+
+**Review fixes (6 October 2026).** A read-through found no ownership gaps but 16 issues; the important ones are fixed. Overlays and sheets now behave as real dialogs (focus in, background inert, Escape, focus back); links with a bad id show an honest empty state instead of crashing; the recap keeps your draft; onboarding never saves its example. `npm run check` (126 tests) and the build pass.
+
+**Email verification, password reset and Google (9 October 2026).** Better Auth already had all three; the app only needed to send email and show the screens. Email goes through Resend's HTTP API from Convex (no package), and locally the link is printed in the backend terminal instead. Google is switched on by two Convex environment variables, so the button never appears half-configured. Learning check: read `sendEmail` in `convex/lib/email.ts` and explain why it logs the link on localhost but throws everywhere else.
+
+**Assistants and the Inbox (9 October 2026).** Becoming now speaks MCP, so Claude Code can ask what to work on and log what you did. The design choice that matters: assistants only *propose*. Everything waits in an Inbox on Today and goes through the same rules as the app when you approve it, so the Journey stays yours. Learning check: read `runPropose` and `approve` in `convex/mcp.ts` and `convex/inbox.ts`, and explain why a proposal is validated twice.
+
+**Reminders that send (9 October 2026).** A cron checks every 15 minutes who has just reached their reminder time in their own timezone. The trick that kept this free of dependencies: Web Push with an *empty* message only needs a signed request (a small ES256 token made with Web Crypto), not encryption. The phone shows text that lives in the service worker. Learning check: read `vapidHeader` in `convex/lib/webpush.ts` and the test that verifies its signature with Node's crypto. What would change if the notification had to carry tonight's task title?
+
+**Tasks move freely (9 October 2026).** A task no longer needs the focus timer to change: `tasks.setStatus` starts, blocks or finishes it from anywhere, and every move lands in a new `taskEvents` history (the base for timelines and the activity feed in Phase 2). Learning check: in `lib/bloom.ts`, why does a finished task skip the skills its own sessions already counted?
+
+**The project constellation (9 October 2026).** Work → Projects → Visual shows a project as a map, built to match the owner's design: where it came from (idea, research, report, decision), the docs it stands on, and one cell per task in each phase, with replay from real dates. Two choices hold it together. First, nothing on the map is stored as a number: `constellation.get` derives every %, code and edge from the records on each read. Second, Claude keeps it current only through the Inbox, and `import_plan` sends a whole plan as one item that only adds what's missing. Learning check: read `stateAt` in `src/components/constellation/model.ts` and the `timeline` line in `convex/constellation.ts`, and explain why an imported task finished on 15 September shows as ready when replay is set to 14 September.

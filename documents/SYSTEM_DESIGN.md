@@ -125,7 +125,7 @@ The user chose to begin fresh in Convex and preserve the old browser workspace. 
 
 ## Phase 2F cloud Settings motive — 29 September 2026
 
-All six `WorkspaceScreen` sections now mount under `AuthProvider` with cloud feature screens. `/settings` checks Better Auth and Convex identity, queries `settings.getProfile`, and saves a validated motive through `settings.saveMotive`. The mutation derives owner, looks up `profiles.by_owner`, and creates or patches only the motive. The `WorkspaceSidebar` skips its profile subscription until Convex confirms authentication, then shows the saved motive across routes. If no profile exists, it offers a Settings link rather than presenting sample copy as a personal choice. The schema makes timezone and weekly target optional; these rules and a complete cloud export remain future work. The old browser-only export action was removed from the routed Settings screen without deleting the old browser records.
+All six `WorkspaceScreen` sections now mount under `AuthProvider` with cloud feature screens. `/settings` checks Better Auth and Convex identity, queries `settings.getProfile`, and saves a validated motive through `settings.saveMotive`. The mutation derives owner, looks up `profiles.by_owner`, and creates or patches only the motive. The `WorkspaceSidebar` skips its profile subscription until Convex confirms authentication, then shows the saved motive across routes. If no profile exists, it offers a Settings link rather than presenting sample copy as a personal choice. The schema makes timezone and weekly target optional; at this checkpoint those rules and a complete cloud export were future work (both arrived on 2 October; see Product phases below). The old browser-only export action was removed from the routed Settings screen without deleting the old browser records.
 
 ## Review fixes — 2 October 2026
 
@@ -147,3 +147,104 @@ All six `WorkspaceScreen` sections now mount under `AuthProvider` with cloud fea
 - Today keeps the previous result on screen while new capacity arguments load (Convex returns `undefined` during that time). The controls stay mounted and keep keyboard focus.
 
 **Errors.** Screens show `ConvexError.data` through `src/lib/errors.ts`; other failures get a calm fallback, and the Convex client still logs details to the console.
+
+## Product phases — 2 October 2026
+
+This section covers small gaps and quick wins, 4A, 4B, 3A, 3B, 3C, 4C, 5A and 5B. No new dependencies; everything uses Convex built-ins (queries, mutations, file storage) and browser APIs.
+
+### Module map
+
+| Layer | Module | Responsibility |
+|---|---|---|
+| Convex functions | `tasks.ts` | Work views, task create/edit/lifecycle, prerequisites, pinning, Today overview, sessions |
+| | `projects.ts` | Projects, milestones (ordered), detail, task-form options, case-study data |
+| | `ideas.ts` | Notebook, structured brainstorm, activation (with project or smaller step), moving back |
+| | `proof.ts` | Proof views, details, status, candidates, evidence for past sessions, screenshots |
+| | `journey.ts` | History with evidence, lifetime counts and firsts |
+| | `rhythm.ts` | Timezone and target, pauses, reflections, one rhythm overview |
+| | `settings.ts` | Motive, lane preference |
+| | `data.ts` | Export, restore into an empty workspace, batched deletion |
+| Pure rules (tested without a database) | `lib/recommend.ts` | Ranking, reasons, pin explanation |
+| | `lib/rhythm.ts`, `lib/time.ts` | Commitments and streaks; timezone week and day maths |
+| | `lib/taskRules.ts`, `lib/projects.ts`, `lib/validate.ts` | Shared validation, link checks, milestone refresh |
+| | `lib/caseStudy.ts` | Markdown case-study draft from records |
+| Client | `use-rhythm.ts` | `useNow` clock, the rhythm subscription, derived weeks and streaks |
+| | `rhythm.tsx`, `journey-extras.tsx`, `projects-view.tsx`, `task-forms.tsx`, `data-controls.tsx` | Feature components used by the six screens |
+
+### Decisions and why
+
+- **Week maths runs in the browser.** Convex caches a query's result and doesn't re-run it as time passes, and its runtime's timezone data couldn't be verified. So `rhythm.overview` takes the client's time rounded to the hour and returns raw records: timezone, commitments, and session end times for about 27 weeks. The browser applies the saved timezone with Intl, using the tested `lib/time.ts` and `lib/rhythm.ts`. Mutations accept only week keys near the server's own clock, so finished weeks can't be edited.
+- **No clock reads during render.** React Compiler lint rules forbid impure calls in render, so `useNow` starts as `null` and ticks from a timer. Today's elapsed time works the same way.
+- **Settled results.** Today keeps its previous answer while a query with new arguments loads (`useSettled`), so controls never unmount mid-click.
+- **Recommendations stay explainable.** The ranking adds pins and a lane preference as two transparent rules. Reasons are generated from the same facts, and choices plus swap reasons are recorded for the trial without changing history.
+- **Uploads go straight to Convex.** The browser asks `proof.generateUploadUrl`, posts the file, then calls `attachImage`. That call checks the server's own metadata (type and size) and that the file isn't already in use. A rejected file is deleted and the reason returned, because throwing would roll back the deletion.
+- **Derived, never stored.** Milestone progress, idea stages, week results, streaks, lifetime counts and firsts are computed from records each time. Only `milestones.completedAt` and `artifacts.candidateSince` record a moment, and both are cleared when their condition stops being true.
+- **Prerequisites clear when Done or archived.** One rule (`lib/taskRules.prerequisiteCleared`) is used by Today and by session start, so set-aside work can't silently hide a task.
+- **Week keys are checked in the person's timezone.** The browser computes the key; the server recomputes it with `weekKey` when its runtime supports the timezone, and otherwise accepts only a week current somewhere on Earth.
+- **Restore is all-or-nothing.** `data.importBackup` runs in one transaction, only into an empty workspace, and rebuilds every link from the backup's original IDs. It reuses the forms' validators (`lib/taskRules`, `lib/ideaRules`, `lib/validate`) and checks cross-record rules first (`assertRestorable`), so a hand-edited backup can't create data the app itself would refuse. Deletion runs in batches of 400 so a large workspace stays inside transaction limits.
+- **Account deletion order.**
+  1. Confirm the password by signing in again.
+  2. Delete workspace data while Convex still recognises the person.
+  3. Delete the Better Auth user.
+
+  A wrong password therefore stops everything before any data is touched.
+- **Offline is visible.** The shell reads `useConvexConnectionState`. When the socket drops after having connected, it says so, because Convex queues changes and sends them on reconnect.
+
+### Growth limits, by design for a personal workspace
+
+| Read | Bound |
+|---|---|
+| Today's candidates | 200 oldest Ready and 200 oldest In progress, always plus the pinned task |
+| The rhythm window | 2,000 sessions in about 27 weeks |
+| `journey.summary` | 10,000 sessions, 5,000 artifacts and 2,000 milestones |
+| Export | 10,000 per table |
+| Restore | 4,000 records (an export can hold up to 10,000 per table, so a very large export would need a staged restore) |
+| Deletion | 400 documents per call |
+
+Each limit is named in code where it's applied.
+
+## Ember Glass redesign — 2 October 2026
+
+The owner's design ("Becoming App Design", claude.ai/design) is now the interface. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+
+- **Shell.** On desktop there is an icon rail, and on phones a floating pill. A shared header shows the date (mono), the serif headline (on Today, your motive), quick idea capture (⌘/Ctrl K) and an avatar link to Settings. The sign-in gate and offline note are unchanged.
+- **Today** follows the design's flow:
+  1. The capacity dial (15–120 minutes) and energy.
+  2. One focus card: lane and project, done-when, why it was suggested, Start.
+  3. Explicit alternatives with swap reasons, and "Rest tonight", which hides suggestions for the evening and records nothing.
+  4. The focus orb: a timer against your plan, plus rotating encouragement.
+  5. An outcome-first recap with skills and evidence. If saving fails, the recap keeps everything you typed.
+
+  On wide screens, a three-column dashboard adds the Mind Bloom, lane balance, the week, the focused project's milestones, the proof pipeline and five weeks of contributions.
+- **Honest visuals.** The Mind Bloom, week dots, heatmap and pipeline are drawn only from records. Their empty states explain why they're empty. The design's demo values exist only in the dev-only preview pages, labelled as sample.
+- **Dark only.** The design has no light theme, so `color-scheme: dark`. Contrast is still measured: `src/lib/contrast.test.ts`.
+- **No new dependencies.** The fonts are self-hosted with `next/font/local`, and the SVG visuals are hand-drawn components.
+
+## Ritual redesign — 6 October 2026
+
+The owner's *Becoming Ritual* design replaces Ember Glass. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) and, for the backend changes, [DATABASE.md](DATABASE.md).
+
+- **Shell.** A 92px rail (orb, + capture, Today, Work, Ideas, Journey, avatar) on desktop and a floating pill with + in the middle on phones. The top bar is gone; each screen owns its header. `RitualProvider` (`src/components/ritual/ritual-context.tsx`) holds the capture sheet, the new-project sheet and the toast, so any screen can open them.
+- **Today is a short conversation**, held in component state: open → which project → check-in → plan, then the focus, recap and reward overlays and "Tonight is done" (a per-tab flag in `sessionStorage`). Time and energy stay temporary UI state. The intent scopes `tasks.todayOverview` by lane, project or task; the alternatives come from the other lanes. Links like `/today?intent=build&project=<id>` open the check-in directly.
+- **Weekly plan.** The review saves a `weekPlans` row: an intention and up to 12 lined-up tasks. Lined-up tasks rank right after a pinned task, and the intention feeds Today's prompt card and Sunday card.
+- **Onboarding** appears for a brand-new account (`getProfile().needsOnboarding`) and saves the motive, rhythm, reminder preference and an optional first task, then `completeOnboarding`.
+- **Proof lives under Journey** (`/journey?tab=proof`, with the publish flow at `&publish=<id>`); `/proof` redirects there. Deep links use small single-item reads (`ideas.get`, `proof.get`, `tasks.get`) so they work beyond the first page.
+- **Reminders are preferences only.** Nothing sends them yet; that needs a notification service (Phase 6).
+- **Honest data, no new dependencies, dark only** — unchanged from Ember Glass. The dev-only `/design-preview` pages were removed with the old screens.
+
+## Assistants (MCP) and the Inbox — 9 October 2026
+
+- **The endpoint.** Becoming answers MCP at `https://<deployment>.convex.site/mcp` (`convex/mcp.ts`), a Convex HTTP action next to auth and data. The owner is resolved from an access token's SHA-256 hash, and every tool then runs as an internal query or mutation with that owner. Reads reuse the app's code; writes become Inbox proposals.
+- **Why proposals.** The record stays honest: an assistant can be wrong about minutes or outcomes, so nothing counts until you approve it. Approval runs the same rules as the app.
+- **Why tokens first.** Claude Code and other local MCP clients send a fixed header, which a token covers with no new dependencies. The Claude app and ChatGPT connect from their own servers through OAuth, which needs the deployed app as a public authorization server. See [ASSISTANTS.md](ASSISTANTS.md).
+
+## Evening reminders — 9 October 2026
+
+A Convex cron (`crons.ts`, every 15 minutes) asks `reminders.due` who has just reached their chosen time in their own timezone, then sends one email (Resend) and one empty Web Push per device (`lib/webpush.ts`, VAPID-signed with Web Crypto). The service worker (`public/sw.js`) shows the text and opens Today. Empty pushes avoid payload encryption entirely, so there is no dependency. The cost is a fixed message; the email carries tonight's suggested step.
+
+## Project constellation — 9 October 2026
+
+- **One query, the whole map.** `constellation.get` (`convex/constellation.ts`) reads a project's phases, milestones, tasks, docs, idea, research, report and recent task events in one go and derives everything else: codes (`05`, `5A`, `5A·1`), % and state per phase and milestone, sessions and focused minutes, which phases each doc feeds and how many tasks it informs, and the replay window. Nothing derived is stored, so the map can't drift from the records.
+- **Replay is computed in the browser** from each task's `startedAt`, `completedAt` and `blockedAt` (`model.ts` `stateAt`), so scrubbing doesn't query the server again.
+- **Claude keeps it current through proposals.** The constellation tools and `import_plan` go through the Inbox like every other assistant write. A plan is applied in one transaction (`inbox.applyPlan`) and only adds what's missing, so the same plan can be sent again after the docs change. See [ASSISTANTS.md](ASSISTANTS.md) and [PLAN-project-constellation.md](PLAN-project-constellation.md).
+- **Docs stay in the repo.** Becoming stores each doc's code, summary, sections, link and the phases it feeds, not its text.

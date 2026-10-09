@@ -13,6 +13,10 @@
 | [Convex setup](CONVEX_SETUP.md) | How to connect the next backend slice yourself |
 | [Authentication setup](AUTH_SETUP.md) | Trace and test the development email/password flow |
 | [Learning log](LEARNING_LOG.md) | What was implemented and how to trace it |
+| [Two-week trial guide](TRIAL_GUIDE.md) | How to run Phase 5C and what to review at the end |
+| [QA_PLAN.md](QA_PLAN.md) | End-to-end QA in order: local setup, every feature, data controls, deployment, and tests on the live app |
+| [ASSISTANTS.md](ASSISTANTS.md) | Becoming as an MCP server: connecting Claude Code, the tools, the Inbox, how tokens and approval work |
+| [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) | The Ritual design system: tokens, type, parts, layout, the evening flow and links between screens |
 
 The PRD and prototype describe the intended product. PLAN and LEARNING_LOG describe the actual implementation. A planned feature in the PRD is not a claim that it is built.
 

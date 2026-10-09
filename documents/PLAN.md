@@ -1,6 +1,6 @@
 # Becoming — full app plan and learning checkpoints
 
-Updated: 2 October 2026. Follow ../agent.md for the working agreement.
+Updated: 2 October 2026 (product phases). Follow ../agent.md for the working agreement.
 
 ## Product direction
 
@@ -21,7 +21,23 @@ An independent design-engineering practice app: choose useful daily work, balanc
 | Cloud Journey history | Signed-in, paginated saved recaps with lane counts over visible results | 19 tests and development sync 29 Sep; browser review pending | User review pending |
 | Cloud Proof gallery | Signed-in, paginated recap evidence with linked session context | 21 tests and development sync 29 Sep; browser review pending | User review pending |
 | Cloud Settings motive | Signed-in profile motive saved in Convex and shown across the sidebar | 22 tests, development sync and build 29 Sep; browser review pending | User review pending |
-| Full projects, streaks, sharing | Planned | Not verified | Future phases |
+| Small gaps and quick wins | Today's honest empty states; Active view uses one index range with In progress first; last-time card, pick-up-here, elapsed time, planned vs actual, evidence in Journey, remembered capacity | 105 tests, build, signed-out browser checks 2 Oct | User review pending |
+| 4A weekly rhythm | Timezone and weekly target (first applies now, later changes next Monday), planned pauses, streaks, week strip, Journey weeks and reflections | Same | User review pending |
+| 4B Proof workflow | Edit, Draft/Ready/Published (link and date required), portfolio candidates, screenshots (Convex storage), evidence for past sessions | Same | User review pending |
+| 3A projects and milestones | Projects, ordered milestones with derived completion, task links, Today excludes inactive projects, case-study Markdown | Same | User review pending |
+| 3B ideas and prerequisites | Structured brainstorm, idea stages, activation with project or smaller step, move back to Ideas, prerequisites with loop checks | Same | User review pending |
+| 3C recommendations | Pinning, swap reasons, lane preference, bounded candidate pool, Journey insights | Same | User review pending |
+| 4C delight | Lifetime counts, firsts, 12-week activity calendar, save celebration (reduced-motion aware) | Same | User review pending |
+| 5A data control | JSON export, all-or-nothing restore into an empty workspace, batched deletion, account deletion | Same | User review pending |
+| 5B interface quality | Contrast fixes (muted text, field borders), compact phone navigation, offline notice | Contrast measured; 320px checked signed out | User review pending |
+| Ember Glass redesign | The owner's design across every screen: rail and pill navigation, serif headline and quick capture, Today's dial, focus card, orb and outcome recap, Mind Bloom from tagged skills, proof pipeline, milestone timeline; Work, Ideas, Proof, Journey, Settings and Account rebuilt in the same system; dev-only preview pages | 113 tests, build, preview pages checked at 360px and 1440px 2 Oct; signed-in review pending | User review pending |
+| Ritual redesign | The owner's *Becoming Ritual* flow (direction 2a) replaces Ember Glass: Today asks "What's on your mind tonight?", then which project, a ten-second check-in and one focus with explicit alternatives; focus, recap, reward and "Tonight is done"; gap and Sunday cards; 5-step onboarding; quick capture and new-project sheets; Work lanes and project page with a task sheet; Ideas brainstorm and Make active; Journey Progress (12-month contributions, bloom, week) and Proof (3-step publish flow), the 3-step weekly review with lined-up steps; Settings with a side nav, reminder and focus preferences. Proof moved under Journey (`/proof` redirects). Dev-only preview pages removed | 126 tests, typecheck, lint and build 6 Oct; signed-out browser check only (signed-in screens not yet seen) | User review pending |
+| Email verification, password reset, Google sign-in | Sign-up confirms the email (Resend, or the Convex logs locally), "Forgot password?" with an emailed reset link, "Continue with Google" once its OAuth client is set; Google-only accounts can be deleted without a password | 130 tests, typecheck, lint 9 Oct; screens checked signed out; sending real email and Google need your Resend key and Google client | User review pending |
+| Assistants (MCP) and the Inbox | Becoming as an MCP server at `/mcp` on the Convex site: reads (tonight's focus, projects, tasks, week, sessions) and proposals (log work, add task, idea, milestone, next step) that wait in the Inbox on Today until approved; access tokens in Settings → Assistants; Journey shows "via Claude Code". Claude app and ChatGPT (OAuth) after deployment | 135 tests, typecheck, lint 9 Oct; end-to-end on the dev deployment with a test identity (reads, proposals, approval, revoke) | User review pending |
+| Evening reminders that send | Every 15 minutes, people whose chosen time just arrived (their timezone, chosen days, no session yet today, no planned pause) get one email (Resend) and a notification on each device that turned it on (Web Push, no package); installable app with icons for iPhone | 139 tests, build 9 Oct; push signing checked on the dev deployment; email needs `RESEND_API_KEY`, phones need the deployed https address | User review pending |
+| Tasks you move freely (Phase 1 of PLAN-tasks-and-focus) | Start / Done / Blocked / back to Ready anywhere, with no timer: a one-tap Start or ✓ on Work's cards, the task sheet's status buttons, Start without the timer and Done already? on Today's focus card; an optional "what changed" and skills when finishing; every move recorded in `taskEvents`; finished tasks grow the bloom | 144 tests, build 9 Oct | User review pending |
+| Project constellation (PLAN-project-constellation, C1–C6) | Work → Projects → **Visual**: one project as a living map, matching the owner's design. Genesis (idea, research, report, decision), the project orb, docs and the phases they feed, one hexagon cell per task; phase and genesis levels; a side panel; replay from real dates. Phases and docs are edited on the project page; research, report and decision in Ideas → brainstorm. Claude keeps it current through new MCP tools, and `import_plan` sends a whole plan as one Inbox item. Becoming's own plan is waiting in the Inbox | 165 tests, typecheck, lint and build 9 Oct; the three levels checked against the design's data at 1440px; signed-in walkthrough pending | User review pending |
+| Friends, production, open-source release (6A–6C) | Not started by design | — | Future phases |
 
 Existing work is a starting point, not automatically accepted scope. Historical checks are not fresh verification. The prior roadmap is preserved as PLAN-2026-09-15.md.
 
@@ -135,13 +151,21 @@ Add server-backed start/cancel/recap, smaller-step snapshots, contribution evide
 
 ## 3 — projects, ideas and recommendation refinement
 
-**Status:** planned; local idea/task baseline already exists.
+**Status:** 3A, 3B and 3C implemented 2 October; see each section. Signed-in review is pending.
 
 ### 3A — projects and milestones
 
 Add create/edit/archive for projects and milestones, link tasks, derive understandable progress and preserve historical references. Decide together whether milestones need a separate view.
 
 **Gate:** archiving does not create dangling references or ready recommendations from archived projects. **Learn:** typed relationships and derived state.
+
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+- Work has a Projects view: create, edit, Mark done, Archive, Make active.
+- Ordered milestones: add, edit, move, remove. Removing one unlinks its tasks, so nothing is left dangling.
+- Each project's tasks are grouped by milestone. Progress shows counts as well as a percentage.
+- Milestone completion is derived from its tasks.
+- Only Active projects feed Today. Sessions snapshot their project.
+- A case-study draft (Markdown, copy or download) is assembled from saved records. See `documents/phase-learning/phase-3A-projects.md`.
 
 ### 3B — notebooks and ready work
 
@@ -151,21 +175,44 @@ Persist brainstorm fields/references, reversible activation and links to origina
 
 **Gate:** saving an idea does not schedule it; activation creates the intended linked task once. **Exercise:** follow an idea through to its first session.
 
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+- Ideas can be edited in full: title, lane, notes and structured brainstorm fields.
+- A stage is shown: Captured, Brainstorming, Active or Archived.
+- Activation can add a smaller step and link a project or milestone, or start a new project from the idea.
+- "Move back to Ideas" archives open work and unlinks it.
+- Tasks have editable prerequisites, with server checks against self-links, archived links and loops.
+
 ### 3C — balanced suggestions
 
 Review the last-six-session approach using actual usage. Discuss lane weighting, user pinning, swap reasons, infeasible tasks and no-candidate states. Explain every recommendation; avoid inventing tasks or using an AI score.
 
 **Gate:** test neglected lanes, consecutive same-lane sessions, dependencies, low capacity and explicit user selection. **Evidence:** a technical breakdown of one rule and its trade-off.
 
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+- A pinned task comes first whenever it fits. When it doesn't, Today explains why.
+- Choosing an alternative asks an optional one-tap reason, recorded with the session.
+- Settings can favour one lane slightly; it counts as one session fewer.
+- Today reads a bounded candidate pool.
+- Journey shows accepted vs swapped suggestions.
+
+The rule review with real usage belongs to the 5C trial.
+
 ## 4 — meaningful motivation and portfolio evidence
 
-**Status:** planned; actual session history and link capture already exist.
+**Status:** 4A, 4B and 4C implemented 2 October; see each section. Signed-in review is pending.
 
 ### 4A — weekly commitment and streaks
 
 Agree on what counts as a session, week boundaries, planned pauses and target effective dates. Store immutable historical commitments; derive streaks from records. Test midnight/timezone transitions, missed/paused weeks and edits.
 
 **Gate:** changing a target does not rewrite past awards; rest creates no overdue backlog or fake progress. **Learn:** temporal data modelling. **Exercise:** explain a paused-week example.
+
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+- **Rules:** Monday to Sunday in the saved timezone. Every saved recap qualifies.
+- **Targets:** the first target applies this week; later changes start next Monday.
+- **Pauses:** this week or next. A pause neither adds to nor breaks a streak.
+- **Where it shows:** a week strip on Today, and weeks, streaks and reflections in Journey.
+- **Implementation:** week maths runs in the browser with tested pure functions, including daylight-saving weeks.
 
 ### 4B — proof and publishing workflow
 
@@ -175,11 +222,27 @@ Build artifact editing, draft/ready/published status, publication links, portfol
 
 **Gate:** a published record has a valid link; evidence remains attributable; nothing is posted automatically. **Evidence:** one completed component with its design/code/process notes.
 
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+- Proof has views: All, Drafts, Ready to share, Published and Portfolio candidates.
+- Each piece of evidence has editable details: title, link, notes and skills.
+- Published needs a valid link and a date that isn't in the future, and moving back clears both.
+- A portfolio-candidate flag.
+- Screenshots in Convex storage, limited to PNG, JPEG, WebP or GIF of up to 5 MB and checked against server metadata.
+- Journey's "Add evidence" attaches evidence to a past session.
+
+Nothing is ever posted.
+
 ### 4C — optional delight and assets
 
 Discuss uploads, badges and a subtle celebration or garden only after the useful loop works. Verify file ownership, type/size limits and reduced-motion behaviour before shipping uploads/animations.
 
 **Gate:** progress signals reflect real records, and all interactions remain accessible. No XP economy or mandatory daily posting by default.
+
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+- Journey shows lifetime counts and a "firsts" timeline, both derived from records, so nothing is awarded twice.
+- A 12-week activity calendar works as a table, with a text label on every day and paused weeks named.
+- A short check-mark celebration plays when a session is saved, and is turned off under reduced motion.
+- Screenshot uploads shipped in 4B. There is no XP or badge economy.
 
 ## 5 — reliability, redesign and real use
 
@@ -187,13 +250,35 @@ Discuss uploads, badges and a subtle celebration or garden only after the useful
 
 Complete export/restore, migrations, account deletion and recovery. Test malformed backups, version mismatches, duplicate imports, interrupted operations and owner isolation. Select archive/delete semantics together.
 
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+- **Export:** JSON with original IDs. Screenshots aren't included; their evidence links are.
+- **Restore:** only into an empty workspace, in one transaction, with every link rebuilt. Each record passes the same rules as the form that created it (lengths, links, smaller steps, brainstorm, publication date). Rules that span records are checked before anything is written: repeated IDs, prerequisite loops, self-links, more than 10 prerequisites, a milestone from another project, an idea pointing at another idea's task, a publication date in the future, two commitments or reflections for one week, and a malformed timezone. Milestone completion is checked against the restored tasks (a true date is kept, a missing one filled in, a wrong one cleared). An archived prerequisite is allowed, because real data can contain one. Restoring replaces the profile settings (motive, timezone, target, preferences) of an account that has nothing else yet. Another format, another version and broken references are refused too, and a failure changes nothing.
+- **Delete workspace data:** in batches, including screenshots.
+- **Delete account:** confirms the password first, then data, then the Better Auth user.
+- **Not done:** password recovery needs an email provider (production gate, 6B).
+
 ### 5B — interface quality
 
 Refine the user's chosen design with keyboard access, focus management, contrast, mobile layouts, reduced motion, meaningful loading/empty/error states and performance checks. New UI/motion libraries require discussion first.
 
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+- **Contrast**, measured with the WCAG formula:
+  - Muted text now passes 4.5:1 on every background (light #5b6b5f).
+  - Fields, chips and secondary buttons use a `--field-line` border (#768478 light, #809181 dark) that passes 3:1 against paper, surface and the soft panel background in both themes.
+- **Phone navigation:** one scrolling row instead of two wrapped rows (124px instead of 186px), keeping the current section in view.
+- **Offline notice:** shown when the Convex connection drops.
+- Focus moves into every in-card form, and every view has loading, empty and error states. No library was added.
+
 ### 5C — two-week personal trial
 
 Use the app and collect recommendations accepted/swapped, planning effort, work completed across lanes and maintenance overhead. Decide whether telemetry is needed; do not add analytics silently. Make focused changes based on evidence.
+
+**Status:** ready for you to run. The app now records what the trial needs, without analytics:
+- whether each session followed the suggestion, and the swap reason;
+- planned vs actual time;
+- lane balance, weekly results and reflections.
+
+See `documents/TRIAL_GUIDE.md` for what to note each evening and what to review at the end.
 
 **Gate:** the app reduces decision effort and helps finish work. **Exercise:** explain one design change based on observed use. **Deliverable:** an honest portfolio case study with before/after evidence and limitations.
 
@@ -227,20 +312,20 @@ Structured assignment import, context export for ChatGPT, scheduled-task integra
 - [ ] One exercise or manual check provided.
 - [ ] User review received before the next subphase begins.
 
-**Current checkpoint (2 October):** review the signed-in screens after the review fixes:
+**Current checkpoint (2 October, product phases):** implemented and verified by automated tests, typecheck, lint and a production build, but not yet tested by you while signed in:
+- small gaps and quick wins;
+- phases 4A, 4B, 3A, 3B, 3C and 4C;
+- phases 5A and 5B.
 
-- Work views, and unblock/reopen/archive/restore.
-- Today's time and energy changes, and the recap's Back behaviour.
-- Ideas archive.
-- Clearing the motive.
+Nothing is committed: you asked to test after all phases were done.
 
-Then review Journey and Proof against a recap containing evidence. The 2E, 4B, 2F and review-fix work is committed and pushed (e0a16c5 to 287e948). The signed-in walkthrough is still your review, and nothing is deployed.
+**Before testing,** run `npm run backend` once. It pushes the additive schema and the new functions to your development deployment; nothing was synced for you this time.
 
-Next proposed work is Phase 4A weekly rhythm, then the two-week personal trial (5C). Projects/milestones and full Proof publishing remain options. Cloud export/account controls and auth production gates remain planned.
+**Suggested walkthrough order:** Settings (rhythm, lane preference), Today, Work (tasks, then projects), Ideas, Proof, Journey, then data export in Settings.
 
-- The app and tab titles now say Becoming. The folder and package name are still `form` / `form-workspace`.
-- Old browser data stays in its browser profile. Its source code is removed, and no import is planned.
-- R1–R4 are not retroactively marked reviewed.
+**Then:** the two-week trial (5C, `documents/TRIAL_GUIDE.md`). Phase 6 (open-source readiness, production, friend pilot) is deliberately not started.
+
+The app and tab titles say Becoming, while the folder and package name are still `form` / `form-workspace`. The old browser data stays in its browser profile; its code is removed. R1–R4 are not retroactively marked reviewed.
 
 ## Detailed learning handoffs
 

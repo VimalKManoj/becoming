@@ -24,12 +24,22 @@ npm run build
 - Next.js 16 App Router, React 19, TypeScript, Tailwind 4 and editable CSS tokens.
 - Better Auth email/password sign-in for development, stored by its Convex component. Email verification and recovery are not set up yet.
 - One shared Convex client and a persistent workspace shell, with six private sections:
-  - **Today**: an explained recommendation from your time, energy, prerequisites and recent lane balance; focused sessions; a recap of Finished, Made progress or Blocked, with an optional evidence link.
-  - **Work**: Active, Blocked, Done and Archived views. Create, edit, unblock, reopen, archive and restore tasks, with optional smaller steps.
-  - **Ideas**: capture, brainstorm, archive and restore. Activating an idea deliberately creates one linked Ready task.
-  - **Proof**: private Draft evidence from recaps, with its source session.
-  - **Journey**: saved recap history, with lane counts over the sessions shown.
-  - **Settings**: a private motive, shown in the sidebar.
+  - **Today**:
+    - an explained recommendation from your time, energy, prerequisites, recent lane balance, an optional pin and an optional favoured lane;
+    - honest empty states and the last saved contribution;
+    - focused sessions with elapsed time, and a recap with optional evidence;
+    - a weekly rhythm strip.
+  - **Work**:
+    - Active, Blocked, Done and Archived task views, with unblock, reopen, archive, restore and prerequisites;
+    - Projects with ordered milestones, derived progress and a Markdown case-study draft.
+  - **Ideas**: capture, structured brainstorming, stages, activation (optionally into a project, with a smaller step), moving back, and archive.
+  - **Proof**: Draft → Ready to share → Published (with a link and date), portfolio candidates, notes, skills, screenshots, and evidence added to past sessions.
+  - **Journey**:
+    - saved history with evidence and planned versus actual time;
+    - weekly results, streaks and reflections;
+    - lifetime counts, firsts, a 12-week activity calendar and suggestion insights.
+  - **Settings**: motive, timezone and weekly target, planned pauses, lane preference, JSON export, restore into an empty workspace, and deletion of data or the whole account.
+- **Design:** the owner's *Becoming Ritual* design (dark, Instrument Serif, Geist and Geist Mono). Today asks "What's on your mind tonight?", takes a ten-second check-in and offers one focus; after the session the Mind Bloom grows. Proof lives under Journey, next to a 12-month contributions graph and a three-step weekly review. See [documents/DESIGN_SYSTEM.md](documents/DESIGN_SYSTEM.md).
 - Every query and mutation derives the owner from the signed-in identity; the browser never supplies it.
 
 ## Learn in order
@@ -53,4 +63,4 @@ Open-source release is planned, not published. `private: true` prevents accident
 
 ## Known scope boundaries
 
-Weekly targets and streaks, projects and milestones, Proof publishing states, export/restore, account deletion, email verification/recovery, production deployment and optional ChatGPT/GitHub connections are planned in `documents/PLAN.md`. Do not treat this as a production multi-user release.
+Email verification and password recovery, production deployment, open-source release preparation, a friend pilot and optional ChatGPT/GitHub connections are planned in `documents/PLAN.md`. The two-week personal trial is described in `documents/TRIAL_GUIDE.md`. Do not treat this as a production multi-user release.

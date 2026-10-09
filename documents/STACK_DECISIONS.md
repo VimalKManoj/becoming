@@ -94,3 +94,16 @@ Verification on 24 September: TypeScript, ESLint and 11 Vitest tests passed; the
 - **Vitest config.** `vitest.config.ts` was renamed to `vitest.config.mts` with the same content. This removes Vite's "ESM syntax in a file loaded as CommonJS" notice.
 - **Lint rules.** `eslint-plugin-react-hooks` 7 runs the React Compiler rules (`refs`, `set-state-in-render`, …) through `eslint-config-next`. Today's "keep the last result" hook therefore stores the previous value in state, conditionally during render, instead of reading a ref during render.
 - **Unchanged.** The `@ts-expect-error` for better-auth issue #420 is still required (TypeScript would report it as unused otherwise). better-auth 1.7.x and convex 1.46 exist; upgrading them is a separate decision.
+
+## 2 October — product phases (gaps through 5B)
+
+- **No dependency added or upgraded.** Uploads use Convex file storage. Export, restore and the case-study download use browser Blob, File and clipboard APIs. Animations are CSS and respect reduced motion. Week maths uses Intl in the browser.
+- **`zod` is still unused.** Restore validation uses Convex argument validators, which run on the server where the security boundary is.
+- **Better Auth `user.deleteUser.enabled`** is set for account deletion with a password. No email sending is configured, so verification and recovery emails remain a production gate.
+- **`useConvexConnectionState`** (convex/react 1.45) powers the offline notice.
+- **Test-only metadata.** `convex-test` doesn't record an uploaded file's content type, so the upload tests add it, standing in for what the real upload endpoint records. That's marked in the test.
+
+## 2 October — Ember Glass redesign
+
+- **No dependency added.** The fonts (Geist, Geist Mono, Instrument Serif, SIL Open Font License) are the latin files from the design export, self-hosted with `next/font/local`. `next/font/google` failed under Turbopack on this machine, and self-hosting also avoids a build-time network fetch. The SVG visuals are plain components.
+- **Dark only**, matching the design. The contrast test now checks the single theme.

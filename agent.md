@@ -44,6 +44,7 @@ Separate implementation from user review: code can exist and pass tests without 
 - documents/PLAN.md: canonical roadmap, active checkpoint and acceptance gates.
 - documents/PRD.md: product intent and expected complete behaviour.
 - documents/SYSTEM_DESIGN.md and DATABASE.md: architecture and data decisions.
+- documents/DESIGN_SYSTEM.md: the owner's Ember Glass design system. New UI must use its tokens, components and rules, and show only real data.
 - documents/APPROACH.md: implementation principles and trade-offs.
 - documents/LEARNING_LOG.md: what changed, why, evidence, and limitations.
 - documents/CONVEX_SETUP.md: future backend setup, not a claim of completed integration.
@@ -52,7 +53,7 @@ Treat prototypes and plans as references, not proof of implementation. Record pr
 
 ## Current checkpoint
 
-The user selected Better Auth with Convex and approved the proposed stack direction. They clarified that all meaningful app data should live in Convex; browser state is for temporary UI selections only. Phase 2B authentication, Phase 2C owner-scoped Work tasks, Phase 2D cloud Today focus sessions, a bounded Phase 3B Ideas slice, Phase 2E Journey history, a bounded Phase 4B Proof gallery, and Phase 2F Settings motive are implemented in development; user review is pending. All six workspace routes require sign-in and use Convex. Journey shows paginated saved recaps and counts over loaded pages; Proof shows owned evidence links with source session context; Settings saves a private motive shown across the sidebar. Weekly targets/timezone policy, streaks, cloud export and Proof publishing controls are future work. The user chose a fresh Convex start and preservation of the old browser copy; no local data was imported or deleted. Email verification/recovery and production readiness remain incomplete.
+Historical checkpoint (29 September; later phases are described below). The user selected Better Auth with Convex and approved the proposed stack direction. They clarified that all meaningful app data should live in Convex; browser state is for temporary UI selections only. Phase 2B authentication, Phase 2C owner-scoped Work tasks, Phase 2D cloud Today focus sessions, a bounded Phase 3B Ideas slice, Phase 2E Journey history, a bounded Phase 4B Proof gallery, and Phase 2F Settings motive are implemented in development; user review is pending. All six workspace routes require sign-in and use Convex. Journey shows paginated saved recaps and counts over loaded pages; Proof shows owned evidence links with source session context; Settings saves a private motive shown across the sidebar. Weekly targets/timezone policy, streaks, cloud export and Proof publishing controls are future work. The user chose a fresh Convex start and preservation of the old browser copy; no local data was imported or deleted. Email verification/recovery and production readiness remain incomplete.
 
 On 1–2 October the agreed review-fixes phase was implemented, verified by checks, and synced to development; user review is pending. Its scope:
 
@@ -64,7 +65,16 @@ On 1–2 October the agreed review-fixes phase was implemented, verified by chec
 - Next.js 16.3.8.
 - Removal of the unrouted local code.
 
-The user chose the name Becoming. On 2 October, 2E, 4B, 2F and the review fixes were committed in six logical groups and pushed (e0a16c5 to 287e948); nothing is deployed. Pause before the next implementation slice for user review.
+The user chose the name Becoming. On 2 October, 2E, 4B, 2F and the review fixes were committed in six logical groups and pushed (e0a16c5 to 287e948).
+
+Later on 2 October the user asked for everything before friends and production, uncommitted, to test signed in afterwards. That means:
+- the small gaps and quick wins;
+- phases 4A, 4B, 3A, 3B, 3C and 4C;
+- phases 5A and 5B.
+
+All of it is implemented and verified by automated tests, typecheck, lint and a build, and documented. The development deployment was not synced, so the user should run `npm run backend` before testing.
+
+5C is the user's trial (documents/TRIAL_GUIDE.md). Phase 6 is not started. Pause for the user's signed-in review before any further implementation.
 
 ## Detailed phase learning notebook
 
