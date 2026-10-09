@@ -322,17 +322,24 @@ These are the steps for the recommended set-up: **Vercel** for the Next.js app, 
 > **Production gate:** email verification, password reset and Google sign-in exist (9 October). Production Convex also needs a new pair of `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_JWK` for notifications (AUTH_SETUP.md). Production needs `RESEND_API_KEY` on Convex, or sign-up is refused. Without a verified domain in Resend, email only reaches your own Resend address: fine for **your own use**, not for friends yet. Google needs its production redirect URI and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` on production Convex.
 
 - [x] **D1. Commit and push.** Done 10 October 2026: nine commits on `main` (`8f4f195` to `cd17634`), pushed to GitHub (`VimalKManoj/becoming`).
-- [ ] **D2. Create the Convex production deployment.**
+> **Deployed 10 October 2026:** **https://becoming-evenings.vercel.app** (Vercel, from `main`), on Convex production `uncommon-goat-661`.
+> - **Production Convex variables:** `BETTER_AUTH_SECRET` (new, made by a script that never prints it), `RESEND_API_KEY` (a sending-only key) and `SITE_URL`.
+> - **Vercel variables:** `CONVEX_DEPLOY_KEY` (only `deployment:deploy` permission, no expiry), `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`. `NEXT_PUBLIC_SITE_URL` isn't read by the app, so it isn't set.
+> - **Left for later, by choice:** notifications (no production VAPID keys, so reminders send email only) and Google sign-in (no OAuth client, so its button stays hidden).
+> - **Email:** without a verified domain, Resend only delivers to the address the Resend account was made with, so create your production account with that email.
+> - **Smoke test (D6), checked by Claude in the browser:** `/` → `/today` with the sign-in prompt; `/account` shows the sign-in form; `/design-preview` and `/cx-preview` answer 404; `/api/auth/get-session` answers 200; the bundle points at `uncommon-goat-661`; production shows all 19 app tables.
+
+- [x] **D2. Create the Convex production deployment.**
   1. In the Convex dashboard, open the **becoming** project and select **Production**. It's created on first use.
   2. Go to Settings → **Deploy keys** and generate a **production** deploy key.
   
   Copy it straight into Vercel in D4; don't save it anywhere else.
-- [ ] **D3. Set the production Convex environment variables.**
+- [x] **D3. Set the production Convex environment variables.**
   1. Generate a **new** secret, different from dev: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`.
   2. In the dashboard (Production → Settings → Environment Variables), set:
      - `BETTER_AUTH_SECRET` = that secret
      - `SITE_URL` = your final app URL, for example `https://becoming-xxxx.vercel.app`. You can fill this in after D5 once you know the URL, then redeploy.
-- [ ] **D4. Create the Vercel project.**
+- [x] **D4. Create the Vercel project.**
   1. Import the GitHub repo. Framework: Next.js.
   2. **Build command:** `npx convex deploy --cmd 'npm run build'`. This pushes the Convex functions and schema to production, then builds the app against them.
   3. **Environment variables** (Production environment only):
@@ -341,10 +348,10 @@ These are the steps for the recommended set-up: **Vercel** for the Next.js app, 
      - `NEXT_PUBLIC_CONVEX_SITE_URL` = the production `https://<name>.convex.site` address
      - `NEXT_PUBLIC_SITE_URL` = your app URL
   4. **Preview deployments:** turn them off for now (Settings → Git), so branch previews never build against production data.
-- [ ] **D5. Deploy.**
+- [x] **D5. Deploy.**
   - **Expect:** the build log shows Convex pushing functions, then `next build` finishing with the route list.
   - If `SITE_URL` wasn't known in D3, set it now and redeploy.
-- [ ] **D6. Smoke test (2 minutes).**
+- [x] **D6. Smoke test (2 minutes).**
   - The app URL redirects to `/today` and shows the dark sign-in card.
   - `/account` loads.
   - `/design-preview` answers **404**: sample pages never appear in production.
