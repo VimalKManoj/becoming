@@ -42,6 +42,19 @@ describe("cloud tasks", () => {
     const projectId = await t.run(ctx => ctx.db.insert("projects", { owner: "https://auth.example.test|user-b", title: "Private project", purpose: "Test isolation", status: "Active" }));
     await expect(asA.mutation(api.tasks.create, { ...task, projectId })).rejects.toThrow("Record not found");
   });
+
+  it("reads one task for its owner, with its prerequisites named", async () => {
+    const t = convexTest(schema, modules);
+    const asA = t.withIdentity({ subject: "user-a", issuer: "https://auth.example.test" });
+    const asB = t.withIdentity({ subject: "user-b", issuer: "https://auth.example.test" });
+    const first = await asA.mutation(api.tasks.create, { ...task, title: "Sketch the layout" });
+    const taskId = await asA.mutation(api.tasks.create, { ...task, title: "Build the layout", dependencies: [first] });
+
+    const read = await asA.query(api.tasks.get, { taskId });
+    expect(read).toMatchObject({ _id: taskId, title: "Build the layout", status: "Ready", prerequisites: [{ _id: first, title: "Sketch the layout", status: "Ready" }] });
+    expect(read).not.toHaveProperty("owner");
+    expect(await asB.query(api.tasks.get, { taskId })).toBeNull();
+  });
 });
 
 describe("cloud focus sessions", () => {
@@ -272,5 +285,56 @@ describe("task lifecycle", () => {
     expect((await asA.query(api.tasks.todayOverview, { minutes: 60, energy: 3 })).choices).toEqual([]);
     await asA.mutation(api.tasks.restore, { taskId: other });
     expect(await t.run(ctx => ctx.db.get(other))).toMatchObject({ status: "Ready" });
+  });
+});
+
+describe("Today states and history details", () => {
+  it("names each empty state honestly and returns the last saved contribution", async () => {
+    const t = convexTest(schema, modules);
+    const asA = t.withIdentity({ subject: "user-a", issuer: "https://auth.example.test" });
+    const overview = () => asA.query(api.tasks.todayOverview, { minutes: 30, energy: 2 });
+
+    expect(await overview()).toMatchObject({ state: "first-run", choices: [], lastSession: null });
+    const large = await asA.mutation(api.tasks.create, { ...task, title: "Large task", minutes: 90 });
+    expect((await overview()).state).toBe("nothing-fits");
+    const prerequisite = await asA.mutation(api.tasks.create, { ...task, title: "Prerequisite", minutes: 90 });
+    await t.run(ctx => ctx.db.patch(large, { dependencies: [prerequisite] }));
+    await t.run(ctx => ctx.db.patch(prerequisite, { status: "Blocked" }));
+    expect((await overview()).state).toBe("waiting");
+    await t.run(ctx => ctx.db.patch(large, { status: "Blocked" }));
+    expect((await overview()).state).toBe("blocked-only");
+    await asA.mutation(api.tasks.archive, { taskId: large });
+    await asA.mutation(api.tasks.archive, { taskId: prerequisite });
+    expect((await overview()).state).toBe("nothing-open");
+
+    const fits = await asA.mutation(api.tasks.create, { ...task, title: "Fits tonight" });
+    const activeSessionId = await asA.mutation(api.tasks.startSession, { taskId: fits });
+    await asA.mutation(api.tasks.recordSession, { activeSessionId, outcome: "Made progress", contribution: "Drafted the layout", nextStep: "Add the empty state", evidence: "" });
+    const ready = await overview();
+    expect(ready.state).toBe("ready");
+    expect(ready.lastSession).toMatchObject({ title: "Fits tonight", contribution: "Drafted the layout", nextStep: "Add the empty state", outcome: "Made progress" });
+    expect(ready.choices[0]).toMatchObject({ taskId: fits, status: "In progress", nextStep: "Add the empty state" });
+  });
+
+  it("lists In progress before Ready in the Active view, oldest first", async () => {
+    const t = convexTest(schema, modules);
+    const asA = t.withIdentity({ subject: "user-a", issuer: "https://auth.example.test" });
+    const first = await asA.mutation(api.tasks.create, { ...task, title: "First ready" });
+    const second = await asA.mutation(api.tasks.create, { ...task, title: "Second ready" });
+    await t.run(ctx => ctx.db.patch(second, { status: "In progress" }));
+    await asA.mutation(api.tasks.create, { ...task, title: "Third ready" });
+    const page = await asA.query(api.tasks.listPage, { view: "active", paginationOpts: { numItems: 10, cursor: null } });
+    expect(page.page.map(item => item.title)).toEqual(["Second ready", "First ready", "Third ready"]);
+    expect(page.page[1]._id).toBe(first);
+  });
+
+  it("records the planned minutes so Journey can compare them with the actual time", async () => {
+    const t = convexTest(schema, modules);
+    const asA = t.withIdentity({ subject: "user-a", issuer: "https://auth.example.test" });
+    const taskId = await asA.mutation(api.tasks.create, { ...task, minutes: 45, smallerStep: "Sketch", smallerDone: "Sketched", smallerMinutes: 15 });
+    const activeSessionId = await asA.mutation(api.tasks.startSession, { taskId, smaller: true });
+    await asA.mutation(api.tasks.recordSession, { activeSessionId, outcome: "Finished", contribution: "Sketched it", nextStep: "Build it", evidence: "https://example.test/sketch" });
+    const history = await asA.query(api.journey.listPage, { paginationOpts: { numItems: 5, cursor: null } });
+    expect(history.page[0]).toMatchObject({ plannedMinutes: 15, evidence: "https://example.test/sketch", smaller: true });
   });
 });

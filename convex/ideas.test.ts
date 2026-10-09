@@ -54,4 +54,21 @@ describe("cloud Ideas", () => {
     expect(restored).toMatchObject({ notes: "Calm typography." });
     expect(restored).not.toHaveProperty("archivedAt");
   });
+
+  it("reads one idea by a link's id, and activates into a chosen lane", async () => {
+    const t = convexTest(schema, modules);
+    const asA = t.withIdentity({ subject: "user-a", issuer: "https://auth.example.test" });
+    const asB = t.withIdentity({ subject: "user-b", issuer: "https://auth.example.test" });
+    const ideaId = await asA.mutation(api.ideas.create, { title: "Type specimen", lane: "Projects", notes: "Pasted brief." });
+
+    await expect(t.query(api.ideas.get, { ideaId })).rejects.toThrow("Sign in");
+    expect(await asA.query(api.ideas.get, { ideaId })).toMatchObject({ _id: ideaId, title: "Type specimen", stage: "Captured", task: null, brainstorm: {} });
+    expect(await asA.query(api.ideas.get, { ideaId })).not.toHaveProperty("owner");
+    expect(await asB.query(api.ideas.get, { ideaId })).toBeNull();
+    expect(await asA.query(api.ideas.get, { ideaId: "not-an-id" })).toBeNull();
+
+    const taskId = await asA.mutation(api.ideas.activate, { ideaId, title: "Two-axis waterfall", minutes: 20, energy: 2, doneWhen: "It scrubs smoothly.", lane: "Writing" });
+    expect(await t.run(ctx => ctx.db.get(taskId))).toMatchObject({ lane: "Writing", ideaId, status: "Ready" });
+    expect(await asA.query(api.ideas.get, { ideaId })).toMatchObject({ lane: "Writing", stage: "Active", task: { title: "Two-axis waterfall", status: "Ready" } });
+  });
 });
