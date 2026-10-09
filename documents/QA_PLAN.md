@@ -2,7 +2,7 @@
 
 Work through this from top to bottom: first locally (Parts A–C), then deployment (D–E), then the same checks on the live app (F). Each step says **what to do** and **what you should see**. Tick the boxes as you go. When something is off, write it down using the bug template at the end and keep going; then send me the list.
 
-Written 2 October 2026; Part B rewritten 6 October and updated 8 October 2026 for the Ritual redesign and the polish round after it (uncommitted). Parts A and B passed on 8 October.
+Written 2 October 2026; Part B rewritten 6 October and updated 8 October 2026 for the Ritual redesign and the polish round after it. Parts A and B passed on 8 October. Everything up to 9 October was committed and pushed on 10 October (D1).
 
 > **Safety rules for the whole plan**
 > - Use test accounts with test passwords for everything destructive (restore, delete). Your real account comes last, and only on the deployed app.
@@ -321,7 +321,7 @@ These are the steps for the recommended set-up: **Vercel** for the Next.js app, 
 
 > **Production gate:** email verification, password reset and Google sign-in exist (9 October). Production Convex also needs a new pair of `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_JWK` for notifications (AUTH_SETUP.md). Production needs `RESEND_API_KEY` on Convex, or sign-up is refused. Without a verified domain in Resend, email only reaches your own Resend address: fine for **your own use**, not for friends yet. Google needs its production redirect URI and `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` on production Convex.
 
-- [ ] **D1. Commit and push.** Decide the commit groups (I can propose them), commit to `main`, and push to GitHub (`VimalKManoj/becoming`). Only stable work goes to `main`.
+- [x] **D1. Commit and push.** Done 10 October 2026: nine commits on `main` (`8f4f195` to `cd17634`), pushed to GitHub (`VimalKManoj/becoming`).
 - [ ] **D2. Create the Convex production deployment.**
   1. In the Convex dashboard, open the **becoming** project and select **Production**. It's created on first use.
   2. Go to Settings → **Deploy keys** and generate a **production** deploy key.

@@ -76,6 +76,8 @@ All of it is implemented and verified by automated tests, typecheck, lint and a 
 
 5C is the user's trial (documents/TRIAL_GUIDE.md). Phase 6 is not started. Pause for the user's signed-in review before any further implementation.
 
+On 10 October that work was committed and pushed as nine commits (`8f4f195` to `cd17634`), together with everything built up to 9 October: the Ritual redesign, email and Google sign-in, assistants (MCP) and the Inbox, reminders, tasks that move freely, the project constellation, and project archive and delete. The user then asked to deploy to production (QA Part D) before the remaining flow and design changes.
+
 ## Detailed phase learning notebook
 
 The user requires detailed explanations, file changes and important code for learning after every phase. Maintain the local-only `documents/phase-learning/` folder using its PHASE-TEMPLATE.md. It is intentionally gitignored; do not stage or force-add it. If absent in a fresh clone, recreate the index/template from this requirement rather than treating it as committed project setup.

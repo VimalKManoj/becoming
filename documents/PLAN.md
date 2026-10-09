@@ -159,7 +159,7 @@ Add create/edit/archive for projects and milestones, link tasks, derive understa
 
 **Gate:** archiving does not create dangling references or ready recommendations from archived projects. **Learn:** typed relationships and derived state.
 
-**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending. Committed and pushed 10 October.
 - Work has a Projects view: create, edit, Mark done, Archive, Make active.
 - Ordered milestones: add, edit, move, remove. Removing one unlinks its tasks, so nothing is left dangling.
 - Each project's tasks are grouped by milestone. Progress shows counts as well as a percentage.
@@ -175,7 +175,7 @@ Persist brainstorm fields/references, reversible activation and links to origina
 
 **Gate:** saving an idea does not schedule it; activation creates the intended linked task once. **Exercise:** follow an idea through to its first session.
 
-**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending. Committed and pushed 10 October.
 - Ideas can be edited in full: title, lane, notes and structured brainstorm fields.
 - A stage is shown: Captured, Brainstorming, Active or Archived.
 - Activation can add a smaller step and link a project or milestone, or start a new project from the idea.
@@ -188,7 +188,7 @@ Review the last-six-session approach using actual usage. Discuss lane weighting,
 
 **Gate:** test neglected lanes, consecutive same-lane sessions, dependencies, low capacity and explicit user selection. **Evidence:** a technical breakdown of one rule and its trade-off.
 
-**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending. Committed and pushed 10 October.
 - A pinned task comes first whenever it fits. When it doesn't, Today explains why.
 - Choosing an alternative asks an optional one-tap reason, recorded with the session.
 - Settings can favour one lane slightly; it counts as one session fewer.
@@ -207,7 +207,7 @@ Agree on what counts as a session, week boundaries, planned pauses and target ef
 
 **Gate:** changing a target does not rewrite past awards; rest creates no overdue backlog or fake progress. **Learn:** temporal data modelling. **Exercise:** explain a paused-week example.
 
-**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending. Committed and pushed 10 October.
 - **Rules:** Monday to Sunday in the saved timezone. Every saved recap qualifies.
 - **Targets:** the first target applies this week; later changes start next Monday.
 - **Pauses:** this week or next. A pause neither adds to nor breaks a streak.
@@ -222,7 +222,7 @@ Build artifact editing, draft/ready/published status, publication links, portfol
 
 **Gate:** a published record has a valid link; evidence remains attributable; nothing is posted automatically. **Evidence:** one completed component with its design/code/process notes.
 
-**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending. Committed and pushed 10 October.
 - Proof has views: All, Drafts, Ready to share, Published and Portfolio candidates.
 - Each piece of evidence has editable details: title, link, notes and skills.
 - Published needs a valid link and a date that isn't in the future, and moving back clears both.
@@ -238,7 +238,7 @@ Discuss uploads, badges and a subtle celebration or garden only after the useful
 
 **Gate:** progress signals reflect real records, and all interactions remain accessible. No XP economy or mandatory daily posting by default.
 
-**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending. Committed and pushed 10 October.
 - Journey shows lifetime counts and a "firsts" timeline, both derived from records, so nothing is awarded twice.
 - A 12-week activity calendar works as a table, with a text label on every day and paused weeks named.
 - A short check-mark celebration plays when a session is saved, and is turned off under reduced motion.
@@ -250,7 +250,7 @@ Discuss uploads, badges and a subtle celebration or garden only after the useful
 
 Complete export/restore, migrations, account deletion and recovery. Test malformed backups, version mismatches, duplicate imports, interrupted operations and owner isolation. Select archive/delete semantics together.
 
-**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending. Committed and pushed 10 October.
 - **Export:** JSON with original IDs. Screenshots aren't included; their evidence links are.
 - **Restore:** only into an empty workspace, in one transaction, with every link rebuilt. Each record passes the same rules as the form that created it (lengths, links, smaller steps, brainstorm, publication date). Rules that span records are checked before anything is written: repeated IDs, prerequisite loops, self-links, more than 10 prerequisites, a milestone from another project, an idea pointing at another idea's task, a publication date in the future, two commitments or reflections for one week, and a malformed timezone. Milestone completion is checked against the restored tasks (a true date is kept, a missing one filled in, a wrong one cleared). An archived prerequisite is allowed, because real data can contain one. Restoring replaces the profile settings (motive, timezone, target, preferences) of an account that has nothing else yet. Another format, another version and broken references are refused too, and a failure changes nothing.
 - **Delete workspace data:** in batches, including screenshots.
@@ -261,7 +261,7 @@ Complete export/restore, migrations, account deletion and recovery. Test malform
 
 Refine the user's chosen design with keyboard access, focus management, contrast, mobile layouts, reduced motion, meaningful loading/empty/error states and performance checks. New UI/motion libraries require discussion first.
 
-**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending, and nothing is committed.
+**Status:** Implemented 2 October and verified by automated tests, typecheck, lint and a production build; your signed-in walkthrough is pending. Committed and pushed 10 October.
 - **Contrast**, measured with the WCAG formula:
   - Muted text now passes 4.5:1 on every background (light #5b6b5f).
   - Fields, chips and secondary buttons use a `--field-line` border (#768478 light, #809181 dark) that passes 3:1 against paper, surface and the soft panel background in both themes.
@@ -317,7 +317,7 @@ Structured assignment import, context export for ChatGPT, scheduled-task integra
 - phases 4A, 4B, 3A, 3B, 3C and 4C;
 - phases 5A and 5B.
 
-Nothing is committed: you asked to test after all phases were done.
+Committed and pushed on 10 October 2026 as nine commits (`8f4f195` to `cd17634`), together with everything built up to 9 October: the Ritual redesign, email and Google sign-in, assistants and the Inbox, reminders, tasks that move freely, the project constellation, and project archive and delete.
 
 **Before testing,** run `npm run backend` once. It pushes the additive schema and the new functions to your development deployment; nothing was synced for you this time.
 
