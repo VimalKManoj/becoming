@@ -1,0 +1,222 @@
+/* Settings (Ritual, prefix s-), then the Account and fallback pages (Ember Glass, see
+   documents/DESIGN_SYSTEM.md). */
+
+/* ---------- Settings (Ritual design: a sticky side nav and one column of cards). Prefix: s- ---------- */
+.s-page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:24px;animation:r-rise .6s both}
+.s-lede{margin-top:10px}
+.s-layout{display:flex;gap:40px;align-items:flex-start}
+.s-nav{position:sticky;top:0;flex:none;width:184px;display:flex;flex-direction:column;gap:2px}
+.s-nav a{display:flex;align-items:center;height:38px;padding:0 14px;border-radius:12px;font:500 13.5px var(--r-sans);color:var(--r-muted);background:transparent;text-decoration:none;transition:all .2s}
+.s-nav a:hover{color:var(--r-ink-2);text-decoration:none}
+.s-nav a[aria-current]{background:rgba(255,138,61,.12);color:var(--r-ember-pale)}
+.s-nav-bone{display:flex;align-items:center;height:38px;padding:0 14px}
+.s-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px}
+/* Phones: the prototype drops the side nav; the cards read top to bottom. */
+@media(max-width:899px){.s-nav{display:none}}
+
+.s-card{padding:22px;border-radius:26px;background:var(--r-glass);border:1px solid var(--r-line);scroll-margin-top:16px}
+.s-bones{display:flex;flex-direction:column;gap:12px}
+.s-h{font:500 16px var(--r-sans)}
+.s-sub{margin-top:2px}
+.s-mt10{margin-top:10px}
+.s-note{margin-top:14px}
+.s-error{font:400 12.5px/1.45 var(--r-sans);color:var(--r-red-pale)}
+
+/* Motive: the north star, previewed as Today shows it. */
+.s-motive{padding:clamp(20px,4cqi,28px);border-radius:28px;background:radial-gradient(110% 80% at 100% 0%,rgba(255,138,61,.24),transparent 60%),linear-gradient(160deg,rgba(255,240,225,.07),rgba(255,240,225,.02));border-color:rgba(255,170,110,.22)}
+.s-motive-top{gap:10px;flex-wrap:nowrap}
+.s-count{flex:none;font:500 11px var(--r-mono);color:var(--r-muted)}
+.s-preview{margin-top:16px;padding:18px 20px;border-radius:20px;background:rgba(0,0,0,.25)}
+.s-preview-text{font:400 clamp(28px,5cqi,40px)/1.05 var(--r-serif);margin-top:8px;text-wrap:pretty;overflow-wrap:anywhere}
+.s-preview-text em{color:var(--r-ember-text);font-style:italic}
+.s-preview-text .s-empty{color:var(--r-muted)}
+.s-field{margin-top:14px}
+.s-motive-input{height:52px;padding:0 16px;border-color:rgba(255,235,215,.16)}
+.s-hint{margin-top:8px}
+
+/* Rhythm: target stepper, week dots, pause, timezone. */
+.s-target-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;margin-top:16px}
+.s-stepper{display:flex;align-items:center;gap:14px}
+.s-step{width:44px;height:44px;min-height:44px;padding:0;border-radius:14px;background:rgba(255,240,225,.06);border:1px solid var(--r-line-3);color:var(--r-ink);font:400 20px var(--r-sans);box-shadow:none;transition:background .2s}
+.s-step:hover{background:rgba(255,240,225,.1);color:var(--r-ink);filter:none}
+.s-step:disabled{opacity:.4;cursor:default}
+.s-target{font:500 40px/1 var(--r-mono)}
+.s-target-unit{font:400 14px var(--r-sans);color:var(--r-text)}
+.s-dots{display:flex;gap:6px}
+.s-dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,240,225,.07);transition:all .3s;font:600 9px var(--r-mono);color:#1B120D}
+.s-dot.on{background:var(--r-ember);box-shadow:0 0 12px rgba(255,138,61,.45)}
+.s-copy{font:400 13px/1.5 var(--r-sans);color:var(--r-text);margin-top:12px}
+.s-start{gap:12px;align-items:flex-start}
+.s-warn{margin-top:12px;color:var(--r-red-pale)}
+.s-rule{height:1px;background:var(--r-line);margin:18px 0}
+.s-switch-row{display:flex;align-items:center;gap:14px}
+.s-switch-text{flex:1;min-width:0}
+.s-switch-title{font:500 14.5px var(--r-sans)}
+.s-card .r-toggle:disabled{opacity:.45;cursor:not-allowed}
+.s-pause{margin-top:12px;padding:10px 14px;border-radius:14px;background:repeating-linear-gradient(135deg,rgba(201,184,240,.16) 0 6px,rgba(201,184,240,.05) 6px 12px);font:500 12.5px/1.5 var(--r-sans);color:var(--r-lilac-pale);animation:r-rise .4s both}
+.s-pause .r-link{margin-left:6px;font-size:12.5px}
+.s-zone-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:16px;font:400 13px var(--r-sans);color:var(--r-text)}
+.s-zone{font:500 13px var(--r-mono);color:var(--r-ink)}
+.s-zone-edit{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;margin-top:12px;animation:r-rise .4s both}
+.s-zone-edit .r-field{flex:1 1 240px}
+.s-select{height:46px;padding:0 38px 0 14px;border-radius:14px;font:400 13.5px var(--r-mono)}
+.s-zone-note{flex-basis:100%}
+
+/* Reminder: time and days, and a preview of the notification. */
+.s-remind{display:flex;flex-wrap:wrap;gap:16px 28px;margin-top:16px;animation:r-rise .4s both}
+.s-remind-choices{flex:1 1 260px;display:flex;flex-direction:column;gap:12px}
+.s-chips{display:flex;flex-wrap:wrap;gap:6px}
+.s-notif{flex:1 1 260px;margin:0;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:18px;background:rgba(40,30,26,.8);border:1px solid var(--r-line-3);box-shadow:0 10px 24px rgba(0,0,0,.3)}
+.s-notif-icon{flex:none;width:30px;height:30px;border-radius:9px;background:radial-gradient(circle at 35% 30%,#FFC08F,#F06A2A 60%,#7A2E0E)}
+.s-notif-body{flex:1;min-width:0}
+.s-notif-head{display:flex;justify-content:space-between;gap:8px;font:500 12px var(--r-sans);color:var(--r-text)}
+.s-notif-text{font:400 13px/1.4 var(--r-sans);color:var(--r-ink);margin-top:3px}
+
+/* How Today chooses: four lane tiles, each says its lane in words. */
+.s-explain{font:400 13px/1.5 var(--r-sans);color:var(--r-text);margin-top:6px;max-width:560px}
+.s-favs{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:16px}
+.s-fav{width:auto;min-height:112px;display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:12px;padding:14px;border-radius:20px;text-align:left;background:rgba(255,240,225,.04);border:1px solid rgba(255,235,215,.1);color:var(--r-ink);box-shadow:none;font:inherit;transition:all .25s}
+.s-fav:hover{border-color:rgba(255,170,110,.35);color:var(--r-ink);filter:none}
+.s-fav[aria-pressed=true]{background:rgba(255,138,61,.16);border-color:rgba(255,138,61,.5)}
+.s-fav-dots{display:flex;gap:4px}
+.s-fav .r-dot{width:9px;height:9px}
+.s-fav-title{display:block;font:500 14px var(--r-sans)}
+.s-fav-detail{display:block;font:400 12px/1.4 var(--r-sans);color:var(--r-muted);margin-top:4px}
+.s-pin{display:flex;align-items:flex-start;gap:12px;margin-top:14px;padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.22)}
+.s-pin-text{flex:1;min-width:0}
+.s-pin-title{font:500 14px/1.4 var(--r-sans);overflow-wrap:anywhere}
+.s-pin .r-link{flex:none;margin-top:1px}
+
+/* During focus. */
+.s-focus{display:flex;flex-direction:column;gap:16px}
+
+/* Account. */
+.s-account{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.s-avatar{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:#2A211D;border:1px solid rgba(255,235,215,.16);font:500 18px var(--r-sans)}
+.s-who{flex:1 1 180px;min-width:0}
+.s-who-name{font:500 16px var(--r-sans);overflow-wrap:anywhere}
+.s-who-mail{font:400 13px var(--r-sans);color:var(--r-muted);margin-top:2px;overflow-wrap:anywhere}
+.s-account-actions{display:flex;flex-wrap:wrap;gap:8px}
+.s-account .r-ghost{height:42px}
+.s-account-link{display:inline-flex;align-items:center;height:42px;padding:0 14px;color:var(--r-ember-text);font:500 13.5px var(--r-sans);text-decoration:none}
+.s-account-link:hover{color:var(--r-ember-pale);text-decoration:none}
+
+/* Your data: keep it (export, restore), then the permanent box. */
+.s-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:14px}
+.s-tile{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:20px;background:rgba(0,0,0,.2)}
+.s-tile-title{font:500 14.5px var(--r-sans)}
+.s-tile-text{font:400 12.5px/1.45 var(--r-sans);color:var(--r-muted);flex:1}
+.s-mini{position:relative;align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;width:auto;height:40px;min-height:40px;padding:0 16px;border-radius:99px;cursor:pointer;background:rgba(255,240,225,.08);border:1px solid var(--r-line-4);color:var(--r-ink);font:500 13px var(--r-sans);box-shadow:none;transition:background .2s}
+.s-mini:hover{background:rgba(255,240,225,.12);color:var(--r-ink);filter:none}
+.s-mini.ember{background:rgba(255,138,61,.14);border-color:rgba(255,170,110,.35);color:var(--r-ember-pale)}
+.s-mini input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.s-mini:focus-within{outline:2px solid var(--r-ember);outline-offset:3px}
+.s-mini.is-off{opacity:.5;cursor:not-allowed}
+.s-restore{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border-radius:16px;border:1px dashed rgba(255,235,215,.2);animation:r-rise .35s both}
+.s-danger{margin-top:18px;padding:16px;border-radius:20px;border:1px solid rgba(255,107,91,.28);background:rgba(255,107,91,.05)}
+.s-danger-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.s-danger .r-ghost.red{padding:0 16px}
+.s-danger .r-ghost.red:hover{background:rgba(255,107,91,.12);color:var(--r-red-pale)}
+.s-confirm{display:flex;flex-direction:column;gap:12px;margin-top:12px;animation:r-rise .35s both}
+.s-confirm-text{font:400 14px/1.5 var(--r-sans);color:#FFE3DE}
+.s-confirm-input{width:100%;height:46px;padding:0 14px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,107,91,.4);font:500 14px var(--r-mono);color:var(--r-ink);outline:none}
+.s-confirm-input.sans{font:400 15px var(--r-sans)}
+.s-confirm-input::placeholder{color:var(--r-placeholder)}
+.s-confirm-input:focus{border-color:var(--r-red)}
+.s-confirm .r-btn:disabled{cursor:not-allowed}
+
+/* ---------- Account page (standalone, outside the workspace shell) ---------- */
+/* One quiet screen, no page scroll on desktop: the form on the left, the bloom on the
+   right. A very short window scrolls the form column only, never the page. */
+.account-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);height:100vh;height:100dvh;overflow:hidden}
+.account-side{display:grid;grid-template-rows:auto 1fr auto;width:min(420px,100%);margin:0 auto;padding:36px 28px 28px;overflow-y:auto;scrollbar-width:none}
+.account-brand{display:flex;align-items:center;gap:10px;font-size:22px;margin:0}
+.account-brand .brand-orb{width:26px;height:26px;margin:0;box-shadow:0 0 18px rgba(255,138,61,.45)}
+.auth{align-self:center;display:grid;gap:10px;padding:28px 0}
+.auth-title{font-size:clamp(40px,4vw,52px)}
+.auth-lede{margin-bottom:14px}
+.auth-form{display:grid;gap:12px}
+.auth-fieldset{display:grid;gap:14px}
+.auth-fieldset input{height:48px;padding:0 16px;border-radius:14px}
+.auth-submit{width:100%;min-height:50px;margin-top:6px;font-size:15px}
+.auth-switch{margin-top:6px;color:var(--muted);font-size:13.5px}
+.auth-switch .text-button{padding:2px 4px;color:var(--accent-text);text-decoration-color:rgba(255,154,82,.4)}
+.account-status{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text-2)}
+.account-status::before{content:"";flex:none;width:8px;height:8px;margin-top:6px;border-radius:50%;border:1.5px solid var(--accent);background:conic-gradient(var(--accent) 0 50%,transparent 0)}
+.account-status.confirmed::before{border:0;background:var(--mint)}
+.account-note{color:var(--muted);opacity:.85}
+.auth .notice{margin:0}
+.auth-google{width:100%;min-height:50px;gap:10px;font-size:15px}
+.auth-or{display:flex;align-items:center;gap:12px;margin:4px 0;color:var(--muted);font-size:12.5px}
+.auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--line)}
+.auth-label-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.auth-forgot{min-height:0;padding:0 2px;font-size:12.5px;color:var(--accent-text);text-decoration-color:rgba(255,154,82,.4)}
+.account-art{position:relative;display:grid;place-items:center;align-content:center;gap:34px;padding:40px;overflow:hidden;
+  background:radial-gradient(55% 50% at 50% 42%,rgba(255,138,61,.2),transparent 70%),#151110;border-left:1px solid var(--line)}
+.art-halo{position:absolute;top:42%;left:50%;width:min(62%,520px);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(255,110,40,.16) 25%,transparent 68%);animation:breathe 6s ease-in-out infinite}
+
+/* The figure: the bloom inside two slow, counter-turning orbits, each carrying one light. */
+.art-figure{position:relative;width:min(78%,400px,52vh);aspect-ratio:1;display:grid;place-items:center}
+.art-bloom{position:relative;width:100%;aspect-ratio:1;animation:rise 1.2s cubic-bezier(.2,.8,.2,1) both}
+.art-bloom .bloom{width:100%;height:100%}
+/* After blooming in, each petal breathes, offset from its neighbours. The scale property
+   composes with the bloom-in transform, so the two animations never fight. */
+.art-bloom .petal{animation:bloomIn .9s cubic-bezier(.2,.9,.25,1) both,petalBreathe 7s ease-in-out infinite}
+.art-bloom g:nth-of-type(odd) .petal{animation-duration:.9s,8.5s}
+.art-bloom .bloom-core{animation:coreGlow 5s ease-in-out infinite}
+.art-orbit{position:absolute;inset:-9%;border-radius:50%;border:1px dashed rgba(255,235,215,.1);animation:spin 46s linear infinite}
+.art-orbit::after{content:"";position:absolute;top:-4px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--ember);box-shadow:0 0 14px 2px rgba(255,138,61,.75)}
+.art-orbit-inner{inset:3%;border-style:solid;border-color:rgba(255,235,215,.05);animation-duration:70s;animation-direction:reverse}
+.art-orbit-inner::after{top:auto;bottom:-3px;width:6px;height:6px;margin-left:-3px;background:var(--mint);box-shadow:0 0 12px 2px rgba(134,227,195,.6)}
+.art-spark{position:absolute;bottom:-10px;border-radius:50%;background:#FFB27A;box-shadow:0 0 8px rgba(255,154,82,.8);opacity:0;animation:sparkRise 12s linear infinite}
+@keyframes petalBreathe{0%,100%{scale:1}50%{scale:.94}}
+@keyframes coreGlow{0%,100%{filter:drop-shadow(0 0 12px rgba(255,138,61,.55))}50%{filter:drop-shadow(0 0 26px rgba(255,138,61,.95))}}
+@keyframes sparkRise{0%{transform:translateY(0);opacity:0}12%{opacity:.7}70%{opacity:.35}100%{transform:translateY(-78vh);opacity:0}}
+
+/* Words: the headline, then one short line at a time, cross-fading. With reduced motion
+   the animations stop and only the first line shows. */
+.art-words{position:relative;display:grid;gap:14px;justify-items:center;animation:quoteIn 1.4s .4s ease both}
+.art-quote{position:relative;display:grid;min-height:1.5em;font-style:italic;font-size:17px;color:var(--muted)}
+.art-quote span{grid-area:1/1;text-align:center;opacity:0;animation:quoteCycle 18s ease-in-out infinite}
+.art-quote span:nth-child(2){animation-delay:6s}.art-quote span:nth-child(3){animation-delay:12s}
+.art-quote span:first-child{opacity:1}
+@keyframes quoteCycle{0%{opacity:0;transform:translateY(6px);filter:blur(3px)}6%,28%{opacity:1;transform:none;filter:none}34%,100%{opacity:0;transform:translateY(-6px);filter:blur(3px)}}
+.art-title{position:relative;text-align:center;font-size:clamp(24px,2.2vw,32px);line-height:1.15;color:var(--text-2)}
+
+/* ---------- Error and not-found ---------- */
+.fallback-page{gap:14px}
+.fallback-page .brand-orb{margin:0 0 6px}
+.fallback-page .row{margin-top:4px}
+.fallback-card{gap:12px}
+.fallback-title{font-size:34px;line-height:1.05;text-wrap:balance}
+.fallback-card .text-2{max-width:420px}
+
+@media(max-width:520px){
+  .fallback-page{margin:20px auto;padding:22px}
+  .fallback-title{font-size:30px}
+}
+
+/* Phones and narrow windows: the form alone, still one screen. */
+@media(max-width:899px){
+  .account-split{display:block;height:auto;min-height:100vh;min-height:100dvh;overflow:visible}
+  .account-side{min-height:100vh;min-height:100dvh;padding:24px 20px;overflow:visible}
+  .account-art{display:none}
+}
+/* Short desktop windows: tighten the spacing so the form still fits. */
+@media(min-width:900px) and (max-height:720px){
+  .account-side{padding-block:22px 18px}
+  .auth{gap:8px;padding:12px 0}
+  .auth-title{font-size:38px}
+  .auth-fieldset{gap:10px}
+}
+
+/* ---------- Assistants ---------- */
+.s-token-new{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+.s-token{margin-top:16px;padding:16px;border-radius:18px;background:rgba(0,0,0,.22);border:1px solid rgba(255,170,110,.25);animation:r-rise .4s both}
+.s-token-row{display:flex;align-items:flex-start;gap:8px;margin-top:8px}
+.s-code{flex:1;min-width:0;padding:10px 12px;border-radius:12px;background:rgba(255,240,225,.05);border:1px solid var(--r-line-3);font:400 12.5px/1.5 var(--r-mono);color:var(--r-ink);overflow-wrap:anywhere;user-select:all}
+.s-inline-code{font:400 12px var(--r-mono);color:var(--r-ink-2);overflow-wrap:anywhere}
+.s-tokens{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.s-token-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:rgba(255,240,225,.035);border:1px solid var(--r-line)}
+.s-channels{flex:1 1 260px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.s-channels .s-switch-row{width:100%}

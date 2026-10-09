@@ -1,0 +1,195 @@
+/* Work — the Ritual design's "What you're building." (lanes, project cards, task cards) and
+   the project page (milestone timeline and next step), plus Work's sheets and task form.
+   Values follow the owner's prototype exactly. Prefix: w- */
+
+.w-work{gap:22px}
+.w-head-btn{padding:0 18px}
+.w-list{display:flex;flex-direction:column;gap:10px}
+.w-eyebrow{display:flex;align-items:center;gap:8px;font:500 12px var(--r-sans);color:var(--r-ember-soft)}
+
+/* Project cards: the whole card opens the project. */
+.w-proj{display:flex;flex-wrap:wrap;align-items:center;gap:16px 28px;width:100%;min-height:0;padding:20px 22px;border-radius:26px;cursor:pointer;text-align:left;color:var(--r-ink);font:inherit;
+  background:radial-gradient(80% 120% at 100% 0%,rgba(255,138,61,.18),transparent 60%),var(--r-glass);border:1px solid rgba(255,170,110,.2);box-shadow:none;transition:border-color .25s}
+.w-proj:hover{border-color:rgba(255,170,110,.4);color:var(--r-ink);filter:none}
+.w-proj:active{transform:none}
+.w-proj-main{flex:1 1 260px;min-width:0;display:flex;flex-direction:column}
+.w-proj-name{font:400 30px/1.05 var(--r-serif);margin-top:6px;overflow-wrap:anywhere}
+.w-proj-next{font:400 13px var(--r-sans);color:var(--r-text);margin-top:6px;overflow-wrap:anywhere}
+.w-proj-progress{flex:1 1 220px;min-width:0;display:flex;flex-direction:column}
+.w-mono-line{display:flex;justify-content:space-between;align-items:center;gap:10px;font:500 12px var(--r-mono);color:var(--r-text)}
+.w-bar{margin-top:8px}
+.w-open{font:500 13px var(--r-sans);color:var(--r-ember-text)}
+
+/* Lanes: one column per lane, wrapping on narrow screens. */
+.w-lanes{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
+.w-lane{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:24px;background:rgba(255,240,225,.025);border:1px solid rgba(255,235,215,.07)}
+.w-lane-head{display:flex;align-items:baseline;gap:8px;padding:2px 4px 6px}
+.w-lane-head .r-dot{align-self:center}
+.w-lane-name{font:500 15px var(--r-sans);color:var(--r-ink)}
+.w-lane-sub{font:400 12px var(--r-sans);color:var(--r-muted)}
+.w-lane-empty{padding:12px 14px;border-radius:18px;border:1px dashed rgba(255,235,215,.14);font:400 12.5px var(--r-sans);color:var(--r-muted)}
+
+/* Task cards: the whole card opens the task's sheet. */
+.w-task{display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;min-height:0;padding:14px;border-radius:18px;cursor:pointer;text-align:left;color:var(--r-ink);font:inherit;
+  background:var(--r-glass);border:1px solid var(--r-line);box-shadow:none;transition:border-color .25s}
+.w-task:hover{border-color:rgba(255,170,110,.35);color:var(--r-ink);filter:none}
+.w-task:active{transform:none}
+.w-task-title{font:500 14px/1.35 var(--r-sans);overflow-wrap:anywhere}
+.w-task-foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.w-task-meta{display:inline-flex;align-items:center;gap:7px;min-width:0;font:400 12px var(--r-sans);color:var(--r-muted);overflow-wrap:anywhere}
+.w-pin{display:inline-flex;align-items:center;gap:8px;font:500 11.5px var(--r-sans);color:var(--r-ember-soft)}
+.w-pin .r-diamond{margin-top:0;width:7px;height:7px}
+.w-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:10px}
+.w-more{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:0 4px;color:var(--r-muted);font:400 13px var(--r-sans)}
+
+/* Project page. */
+.w-page{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.w-project-title{font:400 clamp(40px,7cqi,58px)/1 var(--r-serif);margin-top:8px;overflow-wrap:anywhere}
+.w-purpose{font:400 15px/1.5 var(--r-sans);color:var(--r-text);margin-top:10px;max-width:560px;white-space:pre-wrap;overflow-wrap:anywhere}
+.w-cols{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.w-ms-card{flex:1 1 320px;min-width:0;padding:20px;border-radius:26px;background:var(--r-glass);border:1px solid var(--r-line)}
+.w-mono-head{font:500 12px var(--r-mono);color:var(--r-text)}
+.w-ms-bar{margin:10px 0 18px}
+.w-none{font:400 13.5px/1.5 var(--r-sans);color:var(--r-text)}
+.w-timeline{list-style:none;margin:0;padding:0}
+.w-ms{display:flex;gap:12px;width:100%;min-height:0;padding:0;border:0;border-radius:12px;background:none;box-shadow:none;cursor:pointer;text-align:left;color:var(--r-ink);font:inherit}
+.w-ms:hover{filter:none;color:var(--r-ink)}.w-ms:hover .w-ms-name{color:var(--r-ember-pale)}
+.w-ms:active{transform:none}
+.w-ms-rail{display:flex;flex-direction:column;align-items:center}
+.w-mark{width:20px;height:20px;box-sizing:border-box;border-radius:50%;display:grid;place-items:center;font:700 10px var(--r-sans);color:var(--r-on-mint);background:transparent;border:1.5px solid rgba(255,235,215,.25)}
+.w-line{width:2px;flex:1;min-height:14px;background:rgba(255,235,215,.12)}
+.w-ms.done .w-mark{background:var(--r-mint);border:2px solid var(--r-mint)}
+.w-ms.done .w-line{background:var(--r-mint)}
+.w-ms.current .w-mark{background:#1A1210;border:2px solid var(--r-ember)}
+.w-timeline li:last-child .w-line{background:transparent}
+.w-ms-text{display:flex;flex-direction:column;padding-bottom:14px;min-width:0}
+.w-ms-name{font:500 14px var(--r-sans);color:var(--r-ink);overflow-wrap:anywhere;transition:color .2s}
+.w-ms.next .w-ms-name,.w-ms.later .w-ms-name{color:var(--r-muted)}
+.w-ms-meta{font:400 12px var(--r-sans);color:var(--r-muted);margin-top:2px}
+.w-next{flex:1 1 300px;min-width:0;padding:22px;border-radius:26px;background:radial-gradient(120% 80% at 100% 0%,rgba(255,138,61,.26),transparent 60%),linear-gradient(160deg,rgba(255,240,225,.08),rgba(255,240,225,.02));border:1px solid rgba(255,170,110,.22)}
+.w-next-title{font:400 28px/1.06 var(--r-serif);margin:10px 0 12px;overflow-wrap:anywhere}
+.w-next-meta{font:400 13.5px/1.45 var(--r-sans);color:var(--r-text)}
+.w-plan{margin-top:18px;height:54px;font:600 15px var(--r-sans);box-shadow:0 10px 30px rgba(255,122,47,.3)}
+.w-tasks-card{border-radius:26px}
+.w-rows{list-style:none;margin:10px 0 0;padding:0}
+.w-rows li+li .w-row{border-top:1px solid var(--r-line)}
+.w-row{display:flex;align-items:center;gap:10px;width:100%;min-height:0;padding:11px 2px;border:0;border-radius:0;background:none;box-shadow:none;cursor:pointer;text-align:left;color:var(--r-ink);font:inherit}
+.w-row:hover{filter:none;color:var(--r-ink)}.w-row:hover .w-row-title{color:var(--r-ember-pale)}
+.w-row:active{transform:none}
+.w-row-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.w-row-title{font:500 14px/1.35 var(--r-sans);overflow-wrap:anywhere;transition:color .2s}
+.w-row-meta{font:400 12px var(--r-sans);color:var(--r-muted)}
+
+/* Sheets: the capture sheet's card, scrolling when a task has a lot to say. */
+.w-sheet{max-height:calc(100dvh - 80px);overflow-y:auto;scrollbar-width:none}
+.w-sheet::-webkit-scrollbar{display:none}
+@media(max-width:899px){.w-sheet{max-height:92dvh}}
+.w-sheet-eyebrow{min-width:0;overflow-wrap:anywhere}
+.w-sheet-title{font:400 clamp(34px,6cqi,46px)/1.02 var(--r-serif);overflow-wrap:anywhere;text-wrap:pretty}
+.w-sheet-title.sm{font:400 28px/1.08 var(--r-serif)}
+.w-sheet-title em{color:var(--r-ember-text);font-style:italic}
+.w-blocked{background:rgba(255,107,91,.1);border:1px solid rgba(255,107,91,.3)}
+.w-blocked .r-eyebrow-sm{color:var(--r-red-text)}
+.w-waiting{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
+.w-waiting li{display:flex;gap:10px;align-items:baseline;font:400 14px/1.4 var(--r-sans);color:var(--r-ink-2);overflow-wrap:anywhere}
+.w-waiting li::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;border:1.5px dashed var(--r-muted);transform:translateY(-1px)}
+
+/* Forms. */
+.w-form{display:flex;flex-direction:column;gap:16px;min-width:0}
+.w-fields{display:flex;flex-direction:column;gap:16px;min-width:0;margin:0;padding:0;border:0}
+.w-group{margin:0;padding:0;border:0;min-width:0}
+.w-group>legend{padding:0;margin-bottom:8px}
+.w-pair{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:620px){.w-pair{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.w-textarea{min-height:0}
+.w-markdown{min-height:0;font:400 13px/1.5 var(--r-mono)}
+.w-select{appearance:none;padding-right:38px;background:linear-gradient(45deg,transparent 50%,var(--r-muted) 50%) calc(100% - 20px) 50%/5px 5px no-repeat,linear-gradient(135deg,var(--r-muted) 50%,transparent 50%) calc(100% - 15px) 50%/5px 5px no-repeat,rgba(255,240,225,.05)}
+.w-select:disabled{opacity:.6}
+
+/* Lane and energy are native radios drawn as the design's chips. */
+.w-choice{position:relative}
+.w-choice input{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;opacity:0;cursor:pointer}
+.w-choice:has(input:checked){background:rgba(255,138,61,.16);color:var(--r-ember-pale);border-color:rgba(255,138,61,.5)}
+.w-choice:focus-within{outline:2px solid var(--r-ember);outline-offset:3px}
+.w-energies{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.w-energy{height:44px;justify-content:center;gap:9px}
+.w-details{padding:0 14px;border-radius:16px;border:1px dashed rgba(255,235,215,.2)}
+.w-details summary{position:relative;display:block;min-height:44px;padding:13px 28px 13px 0;cursor:pointer;list-style:none}
+.w-details summary::-webkit-details-marker{display:none}
+.w-details summary::after{content:"+";position:absolute;right:2px;top:10px;font:400 18px var(--r-sans);color:var(--r-text)}
+.w-details[open] summary::after{content:"−"}
+.w-checklist{display:grid;gap:8px;max-height:220px;overflow-y:auto;padding:2px}
+.w-check{display:flex;gap:10px;align-items:center;font:400 14px var(--r-sans);color:var(--r-ink);cursor:pointer}
+.w-check input{width:18px;height:18px;min-width:18px;padding:0;accent-color:var(--r-ember)}
+.w-check>span{min-width:0;overflow-wrap:anywhere}
+
+/* One-tap Start / Done on a lane card (sits beside the card button, not inside it). */
+.w-task-wrap{position:relative}
+.w-task-wrap .w-task{padding-right:52px}
+.w-quick{position:absolute;top:10px;right:10px;width:32px;height:32px;min-height:0;padding:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;font:600 12px var(--r-sans);background:rgba(255,240,225,.06);border:1px solid var(--r-line-3);color:var(--r-ember-pale);box-shadow:none;transition:background .3s ease,border-color .3s ease,transform .3s cubic-bezier(.22,1,.36,1)}
+.w-quick:hover{background:rgba(255,138,61,.16);border-color:rgba(255,138,61,.5);transform:scale(1.06);filter:none;color:var(--r-ember-pale)}
+.w-quick.done{color:var(--r-mint)}
+.w-quick.done:hover{background:rgba(134,227,195,.16);border-color:rgba(134,227,195,.5);color:var(--r-mint)}
+
+/* Projects header (the constellation design): Work's Tasks | Projects tabs, + New project,
+   then the title beside the List | Visual switch. */
+.w-header{display:flex;flex-direction:column;gap:10px}
+.w-hrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.w-tabs{display:flex;align-items:center;gap:6px}
+.w-tabs-label{margin-right:8px}
+.w-tab{height:44px;padding:0 16px;border-radius:99px;border:1px solid transparent;background:transparent;color:var(--r-text);font:500 13.5px var(--r-sans);cursor:pointer;box-shadow:none;transition:background .2s,color .2s}
+.w-tab:hover{background:rgba(255,240,225,.04);color:var(--r-ink);filter:none}
+.w-tab.cur{background:rgba(255,240,225,.06);border-color:var(--r-line-4);color:var(--r-ink);cursor:default}
+.w-trow{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.w-trow .r-title{margin-top:0}
+.w-title-block{flex:1 1 320px;min-width:0}
+
+/* List | Visual: the design's .seg, exactly. */
+.w-seg{display:flex;flex:none;gap:4px;padding:4px;border-radius:99px;background:rgba(255,240,225,.04);border:1px solid var(--r-line)}
+.w-seg button{height:38px;min-width:44px;padding:0 16px;border-radius:99px;border:0;background:transparent;color:var(--r-text);font:500 13px var(--r-sans);cursor:pointer;box-shadow:none;transition:color .2s}
+.w-seg button:hover{color:var(--r-ink);filter:none}
+.w-seg button.on,.w-seg button[aria-pressed=true]{background:rgba(255,138,61,.16);color:var(--r-ember-pale);box-shadow:inset 0 0 0 1px rgba(255,138,61,.45)}
+.w-page.w-page-wide{max-width:1080px}
+
+/* Visual in the projects list: which project to map. */
+.w-picker{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.w-picker-chips{gap:6px;min-width:0}
+.w-picker-chips .r-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Phases card: a numbered row per phase, its goal and a thin progress bar. */
+.w-phases{list-style:none;margin:12px 0 0;padding:0}
+.w-phases li+li .w-phase{border-top:1px solid var(--r-line)}
+.w-phase{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:0;padding:12px 2px;border:0;border-radius:0;background:none;box-shadow:none;cursor:pointer;text-align:left;color:var(--r-ink);font:inherit}
+.w-phase:hover{filter:none;color:var(--r-ink)}.w-phase:hover .w-phase-name{color:var(--r-ember-pale)}
+.w-phase:active{transform:none}
+.w-phase-num{flex:none;width:30px;height:30px;display:grid;place-items:center;border-radius:9px;font:500 12px var(--r-mono);color:var(--r-ember-soft);background:rgba(255,138,61,.1);border:1px solid rgba(255,170,110,.25)}
+.w-phase.done .w-phase-num{color:var(--r-mint-text);background:rgba(134,227,195,.1);border-color:rgba(134,227,195,.3)}
+.w-phase.ahead .w-phase-num{color:var(--r-muted);background:transparent;border-color:var(--r-line-4)}
+.w-phase-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.w-phase-name{font:500 14px/1.35 var(--r-sans);overflow-wrap:anywhere;transition:color .2s}
+.w-phase-goal{font:400 12.5px/1.4 var(--r-sans);color:var(--r-text);overflow-wrap:anywhere}
+.w-phase-bar{margin-top:6px}
+.w-phase.done .w-phase-bar{--dot:var(--r-mint)}
+.w-phase-ms{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.w-phase-ms li{display:flex;align-items:baseline;gap:10px;font:400 13.5px/1.4 var(--r-sans);color:var(--r-ink-2)}
+.w-phase-code{flex:none;font:500 11.5px var(--r-mono);color:var(--r-ember-soft)}
+.w-phase-ms-title{flex:1;min-width:0;overflow-wrap:anywhere}
+
+/* Docs card: a code badge, title and what it feeds. A planned doc is faded, as on the map. */
+.w-docs{list-style:none;margin:12px 0 0;padding:0}
+.w-docs li+li .w-doc{border-top:1px solid var(--r-line)}
+.w-doc{display:flex;align-items:center;gap:12px;width:100%;min-height:0;padding:11px 2px;border:0;border-radius:0;background:none;box-shadow:none;cursor:pointer;text-align:left;color:var(--r-ink);font:inherit}
+.w-doc:hover{filter:none;color:var(--r-ink)}.w-doc:hover .w-row-title{color:var(--r-ember-pale)}
+.w-doc:active{transform:none}
+.w-doc.planned .w-doc-code{background:transparent;border-style:dashed;color:var(--r-muted)}
+.w-doc.planned .w-row-title{color:var(--r-text)}
+.w-doc-code{flex:none;min-width:46px;height:30px;padding:0 8px;box-sizing:border-box;display:grid;place-items:center;border-radius:9px;font:500 11.5px var(--r-mono);letter-spacing:.06em;color:var(--r-lilac-text);background:rgba(201,184,240,.12);border:1px solid rgba(201,184,240,.3)}
+.w-doc-code.lg{min-width:58px;height:38px;font-size:13px;margin-top:2px}
+.w-doc-link{font:500 13.5px var(--r-sans);color:var(--r-ember-text);overflow-wrap:anywhere}
+.w-doc-link:hover{color:var(--r-ember-pale)}
+.w-path{display:inline-block;max-width:100%;padding:3px 8px;border-radius:8px;background:rgba(255,240,225,.06);font:400 13px var(--r-mono);color:var(--r-ink-2);overflow-wrap:anywhere}
+.w-feeds{list-style:none;margin:8px 0 0;padding:0;gap:6px}
+.w-doc-pair{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:620px){.w-doc-pair{grid-template-columns:120px minmax(0,1fr)}}
+.w-code-input{text-transform:uppercase;letter-spacing:.08em}
+.w-switch-row{gap:14px;flex-wrap:nowrap}

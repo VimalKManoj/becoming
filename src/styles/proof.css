@@ -1,0 +1,105 @@
+/* Journey › Proof and the publish flow, as the owner's Ritual prototype (show.jProof,
+   show.publish). Reuses ritual.css (r-); one-off Proof patterns here. Prefix: p- */
+
+/* ---------- Proof tab ---------- */
+.p-tab{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:14px;min-width:0}
+
+/* Three counts that also filter the list. */
+.p-tiles{display:flex;flex-wrap:wrap;gap:10px}
+.p-tile{flex:1 1 180px;width:auto;min-height:0;padding:16px 18px;border-radius:22px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0;
+  text-align:left;cursor:pointer;color:var(--r-ink);box-shadow:none;transition:transform .2s,box-shadow .2s}
+.p-tile:hover{filter:none;color:var(--r-ink);transform:translateY(-1px)}
+.p-tile:active{transform:none}
+.p-tile.draft{background:transparent;border:1px dashed rgba(255,235,215,.22)}
+.p-tile.ready{background:rgba(134,227,195,.12);border:1px solid rgba(134,227,195,.3)}
+.p-tile.published{background:rgba(255,240,225,.05);border:1px solid var(--r-line-2)}
+.p-tile[aria-pressed=true]{box-shadow:0 0 0 2px rgba(255,138,61,.55)}
+.p-tile-count{font:500 28px var(--r-mono);line-height:1.2}
+.p-tile.ready .p-tile-count{color:var(--r-mint-text)}
+.p-tile-label{font:400 12.5px var(--r-sans);color:var(--r-text);margin-top:4px}
+div.p-tile{cursor:default;gap:8px}
+
+.p-filter{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:4px 4px 0}
+
+/* Evidence rows. */
+.p-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.p-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:14px;border-radius:24px;background:var(--r-glass);border:1px solid var(--r-line);min-width:0;animation:r-rise .6s both}
+.p-thumb{display:block;width:84px;height:60px;flex:none;border-radius:14px;object-fit:cover;background:repeating-linear-gradient(45deg,#2A211D 0 5px,#221A17 5px 10px)}
+.p-row-text{flex:1 1 200px;min-width:0}
+.p-row-title{font:500 15px/1.35 var(--r-sans);overflow-wrap:anywhere}
+.p-row-meta{font:400 12px/1.4 var(--r-sans);color:var(--r-muted);margin-top:3px;overflow-wrap:anywhere}
+.p-row .r-status{height:26px;padding:0 10px;font-size:11.5px}
+.p-more{align-self:center}
+.p-foot{padding:0 4px}
+
+/* An opened row. */
+.p-detail{flex:1 1 100%;min-width:0;display:flex;flex-direction:column;gap:14px;padding:14px 4px 2px;border-top:1px solid var(--r-line);animation:r-rise .4s both}
+.p-source{display:flex;flex-direction:column;gap:6px;min-width:0}
+.p-muted{color:var(--r-muted)}
+.p-text{font:400 13.5px/1.5 var(--r-sans);color:var(--r-text)}
+.p-skills{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.p-skills .r-fact{overflow-wrap:anywhere}
+.p-links{display:flex;flex-direction:column;gap:8px;margin:0;padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.22);min-width:0}
+.p-links>div,.p-links dd{margin:0;min-width:0}
+.p-url{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:32px;font:400 13px var(--r-mono);text-decoration:none}
+.p-url.mint{color:var(--r-mint)}.p-url.mint:hover{color:var(--r-mint-text)}
+.p-url.ember{color:var(--r-ember-text)}.p-url.ember:hover{color:var(--r-ember-pale)}
+.p-url-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-manage{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding-top:12px;border-top:1px solid var(--r-line)}
+.p-quiet{min-height:32px;color:var(--r-text);font:500 13px var(--r-sans);text-decoration:underline;text-decoration-color:rgba(255,235,215,.3);text-underline-offset:3px}
+.p-quiet:hover{color:var(--r-ink);text-decoration:underline;text-decoration-color:currentColor}
+.p-quiet:disabled{opacity:.6;cursor:wait}
+.p-danger,.p-danger:hover{color:var(--r-red-text)}
+.p-fields{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;border:0;min-width:0}
+.p-textarea{min-height:0}
+
+/* A file input dressed as a quiet link; the keyboard ring sits on the label. */
+.p-file{position:relative;display:inline-flex;align-items:center;min-height:32px;cursor:pointer;color:var(--r-text);font:500 13px var(--r-sans);text-decoration:underline;text-decoration-color:rgba(255,235,215,.3);text-underline-offset:3px}
+.p-file:hover{color:var(--r-ink);text-decoration-color:currentColor}
+.p-file input{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;opacity:0}
+.p-file:focus-within{outline:2px solid var(--r-ember);outline-offset:3px;border-radius:6px}
+.p-file:has(input:disabled){opacity:.6;cursor:wait}
+
+/* Empty views. */
+.p-empty{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:32px 22px}
+.p-empty-title{font:400 30px/1.05 var(--r-serif);text-wrap:balance}
+.p-empty .r-lede{max-width:440px;text-wrap:pretty}
+.p-empty>a,.p-empty>button{margin-top:6px}
+
+/* ---------- Publish flow ---------- */
+.p-flow{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:18px;min-width:0}
+.p-flow-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.p-steps{list-style:none;margin:0;padding:0;display:flex;gap:6px}
+.p-step{display:flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 4px;border-radius:99px;background:rgba(255,240,225,.04);font:500 11.5px var(--r-sans);color:var(--r-text)}
+.p-step-n{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:rgba(255,240,225,.08);color:var(--r-muted);font:600 10px var(--r-mono);transition:background .25s,color .25s}
+.p-step.on .p-step-n{background:var(--r-ember);color:var(--r-on-ember)}
+/* Narrow screens keep only the current step's name on show (the others stay readable to screen readers). */
+@container (max-width:420px){
+  .p-step:not([aria-current]){padding:0 4px}
+  .p-step:not([aria-current]) .p-step-l{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+}
+.p-flow-title{font:400 clamp(34px,6cqi,46px)/1.02 var(--r-serif);overflow-wrap:anywhere;outline:none}
+.p-flow-lede{font:400 13.5px/1.5 var(--r-sans);color:var(--r-text)}
+.r-btn.p-flat,.r-btn.p-flat:hover{box-shadow:none}
+
+/* Context. */
+.p-shot{display:block;width:100%;height:200px;border-radius:22px;object-fit:cover;background:repeating-linear-gradient(45deg,#2A211D 0 6px,#221A17 6px 12px)}
+.p-shot.empty{display:grid;place-items:center;padding:0 16px;text-align:center;font:500 11px var(--r-mono);color:var(--r-muted);letter-spacing:.1em;overflow-wrap:anywhere}
+.p-shot-row{gap:4px 16px;margin-top:-4px}
+.p-shot-link{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%;margin-left:auto}
+
+/* Where. */
+.p-where{gap:6px}
+.p-where .r-chip{padding:0 16px}
+.p-date{font:400 14px var(--r-mono);color-scheme:dark}
+
+/* Published. */
+.p-done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;padding-top:12px}
+.p-done-mark{position:relative;width:96px;height:96px;display:grid;place-items:center}
+.p-done-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--r-mint);animation:r-ripple 2.4s ease-out infinite}
+.p-done-core{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--r-mint);color:var(--r-on-mint);font:700 24px var(--r-sans)}
+.p-done-title{font:400 clamp(36px,7cqi,52px)/1 var(--r-serif);outline:none}
+.p-done-title em{color:var(--r-mint);font-style:italic}
+.p-done-text{font:400 14.5px/1.5 var(--r-sans);color:var(--r-text);max-width:400px;overflow-wrap:anywhere}
+.p-cand{width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:20px;background:rgba(255,240,225,.04);border:1px solid var(--r-line-2);text-align:left}
+.p-cand-title{font:500 14.5px var(--r-sans)}
