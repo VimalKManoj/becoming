@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Becoming · Project constellation</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&amp;family=Geist:wght@300..700&amp;family=Geist+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0B0908}
+*{box-sizing:border-box}
+a{color:#FF9A52}a:hover{color:#FFC08F}
+.bx{--ink:#F4EDE6;--ink2:#E9DFD6;--text:#C9BDB2;--muted:#A99D93;--ember:#FF8A3D;--ember-t:#FF9A52;--ember-s:#FFB27A;--ember-p:#FFC08F;--mint:#86E3C3;--mint-t:#A6EDD4;--lilac:#C9B8F0;--lilac-t:#D9CCF6;--red:#FF6B5B;--red-t:#FFB4AA;--line:rgba(255,235,215,.08);--line3:rgba(255,235,215,.12);--line4:rgba(255,235,215,.14);--serif:'Bricolage Grotesque',system-ui,sans-serif;--sans:'Geist',system-ui,sans-serif;--mono:'Geist Mono',ui-monospace,monospace;
+  position:relative;display:flex;min-height:900px;overflow:hidden;color:var(--ink);font-family:var(--sans);background:radial-gradient(90% 55% at 40% -10%,#3A2013 0%,#171110 50%,#0D0B0A 100%)}
+.bx button{font:inherit;color:inherit}
+.bx em{font-style:normal;color:var(--ember-t)}
+.bx em.lilac{color:var(--lilac)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* rail */
+.rail{width:92px;flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 0;border-right:1px solid rgba(255,235,215,.07);position:relative;z-index:2}
+.orb-s{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFC08F,#F06A2A 60%,#7A2E0E);box-shadow:0 0 24px rgba(255,138,61,.45);margin-bottom:14px}
+.cap{width:52px;height:52px;border-radius:18px;border:1px solid rgba(255,170,110,.35);background:rgba(255,138,61,.12);color:#FFC08F !important;font:300 26px var(--sans) !important;display:grid;place-items:center;margin-bottom:12px;cursor:pointer;padding:0}
+.nav{width:72px;min-height:56px;padding:8px 0;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted) !important;cursor:pointer}
+.nav.cur{color:#FFC08F !important}
+.navbox{width:48px;height:36px;border-radius:14px;display:grid;place-items:center}
+.nav.cur .navbox{background:rgba(255,138,61,.16)}
+.navl{font:500 11px var(--sans)}
+.gl{display:inline-block;width:13px;height:13px;border:2px solid currentColor}
+.g-today{border-radius:50%}.g-work{border-radius:4px}.g-ideas{border-radius:2px;transform:rotate(45deg)}.g-journey{border-radius:50%;border-style:dashed}
+.avatar{margin-top:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#2A211D;border:1px solid var(--line4);font:500 14px var(--sans);color:var(--ink)}
+
+/* header */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;padding:24px 32px 20px;position:relative;z-index:1}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.tabs{display:flex;align-items:center;gap:6px}
+.eyebrow{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.eyebrow.ember{color:var(--ember-s)}.eyebrow.lilac{color:var(--lilac-t)}.eyebrow.mint{color:var(--mint-t)}
+.tab{height:44px;padding:0 16px;border-radius:99px;border:1px solid transparent;background:transparent;color:var(--text) !important;font:500 13.5px var(--sans) !important;cursor:pointer}
+.tab.cur{background:rgba(255,240,225,.06);border-color:var(--line4);color:var(--ink) !important}
+.hright{display:flex;align-items:center;gap:10px}
+.example{font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--lilac-t);border:1px dashed rgba(201,184,240,.45);border-radius:99px;padding:6px 10px}
+.ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:99px;background:rgba(255,240,225,.06);border:1px solid var(--line4);color:var(--ink) !important;font:500 13.5px var(--sans) !important;cursor:pointer;text-decoration:none}
+.ghost:hover{background:rgba(255,240,225,.1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 20px;border:0;border-radius:99px;background:linear-gradient(180deg,#FF9F58,#F06A2A);color:#1A0E08 !important;font:600 14px var(--sans) !important;box-shadow:0 10px 30px rgba(255,122,47,.25),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer;transition:transform .25s}
+.btn:hover{transform:translateY(-1px)}
+.trow{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.title{margin:0;font:400 42px/1 var(--serif);letter-spacing:-.015em}
+.mline{margin-top:10px;font:500 11px var(--mono);letter-spacing:.1em;color:var(--muted)}
+.seg{display:flex;gap:4px;padding:4px;border-radius:99px;background:rgba(255,240,225,.04);border:1px solid var(--line)}
+.seg button{height:38px;min-width:44px;padding:0 16px;border-radius:99px;border:0;background:transparent;color:var(--text) !important;font:500 13px var(--sans) !important;cursor:pointer}
+.seg .on{background:rgba(255,138,61,.16);color:var(--ember-p) !important;box-shadow:inset 0 0 0 1px rgba(255,138,61,.45)}
+
+/* layout */
+.body{display:flex;flex-wrap:wrap;gap:20px;flex:1;min-height:0}
+.leftcol{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.stagewrap{height:640px;display:flex;flex-direction:column;border-radius:28px;border:1px solid rgba(255,235,215,.06);background:radial-gradient(45% 55% at 35% 55%,rgba(255,138,61,.05),transparent 70%),rgba(8,6,5,.25);overflow:hidden}
+.crumbs{flex:none;height:56px;display:flex;align-items:center;gap:8px;padding:0 10px 0 12px;border-bottom:1px solid var(--line)}
+.backb{width:36px;height:36px;border-radius:50%;border:1px solid var(--line3);background:transparent;color:var(--text) !important;display:grid;place-items:center;cursor:pointer;padding:0}
+.backb:hover{color:var(--ink) !important;background:rgba(255,240,225,.05)}
+.crumb{height:36px;padding:0 10px;border-radius:10px;border:0;background:transparent;color:var(--muted) !important;font:500 13px var(--sans) !important;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center}
+.crumb:hover{color:var(--ink) !important;background:rgba(255,240,225,.04)}
+.crumb.cur{color:var(--ink) !important;cursor:default}
+.csep{color:rgba(255,235,215,.3);font:400 14px var(--sans)}
+.chint{margin-left:auto;font:400 12px var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pn{display:flex;gap:6px;margin-left:12px}
+.tb{height:36px;min-width:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line3);background:rgba(255,240,225,.03);color:var(--text) !important;font:500 12px var(--mono) !important;cursor:pointer}
+.tb:hover{color:var(--ink) !important;border-color:rgba(255,170,110,.35)}
+.tb:disabled{opacity:.35;cursor:default}
+.canvas{flex:1;min-height:0;overflow:auto;scrollbar-width:none;position:relative}
+.canvas::-webkit-scrollbar{display:none}
+.inner{position:relative;width:940px;height:544px;margin:0 auto}
+.lvl{position:absolute;inset:0;animation:enter .55s cubic-bezier(.22,1,.36,1) both}
+.keyline{flex:none;height:44px;display:flex;align-items:center;gap:18px;padding:0 18px;border-top:1px solid var(--line);overflow:hidden;white-space:nowrap}
+.k{display:inline-flex;align-items:center;gap:7px;font:400 11.5px var(--sans);color:var(--muted)}
+.k b{font:500 10px var(--mono);letter-spacing:.12em;color:var(--ink2);font-weight:500}
+.ksep{width:1px;height:16px;background:var(--line3)}
+.sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+/* edges */
+.edges{position:absolute;left:0;top:0;width:940px;height:544px;overflow:visible;pointer-events:none}
+.edges path{fill:none}
+.e-base{stroke:rgba(225,215,205,.075);stroke-width:1}
+.e-core{stroke:rgba(225,215,205,.2);stroke-width:1}
+.e-core.off{stroke:rgba(225,215,205,.09);stroke-dasharray:3 5}
+.e-gen{stroke:rgba(215,208,228,.22);stroke-width:1}
+.e-mint{stroke:rgba(134,227,195,.35);stroke-width:1}
+.e-hl{stroke:rgba(240,228,216,.42);stroke-width:1.2}
+.e-hlg{stroke:rgba(228,218,250,.45);stroke-width:1.2}
+.e-flow{stroke:rgba(255,236,220,.5);stroke-width:1.3;stroke-linecap:round;stroke-dasharray:1 26;animation:flow 4.5s linear infinite}
+.e-flow.hi{stroke:#FFE9D8;stroke-width:1.7;opacity:.9}
+.e-flowg{stroke:rgba(228,218,250,.55);stroke-width:1.3;stroke-linecap:round;stroke-dasharray:1 26;animation:flow 4.5s linear infinite}
+
+/* column headers */
+.colh{position:absolute;top:10px;display:flex;flex-direction:column;gap:3px;pointer-events:none}
+.colh::before{content:"";width:14px;height:1px;background:rgba(255,235,215,.3);margin-bottom:6px}
+.colh b{font:500 10px var(--mono);letter-spacing:.14em;color:var(--ink2);font-weight:500}
+.colh b i{font-style:normal;color:var(--muted);margin-right:6px}
+.colh span{font:400 11.5px var(--sans);color:var(--muted)}
+.colh.lilac::before{background:rgba(201,184,240,.6)}
+.colh.ember::before{background:rgba(255,154,82,.6)}
+
+/* breathing */
+.doc,.st,.thr,.anchor,.corelbl,.hx,.gst{animation:soft 8s ease-in-out infinite}
+
+/* genesis nodes */
+.st{position:absolute;width:44px;height:44px;border:0;background:transparent;cursor:pointer;padding:0;border-radius:50%}
+.dia{position:absolute;left:15px;top:15px;width:14px;height:14px;border-radius:3px;transform:rotate(45deg);background:linear-gradient(135deg,#E4DAFA,#8E84A6);box-shadow:0 0 12px rgba(201,184,240,.3)}
+.rep{position:absolute;left:14px;top:12px;width:16px;height:20px;border-radius:4px;border:1.5px solid #C9B8F0;background:rgba(201,184,240,.12)}
+.rep::before{content:"";position:absolute;left:3px;right:3px;top:5px;height:1.5px;background:#C9B8F0;box-shadow:0 4px 0 #C9B8F0,0 8px 0 rgba(201,184,240,.6)}
+.thr{position:absolute;width:100px;height:112px;border:0;background:transparent;cursor:pointer;padding:0;border-radius:14px}
+.src{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#BDB4CC;animation:twinkle 6s ease-in-out infinite}
+.src.ai{background:#F1EBFF;box-shadow:0 0 0 3px rgba(201,184,240,.16)}
+.st.on,.thr.on{outline:1px solid rgba(201,184,240,.65);outline-offset:2px}
+.slbl{position:absolute;transform:translateX(-50%);text-align:center;white-space:nowrap;pointer-events:none}
+.slbl b{display:block;font:500 9.5px var(--mono);letter-spacing:.14em;color:var(--lilac-t);font-weight:500}
+.slbl span{display:block;margin-top:2px;font:400 11px var(--sans);color:var(--muted)}
+.slbl.ember b{color:var(--ember-s)}.slbl.mint b{color:var(--mint-t)}
+.openb{position:absolute;height:44px;padding:0 14px;border-radius:99px;border:1px solid rgba(255,170,110,.4);background:rgba(255,138,61,.12);color:var(--ember-p) !important;font:500 12.5px var(--sans) !important;cursor:pointer;white-space:nowrap;animation:enter .35s both}
+.openb:hover{background:rgba(255,138,61,.2)}
+.openb.lilac{border-color:rgba(201,184,240,.45);background:rgba(201,184,240,.1);color:var(--lilac-t) !important}
+
+/* core */
+.core{position:absolute;width:96px;height:96px;border:0;background:transparent;border-radius:50%;cursor:pointer;padding:0}
+.halo{position:absolute;inset:-34px;border-radius:50%;background:radial-gradient(circle closest-side,rgba(255,138,61,.14),transparent);pointer-events:none;animation:halo 8s ease-in-out infinite}
+.pring{position:absolute;left:0;top:0;width:96px;height:96px;transform:rotate(-90deg)}
+.pr-bg{fill:none;stroke:rgba(255,235,215,.1);stroke-width:1.5}
+.pr-fg{fill:none;stroke:#FF9A52;stroke-width:2;stroke-linecap:round;transition:stroke-dasharray .3s}
+.orb{position:absolute;left:22px;top:22px;width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE1C4,#FF9F58 30%,#F06A2A 62%,#7A2E0E 100%);box-shadow:0 0 28px rgba(255,138,61,.4);animation:breathe 8s ease-in-out infinite}
+.core.on .pr-bg{stroke:rgba(255,192,143,.35)}
+.corelbl{position:absolute;width:160px;text-align:center;pointer-events:none}
+.corename{font:400 19px/1 var(--serif)}
+.corepct{margin-top:5px;font:500 10px var(--mono);letter-spacing:.14em;color:var(--ember-s)}
+
+/* docs */
+.doc{position:absolute;width:172px;height:54px;display:flex;align-items:center;gap:11px;padding:0 14px 0 12px;border-radius:14px;background:rgba(22,17,14,.85);border:1px solid var(--line3);cursor:pointer;text-align:left;transition:opacity .4s,border-color .3s,background .3s}
+.doc:hover{border-color:rgba(255,235,215,.28)}
+.code{flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font:500 9px var(--mono);letter-spacing:.04em;color:var(--text);background:rgba(255,240,225,.05);border:1px solid rgba(255,235,215,.16);transition:color .3s,border-color .3s}
+.doc.on .code,.doc.rel .code{color:var(--lilac-t);border-color:rgba(201,184,240,.4)}
+.dtext{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.dname{display:block;font:500 12.5px/1.2 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dmeta{display:block;font:400 10px/1.2 var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc.on{border-color:rgba(201,184,240,.7);background:rgba(201,184,240,.08)}
+.doc.rel{border-color:rgba(255,235,215,.26)}
+.doc.unwritten{opacity:.3}
+
+/* phase rows */
+.ph{position:absolute;width:270px;height:52px;border:1px solid transparent;border-radius:14px;background:transparent;padding:0;cursor:pointer;text-align:left;transition:opacity .4s,background .3s,border-color .3s}
+.ph:hover{background:rgba(255,240,225,.03);border-color:var(--line)}
+.ph.on{background:rgba(255,138,61,.07);border-color:rgba(255,138,61,.4)}
+.anchor{position:absolute;left:10px;top:10px;width:16px;height:16px;clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%);background:rgba(255,235,215,.28)}
+.anchor::before{content:"";position:absolute;inset:1.4px;clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%);background:#140F0D}
+.ph.done .anchor,.ph.done .anchor::before{background:linear-gradient(180deg,#FFC08F,#F06A2A)}
+.ph.active .anchor{background:#FF8A3D}
+.ph.active .anchor::before{background:linear-gradient(180deg,#140F0D 50%,rgba(255,138,61,.8) 50%)}
+.plbl{position:absolute;left:34px;right:12px;top:8px;display:flex;align-items:baseline;gap:7px;white-space:nowrap}
+.pnum{font:500 10.5px var(--mono);color:var(--muted)}
+.pname{font:500 12.5px var(--sans);color:var(--ink2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.pword{font:500 9.5px var(--mono);letter-spacing:.1em;color:var(--ember-s)}
+.ph.done .pword{color:var(--mint-t)}
+.ph.ahead .pword{color:var(--muted)}
+.ph.ahead .pname{color:var(--text)}
+.pbar{position:absolute;left:34px;right:12px;top:28px;height:2px;border-radius:99px;background:rgba(255,235,215,.09);overflow:hidden}
+.pbar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#F06A2A,#FFB27A);transition:width .4s}
+.cells{position:absolute;left:34px;top:35px}
+.cell{position:absolute;width:9px;height:10.4px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,235,215,.22)}
+.cell::before{content:"";position:absolute;inset:1.1px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#140F0D}
+.cf{position:absolute;inset:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(180deg,#FFC08F,#F06A2A);opacity:0;transform:scale(.4);transition:opacity .4s ease,transform .5s cubic-bezier(.22,1,.36,1)}
+.c-d{background:rgba(255,170,110,.7)}
+.c-d .cf{opacity:1;transform:scale(1)}
+.c-p{background:#FF8A3D;animation:pulse 4s ease-in-out infinite}
+.c-p .cf{opacity:1;transform:scale(1);background:linear-gradient(180deg,transparent 50%,#FF8A3D 50%)}
+.c-b{background:#FF6B5B}
+.c-b .cf{opacity:1;transform:scale(.4);background:#FF6B5B}
+.far{opacity:.4}
+.ph:focus-visible,.doc:focus-visible,.core:focus-visible,.st:focus-visible,.thr:focus-visible,.hx:focus-visible,.gst:focus-visible,.phx:focus-visible{outline:2px solid #FFC08F;outline-offset:3px}
+
+/* phase level */
+.phx{position:absolute;left:22px;top:186px;width:150px;height:173px;border:0;padding:0;background:transparent;cursor:pointer}
+.phglow{position:absolute;inset:-46px;border-radius:50%;background:radial-gradient(circle closest-side,rgba(255,138,61,.18),rgba(255,138,61,.04) 60%,transparent);pointer-events:none;animation:halo 8s ease-in-out infinite}
+.phring{position:absolute;left:0;top:0;width:150px;height:173px;overflow:visible}
+.phring polygon{fill:none;stroke-linejoin:round}
+.hr-bg{stroke:rgba(255,235,215,.12);stroke-width:2}
+.hr-fg{stroke:#FF9A52;stroke-width:2.5;stroke-linecap:round;transition:stroke-dasharray .5s cubic-bezier(.22,1,.36,1);filter:drop-shadow(0 0 4px rgba(255,138,61,.55))}
+.hr-in{stroke:rgba(255,235,215,.07);stroke-width:1;stroke-dasharray:2 4}
+.hr-v{fill:rgba(255,235,215,.35)}
+.phcore{position:absolute;left:14px;top:16px;width:122px;height:141px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:radial-gradient(90% 70% at 50% 18%,rgba(255,138,61,.22),transparent 65%),linear-gradient(170deg,#241A15,#120D0B);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;animation:soft 8s ease-in-out infinite}
+.phk{font:500 9px var(--mono);letter-spacing:.18em;color:var(--muted)}
+.phn{font:300 40px/1 var(--serif);letter-spacing:-.02em;color:var(--ink)}
+.phn small{font-size:17px;color:var(--ember-s);margin-left:1px}
+.phrule{width:22px;height:1px;background:rgba(255,235,215,.18)}
+.phc{font:500 9px var(--mono);letter-spacing:.12em;color:var(--text)}
+.phw{font:500 8.5px var(--mono);letter-spacing:.14em;color:var(--ember-p)}
+.phw.done{color:var(--mint-t)}.phw.ahead{color:var(--muted)}
+.phx:hover .hr-bg{stroke:rgba(255,235,215,.2)}
+.phx.on .hr-fg{stroke:#FFB27A}
+.phname{position:absolute;left:7px;top:370px;width:180px;text-align:center;font:400 15px/1.2 var(--serif);color:var(--ink2);pointer-events:none}
+.mlbl{position:absolute;display:flex;align-items:baseline;gap:4px;white-space:nowrap;font:500 10px var(--mono);letter-spacing:.12em;color:var(--text)}
+.mlbl b{font-weight:500;color:var(--ink)}
+.mlbl .w{color:var(--mint-t)}.mlbl .wp{color:var(--ember-s)}.mlbl .wa{color:var(--muted)}
+.hx{position:absolute;width:88px;height:101px;border:0;padding:0;background:transparent;cursor:pointer;transition:opacity .4s}
+.hs{position:absolute;inset:0;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,235,215,.22)}
+.hin{position:absolute;inset:1.5px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#1E1714,#120D0B);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:16px 10px;text-align:center;overflow:hidden}
+.hid{position:relative;font:500 9px var(--mono);letter-spacing:.1em;color:var(--muted)}
+.htt{position:relative;font:500 10.5px/1.2 var(--sans);color:var(--ink2)}
+.hft{position:relative;font:500 8.5px var(--mono);letter-spacing:.06em;color:var(--muted)}
+.lvlfill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(255,138,61,.26),rgba(255,138,61,.1));border-top:1px solid rgba(255,170,110,.55)}
+.hx.d .hs{background:#FFC08F}
+.hx.d .hin{background:linear-gradient(160deg,#FFB27A,#F06A2A)}
+.hx.d .hid,.hx.d .htt,.hx.d .hft{color:#1A0E08}
+.hx.p .hs{background:#FF8A3D}
+.hx.p .hft{color:var(--ember-p)}
+.hx.b .hs{background:#FF6B5B}
+.hx.b .hft{color:var(--red-t)}
+.ring{position:absolute;left:-5px;top:-6px;width:98px;height:113px;opacity:0;transition:opacity .3s;overflow:visible;pointer-events:none}
+.ring polygon{fill:none;stroke:rgba(255,236,220,.8);stroke-width:1.2}
+.hx.on .ring{opacity:1}
+
+/* genesis level */
+.time{position:absolute;top:14px;font:500 9.5px var(--mono);letter-spacing:.12em;color:var(--muted);white-space:nowrap;transform:translateX(-50%)}
+.gst{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border:0;background:transparent;padding:0;cursor:pointer;border-radius:50%}
+.gst.on{outline:1px dashed rgba(228,218,250,.75);outline-offset:4px}
+.gst.ember.on{outline-color:rgba(255,192,143,.8)}
+.gst .dia{left:20px;top:20px;width:16px;height:16px}
+.gst .rep{left:19px;top:16px;width:18px;height:23px}
+.bsc{position:absolute;left:20px;top:20px;width:16px;height:16px;border-radius:50%;border:1.5px solid #C9B8F0;background:rgba(201,184,240,.12)}
+.orbit{position:absolute;inset:6px;border-radius:50%;border:1px dashed rgba(201,184,240,.3);animation:spin 40s linear infinite}
+.orbit i{position:absolute;width:5px;height:5px;border-radius:50%;background:#D9CCF6}
+.gate{position:absolute;left:17px;top:17px;width:22px;height:22px;border-radius:5px;transform:rotate(45deg);border:1.5px solid #86E3C3;background:rgba(134,227,195,.12)}
+.gate::after{content:"";position:absolute;left:7px;top:3px;width:5px;height:10px;border:solid #A6EDD4;border-width:0 2px 2px 0}
+.porb{position:absolute;left:6px;top:6px;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE1C4,#FF9F58 30%,#F06A2A 62%,#7A2E0E 100%);box-shadow:0 0 26px rgba(255,138,61,.45);animation:breathe 8s ease-in-out infinite}
+.tlbl{position:absolute;font:500 9.5px var(--mono);letter-spacing:.12em;color:var(--lilac-t);white-space:nowrap}
+.tlbl i{font-style:normal;color:var(--muted)}
+.tgo{position:absolute;left:260px;width:240px;height:44px;margin-top:-22px;border:0;background:transparent;cursor:pointer;border-radius:12px;padding:0}
+.tgo.on{outline:1px dashed rgba(228,218,250,.6)}
+
+/* scrub */
+.scrub{display:flex;align-items:center;gap:16px;height:60px;padding:0 20px 0 8px;border-radius:99px;background:linear-gradient(160deg,rgba(255,240,225,.05),rgba(255,240,225,.02));border:1px solid var(--line)}
+.play{flex:none;width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer;background:linear-gradient(180deg,#FF9F58,#F06A2A);color:#1A0E08 !important;box-shadow:0 8px 24px rgba(255,122,47,.3)}
+.track{flex:1;min-width:0}
+.tltop{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px}
+.tdate{font:500 11px var(--mono);letter-spacing:.1em;color:var(--ember-s)}
+.tnote{font:400 12px var(--sans);color:var(--muted)}
+.rangewrap{position:relative;height:16px}
+.range{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:99px;margin:6px 0 0;outline:none;cursor:pointer}
+.range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#FFE1C4;box-shadow:0 0 0 4px rgba(255,138,61,.22);cursor:pointer}
+.range::-moz-range-thumb{width:14px;height:14px;border:0;border-radius:50%;background:#FFE1C4;box-shadow:0 0 0 4px rgba(255,138,61,.22)}
+.tk{position:absolute;top:-1px;width:1px;height:14px;background:rgba(255,235,215,.22);pointer-events:none}
+.tk span{position:absolute;left:4px;top:-1px;font:500 9px var(--mono);color:var(--muted);letter-spacing:.08em}
+.formed{flex:none;display:flex;align-items:baseline;gap:7px;padding-left:16px;border-left:1px solid var(--line)}
+.formed b{font:500 12px/1 var(--mono);letter-spacing:.12em;color:var(--ink)}
+.formed span{font:500 12px/1 var(--mono);letter-spacing:.12em;color:var(--muted)}
+.gnote{display:flex;align-items:center;gap:14px;height:60px;padding:0 22px;border-radius:99px;background:linear-gradient(160deg,rgba(201,184,240,.07),rgba(255,240,225,.02));border:1px solid var(--line);font:400 13px var(--sans);color:var(--text)}
+.gnote b{font:500 11px var(--mono);letter-spacing:.1em;color:var(--lilac-t);font-weight:500}
+
+/* panel */
+.panel{flex:1 1 300px;max-width:320px;display:flex;flex-direction:column;gap:10px;max-height:714px;overflow-y:auto;scrollbar-width:none}
+.panel::-webkit-scrollbar{display:none}
+.pin{display:flex;flex-direction:column;gap:10px;animation:enter .45s cubic-bezier(.22,1,.36,1) both}
+.pc{border-radius:22px;padding:16px 18px;background:linear-gradient(160deg,rgba(255,240,225,.05),rgba(255,240,225,.02));border:1px solid var(--line)}
+.pc.head{background:radial-gradient(120% 90% at 100% 0%,rgba(255,138,61,.16),transparent 60%),linear-gradient(160deg,rgba(255,240,225,.07),rgba(255,240,225,.02));border-color:rgba(255,170,110,.18)}
+.pc.head.lilac{background:radial-gradient(120% 90% at 100% 0%,rgba(201,184,240,.14),transparent 60%),linear-gradient(160deg,rgba(255,240,225,.07),rgba(255,240,225,.02));border-color:rgba(201,184,240,.2)}
+.pc.head.mint{background:radial-gradient(120% 90% at 100% 0%,rgba(134,227,195,.12),transparent 60%),linear-gradient(160deg,rgba(255,240,225,.07),rgba(255,240,225,.02));border-color:rgba(134,227,195,.2)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--ember)}
+.dot.lilac{background:var(--lilac)}.dot.mint{background:var(--mint)}
+.ptitle{margin:10px 0 0;font:400 28px/1.06 var(--serif);letter-spacing:-.01em}
+.prow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.status{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:99px;font:500 11.5px var(--sans);border:1px solid}
+.s-done{color:var(--mint-t);border-color:rgba(134,227,195,.35);background:rgba(134,227,195,.08)}
+.s-progress{color:var(--ember-p);border-color:rgba(255,138,61,.45);background:rgba(255,138,61,.1)}
+.s-ready{color:var(--text);border-color:var(--line4)}
+.s-blocked{color:var(--red-t);border-color:rgba(255,107,91,.45);background:rgba(255,107,91,.08)}
+.s-lilac{color:var(--lilac-t);border-color:rgba(201,184,240,.4);background:rgba(201,184,240,.08)}
+.small{font:400 12px var(--sans);color:var(--muted)}
+.prim .btn{width:100%}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stc{border-radius:18px;padding:12px 14px;background:rgba(255,240,225,.025);border:1px solid rgba(255,235,215,.07)}
+.stv{font:400 24px/1 var(--serif)}
+.stl{margin-top:6px;font:400 11.5px var(--sans);color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.li{display:flex;flex-direction:column;gap:3px}
+.lk{font:500 10px var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.lv{font:400 13px/1.4 var(--sans);color:var(--ink2)}
+.lbar{display:block;height:2px;border-radius:99px;background:rgba(255,235,215,.09);overflow:hidden;margin-top:4px}
+.lbar span{display:block;height:100%;background:linear-gradient(90deg,#F06A2A,#FFB27A)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:0 11px;border-radius:10px;font:500 12px var(--sans) !important;color:var(--text) !important;background:rgba(255,240,225,.04);border:1px solid rgba(255,235,215,.1);cursor:pointer;text-align:left}
+.chip:hover{border-color:rgba(255,235,215,.28);color:var(--ink) !important}
+.chip .go{color:var(--muted);margin-left:2px}
+.dashed{padding:12px 14px;border-radius:16px;border:1px dashed rgba(255,235,215,.2);display:flex;flex-direction:column;gap:10px}
+.body14{margin-top:4px;font:400 13.5px/1.45 var(--sans);color:var(--ink2)}
+.feed{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.fi{display:flex;gap:10px;align-items:flex-start}
+.fav{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:500 11px var(--sans);background:#2A211D;border:1px solid var(--line4)}
+.fav.ai{background:rgba(201,184,240,.14);border-color:rgba(201,184,240,.35);color:var(--lilac-t)}
+.ftxt{font:400 12.5px/1.4 var(--sans);color:var(--ink2)}
+.fwho{color:var(--ink);font-weight:500}
+.mcp{font:500 9px var(--mono);letter-spacing:.1em;color:var(--lilac-t);border:1px solid rgba(201,184,240,.35);border-radius:6px;padding:1px 5px;margin-left:4px}
+.fwhen{display:block;font:400 11px var(--mono);color:var(--muted);margin-top:2px}
+
+.still *,.still *::before,.still *::after{animation:none !important}
+@media (prefers-reduced-motion: reduce){.bx *,.bx *::before,.bx *::after{animation:none !important;transition:none !important}}
+@media (max-width: 899px){.rail{display:none}.main{padding:20px 16px 24px}.title{font-size:32px}.panel{max-width:none;max-height:none}.chint{display:none}}
+
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes flow{to{stroke-dashoffset:-54}}
+@keyframes soft{0%,100%{filter:brightness(.88)}50%{filter:brightness(1.1)}}
+@keyframes twinkle{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes halo{0%,100%{opacity:.75}50%{opacity:1}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes enter{from{opacity:0;transform:scale(.985) translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div class="bx {{rootCls}}">
+
+  <nav class="rail" aria-label="Sections">
+    <span class="orb-s" aria-hidden="true"></span>
+    <button class="cap" aria-label="Quick capture">+</button>
+    <button class="nav"><span class="navbox"><span class="gl g-today"></span></span><span class="navl">Today</span></button>
+    <button class="nav cur" aria-current="page"><span class="navbox"><span class="gl g-work"></span></span><span class="navl">Work</span></button>
+    <button class="nav"><span class="navbox"><span class="gl g-ideas"></span></span><span class="navl">Ideas</span></button>
+    <button class="nav"><span class="navbox"><span class="gl g-journey"></span></span><span class="navl">Journey</span></button>
+    <span class="avatar" aria-label="Settings">V</span>
+  </nav>
+
+  <main class="main">
+    <header style="display: flex; flex-direction: column; gap: 10px;">
+      <div class="hrow">
+        <div class="tabs">
+          <span class="eyebrow" style="margin-right: 8px;">Work</span>
+          <button class="tab">Tasks</button>
+          <button class="tab cur" aria-pressed="true">Projects</button>
+        </div>
+        <div class="hright">
+          <span class="example">EXAMPLE DATA</span>
+          <button class="ghost">+ New project</button>
+        </div>
+      </div>
+      <div class="trow">
+        <div>
+          <h1 class="title">Becoming, <em>taking form</em></h1>
+          <div class="mline">IDEA 15 SEP · PROJECT 16 SEP · 6 DOCS · 8 PHASES · 76 TASKS</div>
+        </div>
+        <div class="seg" aria-label="Projects view">
+          <button>List</button>
+          <button class="on" aria-pressed="true">Visual</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="body">
+      <div class="leftcol">
+        <div class="stagewrap">
+          <nav class="crumbs" aria-label="Where you are">
+            <sc-if value="{{nav.canBack}}" hint-placeholder-val="{{false}}">
+              <button class="backb" onClick="{{nav.back}}" aria-label="Back"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8.5 3L4.5 7l4 4"></path></svg></button>
+            </sc-if>
+            <button class="crumb {{nav.c0}}" onClick="{{nav.home}}">Becoming</button>
+            <sc-if value="{{nav.hasL1}}" hint-placeholder-val="{{false}}">
+              <span class="csep">›</span><button class="crumb {{nav.c1}}" onClick="{{nav.l1go}}">{{nav.l1}}</button>
+            </sc-if>
+            <sc-if value="{{nav.hasL2}}" hint-placeholder-val="{{false}}">
+              <span class="csep">›</span><span class="crumb cur">{{nav.l2}}</span>
+            </sc-if>
+            <span class="chint">{{nav.hint}}</span>
+            <sc-if value="{{nav.isPhase}}" hint-placeholder-val="{{false}}">
+              <div class="pn">
+                <button class="tb" onClick="{{nav.prev}}" disabled="{{nav.prevDis}}" aria-label="Previous phase">‹ {{nav.prevNum}}</button>
+                <button class="tb" onClick="{{nav.next}}" disabled="{{nav.nextDis}}" aria-label="Next phase">{{nav.nextNum}} ›</button>
+              </div>
+            </sc-if>
+          </nav>
+
+          <div class="canvas">
+            <div class="inner">
+
+              <sc-if value="{{isOverview}}" hint-placeholder-val="{{true}}">
+                <div class="lvl">
+                  <svg class="edges" viewBox="0 0 940 544" aria-hidden="true">
+                    <path class="e-base" d="{{ov.base}}"></path>
+                    <path class="e-gen" d="{{ov.gen}}"></path>
+                    <path class="e-core" d="{{ov.core}}"></path>
+                    <path class="e-core off" d="{{ov.coreOff}}"></path>
+                    <path class="e-hlg" d="{{ov.hlg}}"></path>
+                    <path class="e-hl" d="{{ov.hl}}"></path>
+                    <path class="e-flowg" d="{{ov.gen}}"></path>
+                    <path class="e-flow" d="{{ov.lit}}"></path>
+                    <path class="e-flow hi" d="{{ov.hl}}"></path>
+                  </svg>
+
+                  <div class="colh lilac" style="left: 16px;"><b><i>01</i>GENESIS</b><span>15 Sep</span></div>
+                  <div class="colh ember" style="left: 252px;"><b><i>02</i>PROJECT</b><span>16 Sep</span></div>
+                  <div class="colh lilac" style="left: 400px;"><b><i>03</i>DOCS</b><span>17–19 Sep</span></div>
+                  <div class="colh ember" style="left: 660px;"><b><i>04</i>PHASES</b><span>20 Sep → today</span></div>
+
+                  <button class="st {{ov.g.idea}}" style="left: 18px; top: 270px; animation-delay: .4s;" onClick="{{ov.pick.idea}}" aria-label="Idea: An evening practice"><span class="dia"></span></button>
+                  <div class="slbl" style="left: 40px; top: 352px;"><b>IDEA</b><span>Captured</span></div>
+                  <button class="thr {{ov.g.research}}" style="left: 70px; top: 236px; animation-delay: 1.3s;" onClick="{{ov.pick.research}}" aria-label="Research: three threads, eleven sources">
+                    <span class="src" style="left: 16px; top: 16px;"></span><span class="src" style="left: 34px; top: 16px;"></span><span class="src" style="left: 52px; top: 16px;"></span><span class="src" style="left: 70px; top: 16px;"></span><span class="src" style="left: 86px; top: 16px;"></span>
+                    <span class="src" style="left: 22px; top: 56px;"></span><span class="src" style="left: 44px; top: 56px;"></span><span class="src" style="left: 66px; top: 56px;"></span><span class="src" style="left: 84px; top: 56px;"></span>
+                    <span class="src ai" style="left: 34px; top: 96px;"></span><span class="src ai" style="left: 70px; top: 96px;"></span>
+                  </button>
+                  <div class="slbl" style="left: 120px; top: 352px;"><b>RESEARCH</b><span>11 sources</span></div>
+                  <button class="st {{ov.g.report}}" style="left: 178px; top: 270px; animation-delay: 2.2s;" onClick="{{ov.pick.report}}" aria-label="Report: Why evenings fail"><span class="rep"></span></button>
+                  <div class="slbl" style="left: 200px; top: 352px;"><b>REPORT</b><span>4 findings</span></div>
+                  <sc-if value="{{ov.genOpen}}" hint-placeholder-val="{{false}}">
+                    <button class="openb lilac" style="left: 58px; top: 402px;" onClick="{{ov.openGen}}">Open genesis ›</button>
+                  </sc-if>
+
+                  <button class="core {{ov.g.core}}" style="left: 252px; top: 244px;" onClick="{{ov.pick.core}}" aria-label="Project: Becoming">
+                    <span class="halo"></span>
+                    <svg class="pring" viewBox="0 0 96 96" aria-hidden="true">
+                      <circle class="pr-bg" cx="48" cy="48" r="44"></circle>
+                      <circle class="pr-fg" cx="48" cy="48" r="44" style="stroke-dasharray: {{core.dash}};"></circle>
+                    </svg>
+                    <span class="orb"></span>
+                  </button>
+                  <div class="corelbl" style="left: 220px; top: 352px;">
+                    <div class="corename">Becoming</div>
+                    <div class="corepct">{{core.pct}}% FORMED</div>
+                  </div>
+
+                  <sc-for list="{{ov.docs}}" as="d" hint-placeholder-count="6">
+                    <button class="doc {{d.cls}}" style="left: 400px; top: {{d.top}}px; animation-delay: {{d.delay}}s;" onClick="{{d.pick}}" aria-label="{{d.name}}">
+                      <span class="code">{{d.code}}</span>
+                      <span class="dtext"><span class="dname">{{d.name}}</span><span class="dmeta">{{d.sub}}</span></span>
+                    </button>
+                  </sc-for>
+
+                  <sc-for list="{{ov.rows}}" as="p" hint-placeholder-count="8">
+                    <button class="ph {{p.cls}}" style="left: 660px; top: {{p.top}}px;" onClick="{{p.pick}}" onDoubleClick="{{p.open}}" aria-label="{{p.aria}}">
+                      <span class="anchor" style="animation-delay: {{p.bd}}s;"></span>
+                      <span class="plbl"><span class="pnum">{{p.num}}</span><span class="pname">{{p.name}}</span><span class="pword">{{p.word}}</span></span>
+                      <span class="pbar"><span style="width: {{p.pct}}%;"></span></span>
+                      <span class="cells">
+                        <sc-for list="{{p.cells}}" as="c" hint-placeholder-count="8">
+                          <span class="cell {{c.cls}}" style="left: {{c.x}}px; animation-delay: {{c.d}}s;"><span class="cf"></span></span>
+                        </sc-for>
+                      </span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{isPhaseLvl}}" hint-placeholder-val="{{false}}">
+                <div class="lvl">
+                  <svg class="edges" viewBox="0 0 940 544" aria-hidden="true">
+                    <path class="e-base" style="stroke: rgba(225,215,205,.14);" d="{{pl.edges}}"></path>
+                    <path class="e-flow" d="{{pl.lit}}"></path>
+                  </svg>
+                  <button class="phx {{pl.hexCls}}" style="left: {{pl.hx}}px;" onClick="{{pl.pickHex}}" aria-label="{{pl.aria}}">
+                    <span class="phglow"></span>
+                    <svg class="phring" viewBox="0 0 150 173" aria-hidden="true">
+                      <polygon class="hr-bg" points="75,2 148,44.25 148,128.75 75,171 2,128.75 2,44.25"></polygon>
+                      <polygon class="hr-fg" points="75,2 148,44.25 148,128.75 75,171 2,128.75 2,44.25" style="stroke-dasharray: {{pl.dash}};"></polygon>
+                      <polygon class="hr-in" points="75,10 141,48.5 141,124.5 75,163 9,124.5 9,48.5"></polygon>
+                      <circle class="hr-v" cx="75" cy="2" r="2"></circle><circle class="hr-v" cx="148" cy="44.25" r="2"></circle><circle class="hr-v" cx="148" cy="128.75" r="2"></circle><circle class="hr-v" cx="75" cy="171" r="2"></circle><circle class="hr-v" cx="2" cy="128.75" r="2"></circle><circle class="hr-v" cx="2" cy="44.25" r="2"></circle>
+                    </svg>
+                    <span class="phcore">
+                      <span class="phk">PHASE {{pl.num}}</span>
+                      <span class="phn">{{pl.pct}}<small>%</small></span>
+                      <span class="phrule"></span>
+                      <span class="phc">{{pl.pd}} OF {{pl.n}} TASKS</span>
+                      <span class="phw {{pl.state}}">{{pl.word}}</span>
+                    </span>
+                  </button>
+                  <div class="phname" style="left: {{pl.nx}}px;">{{pl.name}}</div>
+                  <sc-for list="{{pl.clusters}}" as="m" hint-placeholder-count="3">
+                    <div class="mlbl" style="left: {{m.x}}px; top: {{m.y}}px;"><b>{{m.code}}</b>{{m.upper}}<span class="{{m.wcls}}">· {{m.word}}</span></div>
+                    <sc-for list="{{m.tasks}}" as="t" hint-placeholder-count="4">
+                      <button class="hx {{t.cls}}" style="left: {{t.x}}px; top: {{t.y}}px; animation-delay: {{t.bd}}s;" onClick="{{t.pick}}" aria-label="{{t.aria}}">
+                        <svg class="ring" viewBox="0 0 98 113" aria-hidden="true"><polygon points="49,1.5 96.5,28.75 96.5,84.25 49,111.5 1.5,84.25 1.5,28.75"></polygon></svg>
+                        <span class="hs"></span>
+                        <span class="hin">
+                          <sc-if value="{{t.hasLvl}}" hint-placeholder-val="{{false}}"><span class="lvlfill" style="height: {{t.lvl}}%;"></span></sc-if>
+                          <span class="hid">{{t.id}}</span>
+                          <span class="htt">{{t.t}}</span>
+                          <span class="hft">{{t.foot}}</span>
+                        </span>
+                      </button>
+                    </sc-for>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{isGenesis}}" hint-placeholder-val="{{false}}">
+                <div class="lvl">
+                  <svg class="edges" viewBox="0 0 940 544" aria-hidden="true">
+                    <path class="e-gen" style="stroke: rgba(215,208,228,.3);" d="M60,262 L180,262 M180,262 C220,262 230,172 260,172 M180,262 L260,262 M180,262 C220,262 230,352 260,352 M260,172 L500,172 M260,262 L500,262 M260,352 L500,352 M500,172 C545,172 540,262 580,262 M500,262 L580,262 M500,352 C545,352 540,262 580,262 M580,262 L690,262"></path>
+                    <path class="e-flowg" d="M60,262 L180,262 M180,262 C220,262 230,172 260,172 M180,262 L260,262 M180,262 C220,262 230,352 260,352 M260,172 L500,172 M260,262 L500,262 M260,352 L500,352 M500,172 C545,172 540,262 580,262 M500,262 L580,262 M500,352 C545,352 540,262 580,262 M580,262 L690,262"></path>
+                    <path class="e-mint" d="M690,262 L810,262"></path>
+                    <path class="e-flow" d="M690,262 L810,262"></path>
+                  </svg>
+                  <span class="time" style="left: 60px;">15 SEP · 21:40</span>
+                  <span class="time" style="left: 180px;">21:55</span>
+                  <span class="time" style="left: 380px;">15 → 16 SEP</span>
+                  <span class="time" style="left: 580px;">16 SEP · 18:00</span>
+                  <span class="time" style="left: 690px;">22:30</span>
+                  <span class="time" style="left: 810px;">23:10</span>
+
+                  <button class="gst {{gs.idea}}" style="left: 60px; top: 262px;" onClick="{{gp.idea}}" aria-label="Idea"><span class="dia"></span></button>
+                  <div class="slbl" style="left: 60px; top: 300px;"><b>IDEA</b><span>Captured</span></div>
+                  <button class="gst {{gs.brain}}" style="left: 180px; top: 262px; animation-delay: 1s;" onClick="{{gp.brain}}" aria-label="Brainstorm">
+                    <span class="bsc"></span>
+                    <span class="orbit"><i style="left: -2.5px; top: 19.5px;"></i><i style="left: 19.5px; top: -2.5px;"></i><i style="right: -2.5px; top: 19.5px;"></i><i style="left: 19.5px; bottom: -2.5px;"></i></span>
+                  </button>
+                  <div class="slbl" style="left: 180px; top: 300px;"><b>BRAINSTORM</b><span>4 answers</span></div>
+
+                  <span class="tlbl" style="left: 264px; top: 150px;">HABIT-APP TEARDOWN <i>· 5</i></span>
+                  <span class="tlbl" style="left: 264px; top: 240px;">MAKER INTERVIEWS <i>· 4</i></span>
+                  <span class="tlbl" style="left: 264px; top: 330px;">CLAUDE BRIEFS <i>· 2 · MCP</i></span>
+                  <span class="src" style="left: 290px; top: 172px;"></span><span class="src" style="left: 335px; top: 172px; animation-delay: .5s;"></span><span class="src" style="left: 380px; top: 172px; animation-delay: 1s;"></span><span class="src" style="left: 425px; top: 172px; animation-delay: 1.5s;"></span><span class="src" style="left: 470px; top: 172px; animation-delay: 2s;"></span>
+                  <span class="src" style="left: 300px; top: 262px; animation-delay: .3s;"></span><span class="src" style="left: 350px; top: 262px; animation-delay: .8s;"></span><span class="src" style="left: 400px; top: 262px; animation-delay: 1.3s;"></span><span class="src" style="left: 450px; top: 262px; animation-delay: 1.8s;"></span>
+                  <span class="src ai" style="left: 330px; top: 352px; animation-delay: .6s;"></span><span class="src ai" style="left: 430px; top: 352px; animation-delay: 1.6s;"></span>
+                  <button class="tgo {{gs.research}}" style="top: 172px;" onClick="{{gp.research}}" aria-label="Research thread: habit-app teardown"></button>
+                  <button class="tgo {{gs.research}}" style="top: 262px;" onClick="{{gp.research}}" aria-label="Research thread: maker interviews"></button>
+                  <button class="tgo {{gs.research}}" style="top: 352px;" onClick="{{gp.research}}" aria-label="Research thread: Claude briefs"></button>
+                  <div class="slbl" style="left: 380px; top: 386px;"><b>RESEARCH</b><span>3 threads · 11 sources</span></div>
+
+                  <button class="gst {{gs.report}}" style="left: 580px; top: 262px; animation-delay: 2s;" onClick="{{gp.report}}" aria-label="Report"><span class="rep"></span></button>
+                  <div class="slbl" style="left: 580px; top: 300px;"><b>REPORT</b><span>4 findings</span></div>
+                  <button class="gst {{gs.decision}}" style="left: 690px; top: 262px; animation-delay: 3s;" onClick="{{gp.decision}}" aria-label="Decision"><span class="gate"></span></button>
+                  <div class="slbl mint" style="left: 690px; top: 300px;"><b>DECISION</b><span>Build it</span></div>
+                  <button class="gst ember {{gs.project}}" style="left: 810px; top: 262px; animation-delay: 4s;" onClick="{{gp.project}}" aria-label="Project: Becoming"><span class="porb"></span></button>
+                  <div class="slbl ember" style="left: 810px; top: 300px;"><b>PROJECT</b><span>Becoming</span></div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+
+          <div class="keyline">
+            <sc-if value="{{isOverview}}" hint-placeholder-val="{{true}}">
+              <span class="k"><b>GENESIS</b>where it came from</span><span class="ksep"></span>
+              <span class="k"><b>DOCS</b>the ground each phase stands on</span><span class="ksep"></span>
+              <span class="k"><b>PHASES</b>one cell per task</span>
+              <span class="k" style="margin-left: auto;"><span class="cell c-d" style="position: relative;"><span class="cf"></span></span>done <span class="cell c-p" style="position: relative; animation: none;"><span class="cf"></span></span>doing <span class="cell" style="position: relative;"><span class="cf"></span></span>ready <span class="cell c-b" style="position: relative;"><span class="cf"></span></span>blocked</span>
+            </sc-if>
+            <sc-if value="{{isPhaseLvl}}" hint-placeholder-val="{{false}}">
+              <span class="k"><b>MILESTONES</b>clusters, in plan order</span><span class="ksep"></span>
+              <span class="k"><b>TASKS</b>one cell each · click for its story</span>
+              <span class="k" style="margin-left: auto;"><span class="sw" style="background: linear-gradient(180deg,#FFB27A,#F06A2A);"></span>done <span class="sw" style="border: 1px solid #FF8A3D; background: rgba(255,138,61,.25);"></span>doing <span class="sw" style="border: 1px solid rgba(255,235,215,.3);"></span>ready <span class="sw" style="border: 1px solid #FF6B5B;"></span>blocked</span>
+            </sc-if>
+            <sc-if value="{{isGenesis}}" hint-placeholder-val="{{false}}">
+              <span class="k"><span class="sw" style="background: rgba(201,184,240,.5);"></span>thinking</span>
+              <span class="k"><span class="sw" style="background: rgba(134,227,195,.5);"></span>decision</span>
+              <span class="k"><span class="sw" style="background: linear-gradient(180deg,#FFB27A,#F06A2A);"></span>building</span>
+              <span class="k" style="margin-left: auto;">Bright dots are briefs Claude wrote through MCP</span>
+            </sc-if>
+          </div>
+        </div>
+
+        <sc-if value="{{showScrub}}" hint-placeholder-val="{{true}}">
+          <div class="scrub">
+            <button class="play" onClick="{{play}}" aria-label="{{playLabel}}">
+              <sc-if value="{{playing}}" hint-placeholder-val="{{false}}">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="2" width="3.5" height="12" rx="1"></rect><rect x="9.5" y="2" width="3.5" height="12" rx="1"></rect></svg>
+              </sc-if>
+              <sc-if value="{{paused}}" hint-placeholder-val="{{true}}">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2.2v11.6c0 .6.7 1 1.2.7l9.2-5.8c.5-.3.5-1 0-1.4L5.2 1.5C4.7 1.2 4 1.6 4 2.2z"></path></svg>
+              </sc-if>
+            </button>
+            <div class="track">
+              <div class="tltop"><span class="tdate">{{dateLabel}}</span><span class="tnote">{{scrubNote}}</span></div>
+              <div class="rangewrap">
+                <sc-for list="{{ticks}}" as="t" hint-placeholder-count="4">
+                  <span class="tk" style="left: {{t.l}}%;"><span>{{t.label}}</span></span>
+                </sc-for>
+                <label class="sr" for="scrub">Replay how the project grew, day by day</label>
+                <input id="scrub" class="range" type="range" min="0" max="240" step="1" value="{{view}}" onChange="{{onScrub}}" style="background: linear-gradient(90deg, #FF8A3D {{viewPct}}%, rgba(255,235,215,.12) {{viewPct}}%);">
+              </div>
+            </div>
+            <div class="formed"><b>{{core.pct}}%</b><span>FORMED</span></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{isGenesis}}" hint-placeholder-val="{{false}}">
+          <div class="gnote"><b>26 HOURS</b>From a thought typed at 21:40 to a project with a purpose, the next night.</div>
+        </sc-if>
+      </div>
+
+      <aside class="panel" aria-label="Selected part" aria-live="polite">
+        <div class="pin">
+          <div class="pc head {{d.tone}}">
+            <div class="eyebrow {{d.tone}}"><span class="dot {{d.tone}}"></span>{{d.eyebrow}}</div>
+            <h2 class="ptitle">{{d.a}} <em class="{{d.tone}}">{{d.em}}</em></h2>
+            <div class="prow"><span class="status {{d.scls}}">{{d.status}}</span><span class="small">{{d.meta}}</span></div>
+          </div>
+
+          <sc-if value="{{d.hasPrimary}}" hint-placeholder-val="{{true}}">
+            <div class="prim"><button class="btn" onClick="{{d.primary}}">{{d.primaryLabel}}</button></div>
+          </sc-if>
+
+          <sc-if value="{{d.hasStats}}" hint-placeholder-val="{{true}}">
+            <div class="stats">
+              <sc-for list="{{d.stats}}" as="s" hint-placeholder-count="4">
+                <div class="stc"><div class="stv">{{s.v}}</div><div class="stl">{{s.l}}</div></div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{d.hasList}}" hint-placeholder-val="{{true}}">
+            <div class="pc">
+              <div class="eyebrow">{{d.listK}}</div>
+              <div class="list">
+                <sc-for list="{{d.list}}" as="i" hint-placeholder-count="3">
+                  <div class="li">
+                    <span class="lk">{{i.k}}</span>
+                    <span class="lv">{{i.v}}</span>
+                    <sc-if value="{{i.hasBar}}" hint-placeholder-val="{{false}}"><span class="lbar"><span style="width: {{i.pct}}%;"></span></span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{d.hasChips}}" hint-placeholder-val="{{true}}">
+            <div class="pc">
+              <div class="eyebrow">{{d.chipsK}}</div>
+              <div class="chips">
+                <sc-for list="{{d.chips}}" as="c" hint-placeholder-count="3">
+                  <button class="chip" onClick="{{c.go}}"><span class="dot {{c.tone}}"></span>{{c.t}}<span class="go">›</span></button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{d.hasNext}}" hint-placeholder-val="{{true}}">
+            <div class="dashed">
+              <div><div class="eyebrow ember">{{d.nextK}}</div><div class="body14">{{d.next}}</div></div>
+              <sc-if value="{{d.hasDone}}" hint-placeholder-val="{{true}}"><div><div class="eyebrow">{{d.doneK}}</div><div class="body14">{{d.done}}</div></div></sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{d.hasFeed}}" hint-placeholder-val="{{true}}">
+            <div class="pc">
+              <div class="eyebrow">{{d.feedK}}</div>
+              <div class="feed">
+                <sc-for list="{{d.feed}}" as="f" hint-placeholder-count="2">
+                  <div class="fi">
+                    <span class="fav {{f.av}}">{{f.i}}</span>
+                    <div class="ftxt"><span class="fwho">{{f.w}}</span><sc-if value="{{f.ai}}" hint-placeholder-val="{{false}}"><span class="mcp">MCP</span></sc-if> {{f.what}}<span class="fwhen">{{f.when}}</span></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"motion":{"editor":"boolean","default":true},"focusDim":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  componentWillUnmount() { if (this.timer) clearInterval(this.timer); }
+
+  data() {
+    if (this._d) return this._d;
+    const you = (what, when) => ({ w: 'You', i: 'V', av: '', ai: false, what, when });
+    const cc = (what, when) => ({ w: 'Claude Code', i: 'C', av: 'ai', ai: true, what, when });
+    const mk = (code, name, rows) => ({ code, name, tasks: rows.map((r, i) => ({ id: code + '·' + (i + 1), t: r[0], st: r[1], min: r[2] })) });
+    const P = [
+      { num: '00', name: 'Foundation', a: 'The', em: 'foundation', start: 0, end: 1.5, sessions: 4, hours: 5,
+        next: 'Delivered a repo that stands on its own, and tokens you own.', done: 'Closed 16 Sep.', feed: [you('closed “Own the tokens”', '16 Sep'), cc('logged the last session', '16 Sep')],
+        ms: [mk('0A', 'Repo & tooling', [['Create the Next.js app', 'd', 45], ['Lint, types and tests', 'd', 60], ['One check command', 'd', 30]]),
+          mk('0B', 'Visual ownership', [['Own the tokens', 'd', 60], ['Fonts and type scale', 'd', 45], ['First screen in your look', 'd', 90]])] },
+      { num: '01', name: 'A useful evening', a: 'A useful', em: 'evening', start: 1.5, end: 3.5, sessions: 7, hours: 8,
+        next: 'Delivered one whole evening, start to finish, saved locally.', done: 'Closed 18 Sep.', feed: [you('finished the recap screen', '18 Sep')],
+        ms: [mk('1A', 'Today, locally', [['Opening question', 'd', 45], ['Ten-second check-in', 'd', 60], ['One clear focus', 'd', 90], ['Save in the browser', 'd', 45]]),
+          mk('1B', 'Focus & recap', [['Focus orb and timer', 'd', 60], ['Recap with outcome', 'd', 60], ['Week dots', 'd', 30], ['Local history', 'd', 45]])] },
+      { num: '02', name: 'Convex, flow by flow', a: 'Convex,', em: 'flow by flow', start: 3.5, end: 8, sessions: 16, hours: 19,
+        next: 'Delivered every screen reading and writing your own records.', done: 'Closed 23 Sep.', feed: [you('moved Settings to the cloud', '23 Sep'), cc('wrote 14 authorization tests', '22 Sep')],
+        ms: [mk('2A', 'Backend & identity', [['Pick Convex', 'd', 45], ['Identity decision', 'd', 30]]),
+          mk('2B', 'Sign-in', [['Connect Convex', 'd', 60], ['Better Auth sign-in', 'd', 90], ['Private records', 'd', 60]]),
+          mk('2C', 'Cloud tasks', [['Tasks in the cloud', 'd', 90], ['Task statuses', 'd', 45], ['Prerequisites', 'd', 60]]),
+          mk('2D', 'Sessions', [['Cloud sessions', 'd', 60], ['Move local data', 'd', 90]]),
+          mk('2E', 'Journey', [['Journey history', 'd', 60], ['Weekly results', 'd', 45]]),
+          mk('2F', 'Settings', [['Cloud motive', 'd', 30], ['Timezone and target', 'd', 30]])] },
+      { num: '03', name: 'Projects & ideas', a: 'Projects &', em: 'ideas', start: 8, end: 12, sessions: 13, hours: 15,
+        next: 'Delivered ideas that become projects, and a Today that explains its pick.', done: 'Closed 27 Sep.', feed: [you('shipped balanced suggestions', '27 Sep')],
+        ms: [mk('3A', 'Projects & milestones', [['Projects table', 'd', 45], ['Ordered milestones', 'd', 60], ['Derived progress', 'd', 45], ['Case-study draft', 'd', 90]]),
+          mk('3B', 'Notebooks & ready work', [['Idea capture', 'd', 30], ['Brainstorm fields', 'd', 60], ['Activate into a project', 'd', 60], ['Smaller first step', 'd', 30]]),
+          mk('3C', 'Balanced suggestions', [['Explain the pick', 'd', 60], ['Lane balance', 'd', 45], ['Pin a task', 'd', 30], ['Favoured lane', 'd', 30]])] },
+      { num: '04', name: 'Motivation & proof', a: 'Motivation &', em: 'proof', start: 12, end: 16, sessions: 11, hours: 12,
+        next: '4C: one small delight, only if it earns its place.', done: 'It ships, or it is dropped on purpose.', feed: [cc('proposed “Ripple sound”. Waiting in Inbox', '3h ago'), you('published the 4B case study', '4 Oct')],
+        ms: [mk('4A', 'Weekly commitment', [['Weekly target', 'd', 45], ['Streaks that forgive', 'd', 60], ['Planned pauses', 'd', 30]]),
+          mk('4B', 'Proof & publishing', [['Proof statuses', 'd', 45], ['Three-step publish', 'd', 90], ['Portfolio candidates', 'd', 45], ['Screenshots', 'd', 60]]),
+          mk('4C', 'Optional delight', [['Mind Bloom', 'd', 90], ['Bloom ripple', 'd', 45], ['Ripple sound', 'r', 30]])] },
+      { num: '05', name: 'Reliability & real use', a: 'Reliability &', em: 'real use', start: 16, end: 23, sessions: 13, hours: 12,
+        next: 'Log evening 7 of the trial and note one friction.', done: 'Ten evenings logged and the friction list triaged.', feed: [cc('logged 45 min on 5C. Waiting in Inbox', '2h ago'), you('marked “Restore into an empty workspace” done', 'yesterday'), you('blocked “Push on iOS”: no test device', '3 Oct')],
+        ms: [mk('5A', 'Data control', [['JSON export of every record', 'd', 60], ['Restore into an empty workspace', 'd', 90], ['Delete data, keep the account', 'd', 45], ['Delete the whole account', 'd', 45]]),
+          mk('5B', 'Interface quality', [['Skeletons that match each screen', 'd', 60], ['Contrast tests for every token', 'd', 45], ['Keyboard path through Today', 'd', 60], ['Reduced-motion audit', 'd', 30]]),
+          mk('5C', 'Two-week trial', [['Log ten real evenings', 'p', 60], ['Friction list, triaged weekly', 'p', 30], ['Write what changed', 'r', 60], ['Push reminders on iOS', 'b', 45]])] },
+      { num: '06', name: 'Friends & open source', a: 'Friends &', em: 'open source', start: 21, end: 30, sessions: 0, hours: 0,
+        next: 'Choose a license before inviting reuse (6A).', done: 'A LICENSE file, and a README line on why.', feed: [cc('proposed 9 tasks from PLAN.md. Approved', '3 Oct')],
+        ms: [mk('6A', 'Repo readiness', [['Choose a license', 'r', 30], ['README for strangers', 'r', 60], ['Contributing guide', 'r', 45]]),
+          mk('6B', 'Production', [['Production deploy', 'r', 90], ['Error tracking', 'r', 45], ['Email recovery', 'b', 60]]),
+          mk('6C', 'Friend pilot', [['Invite three friends', 'r', 15], ['Feedback form', 'r', 45], ['Pilot review', 'r', 60]])] },
+      { num: '07', name: 'Connections', a: 'Optional', em: 'connections', start: 99, end: 99, sessions: 0, hours: 0,
+        next: 'Wait. Only after the core proves useful.', done: 'The trial says a connection would help.', feed: [you('parked this phase on purpose', '2 Oct')],
+        ms: [mk('7A', 'Assistants', [['ChatGPT connection', 'r', 90], ['Claude Desktop guide', 'r', 45]]),
+          mk('7B', 'GitHub', [['Commits as evidence', 'r', 90], ['Link pull requests', 'r', 60], ['Import issues as tasks', 'r', 60]])] }
+    ];
+    const docs = [
+      { k: 'prd', code: 'PRD', name: 'Product brief', full: 'Product requirements', a: 'Product', em: 'requirements', meta: '9 sections · revised 2 Oct', last: '2 Oct', links: [0, 1, 3, 4, 6], written: 0.3, sections: 9,
+        next: 'Two open questions: pilot size and the reminder default.', done: 'Both answered in the doc, with the reason.', feed: [you('answered “Who is it for?”', '2 Oct'), cc('flagged two open questions', '1 Oct')] },
+      { k: 'sys', code: 'SYS', name: 'System design', full: 'System design', a: 'System', em: 'design', meta: 'Next 16 · Convex · Better Auth', last: '28 Sep', links: [0, 2, 3, 5, 7], written: 0.6, sections: 7,
+        next: 'Add the push-notification path.', done: 'Diagram and failure cases written.', feed: [you('added the reminders cron', '28 Sep')] },
+      { k: 'api', code: 'API', name: 'API & MCP', full: 'API & MCP', a: 'API &', em: 'MCP', meta: '38 functions · 12 MCP tools', last: '4 Oct', links: [2, 6, 7], written: 0.8, sections: 5,
+        next: 'Describe whats_next and set_next_step.', done: 'Every MCP tool has an example call.', feed: [cc('added 12 MCP tools', '4 Oct')] },
+      { k: 'db', code: 'DB', name: 'Schema', full: 'Schema', a: 'The', em: 'schema', meta: '14 tables · revised 6 Oct', last: '6 Oct', links: [2, 3, 4, 5], written: 0.9, sections: 14,
+        next: 'Add research and report tables for this view.', done: 'Migration written and tested.', feed: [you('added taskEvents and inbox', '6 Oct')] },
+      { k: 'ui', code: 'UI', name: 'UI flow', full: 'UI flow', a: 'UI', em: 'flow', meta: 'Today → Plan → Focus → Recap', last: '6 Oct', links: [1, 3, 4, 5], written: 1.0, sections: 6,
+        next: 'Map the Visual tab into Work.', done: 'Every screen link listed.', feed: [you('moved Proof under Journey', '6 Oct')] },
+      { k: 'ds', code: 'DS', name: 'Design system', full: 'Design system', a: 'Design', em: 'system', meta: 'Ritual · Bricolage since 8 Oct', last: '8 Oct', links: [0, 5], written: 1.2, sections: 4,
+        next: 'Add the hive tokens: cell, edge, glow.', done: 'Contrast tests pass on the new tokens.', feed: [you('swapped in Bricolage Grotesque', '8 Oct')] }
+    ];
+    const ev = (w, what, when, ai) => ({ w, i: ai ? 'C' : 'V', av: ai ? 'ai' : '', ai: !!ai, what, when });
+    const X = {
+      '5A·2': { done: 'An export restores into a fresh account with nothing lost.', skills: 'Systems', events: [ev('STARTED', 'First focus session, 50 min', '1 Oct'), ev('LOGGED', '40 min from Claude Code, approved', '2 Oct', true), ev('DONE', 'Round-trip test passes', '2 Oct')] },
+      '5B·3': { done: 'Open to recap without a mouse.', skills: 'Interaction', events: [ev('LOGGED', '55 min from Claude Code, approved', '5 Oct', true), ev('DONE', 'Focus order fixed in the plan card', '5 Oct')] },
+      '5C·1': { n: 6, of: 10, lvl: 60, next: 'Log evening 7 tonight and note one friction.', done: 'Ten evenings logged in Journey, each with a contribution.', skills: 'Shipping, Research',
+        events: [ev('CREATED', 'Proposed by Claude Code, approved', '2 Oct', true), ev('STARTED', 'Evening 1, 45 min', '2 Oct'), ev('LOGGED', 'Evening 6, 45 min. Waiting in Inbox', '2h ago', true)] },
+      '5C·2': { n: 1, of: 2, lvl: 35, next: 'Triage on Sunday: 7 notes so far.', done: 'Each friction has a task or a reason to ignore it.', skills: 'Research, Writing',
+        events: [ev('STARTED', 'First triage, 3 tasks made', '5 Oct'), ev('FOCUSED', 'Pinned for Sunday by the weekly review', '6 Oct')] },
+      '5C·3': { dep: 'AFTER 5C·1', next: 'Waits on 5C·1. Draft the outline now if you like.', done: 'A short post on what the trial changed, ready to share.', skills: 'Writing',
+        events: [ev('CREATED', 'From PLAN.md, approved in the Inbox', '30 Sep', true), ev('READY', 'Depends on Log ten real evenings', '30 Sep')] },
+      '5C·4': { next: 'Waiting on a test device. Borrow one, or move it to 6B.', done: 'A reminder arrives on an iPhone at 21:30.', skills: 'Frontend, Shipping',
+        events: [ev('STARTED', 'Web Push works on Android and desktop', '3 Oct'), ev('BLOCKED', 'No iOS device to test on', '3 Oct')] },
+      '6B·3': { next: 'Waiting on a sending domain for recovery emails.', done: 'A reset link arrives and works once.', skills: 'Systems', events: [ev('BLOCKED', 'No sending domain yet', '4 Oct')] }
+    };
+    const G = {
+      idea: { tone: 'lilac', eyebrow: 'Idea · quick capture · 15 Sep, 21:40', a: 'An evening', em: 'practice', status: 'Activated', scls: 's-done', meta: 'Projects lane', label: 'Idea',
+        next: 'Typed into the + sheet after a long day: evenings keep leaking away, so what if there were a small ritual for them?',
+        list: [['Took', '20 seconds to capture'], ['Stage', 'Captured → Brainstorming → Activated'], ['Became', 'Becoming, 26 hours later']] },
+      brain: { tone: 'lilac', eyebrow: 'Brainstorm · 15 Sep, 21:55', a: 'Four questions,', em: 'answered', status: 'Answered', scls: 's-done', meta: 'Each became a line in the brief', label: 'Brainstorm',
+        next: 'The idea’s structured thinking, before any research.',
+        list: [['Problem', 'Evenings leak away into scrolling.'], ['For', 'Makers with day jobs.'], ['Why now', 'A portfolio is due in spring.'], ['Smallest version', 'One question, one focus, one recap.']] },
+      research: { tone: 'lilac', eyebrow: 'Research · 15–16 Sep · 6 hours', a: 'Three threads,', em: 'eleven sources', status: 'Synthesised', scls: 's-done', meta: '2 briefs by Claude', label: 'Research',
+        next: 'Each dot is a source you read, quoted or tried. The two bright ones are briefs Claude wrote through MCP, approved in your Inbox.',
+        list: [['Habit-app teardown', '5 apps, and what made people quit'], ['Maker interviews', '4 conversations, 40 min each'], ['Claude briefs · MCP', 'Evening energy, streak guilt']] },
+      report: { tone: 'lilac', eyebrow: 'Report · 16 Sep, 18:00', a: 'Why evenings', em: 'fail', status: 'Final', scls: 's-done', meta: 'A nine-minute read', label: 'Report',
+        next: 'Four findings, each traced back to a source.',
+        list: [['Finding 1', 'Trackers ask more than the work does.'], ['Finding 2', 'Energy, not time, decides the evening.'], ['Finding 3', 'Progress you can’t see feels like none.'], ['Finding 4', 'Streak guilt makes people quit.']] },
+      decision: { tone: 'mint', eyebrow: 'Decision · 16 Sep, 22:30', a: 'Build it,', em: 'with one rule', status: 'Decided', scls: 's-done', meta: 'Decided by the report', label: 'Decision',
+        next: 'Honest data only. Nothing is shown that you did not do.',
+        list: [['Dropped', 'Social feed, points, badges'], ['Kept', 'The bloom, as a quiet reward']] },
+      project: { tone: 'ember', eyebrow: 'Project · 16 Sep, 23:10', a: 'Becoming', em: 'is born', status: 'Active', scls: 's-progress', meta: 'Projects lane', label: 'Project',
+        next: 'The idea became a project with a purpose and an outcome. Its lineage stays one click away.',
+        list: [['Purpose', 'A practice worth building'], ['Outcome', 'A portfolio of honest proof'], ['First step', 'Write the product brief']] }
+    };
+    this._d = { P, docs, X, G, you, cc };
+    return this._d;
+  }
+
+  play() {
+    if (this.timer) { clearInterval(this.timer); this.timer = null; this.setState({ playing: false }); return; }
+    let v = 0;
+    this.setState({ view: 0, playing: true });
+    this.timer = setInterval(() => {
+      v += 1.2;
+      if (v >= 240) { clearInterval(this.timer); this.timer = null; this.setState({ view: 240, playing: false }); return; }
+      this.setState({ view: v });
+    }, 50);
+  }
+
+  renderVals() {
+    const D = this.data();
+    const X = D.X;
+    const s = this.state || {};
+    const level = s.level || 'overview';
+    const ph = s.ph == null ? 5 : s.ph;
+    const sel = s.sel !== undefined ? s.sel : (level === 'genesis' ? 'research' : (level === 'phase' ? null : 'core'));
+    const go = (lv, p, se) => () => this.setState({ level: lv, ph: p == null ? ph : p, sel: se });
+    const view = s.view == null ? 240 : s.view;
+    const days = view / 10;
+    const fmt = (dd) => { const n = 15 + Math.floor(Math.max(0, dd)); return n <= 30 ? n + ' Sep' : (n - 30) + ' Oct'; };
+    const ev2 = (w, what, when) => ({ w, i: 'V', av: '', ai: false, what, when });
+    const focus = this.props.focusDim !== false;
+
+    // status of every task at the replay day
+    let total = 0, done = 0, phDone = 0;
+    const phases = D.P.map((p, i) => {
+      const all = [];
+      p.ms.forEach((m) => m.tasks.forEach((t) => all.push(t)));
+      const nd = all.filter((t) => t.st === 'd').length;
+      let k = 0, pd = 0, pp = 0;
+      all.forEach((t) => {
+        let st = t.st;
+        if (st === 'd') { k++; t.doneDay = p.start + (p.end - p.start) * k / nd; st = t.doneDay <= days ? 'd' : 'r'; }
+        else if (st === 'p') st = days >= p.start + 1 ? 'p' : 'r';
+        else if (st === 'b') st = days >= p.start + 2 ? 'b' : 'r';
+        t.cur = st;
+        if (st === 'd') pd++;
+        if (st === 'p') pp++;
+      });
+      const n = all.length;
+      total += n; done += pd;
+      const state = pd === n ? 'done' : (pd + pp > 0 ? 'active' : 'ahead');
+      if (state === 'done') phDone++;
+      return { p, i, all, n, pd, pp, state, pct: Math.round(pd / n * 100) };
+    });
+    const pct = Math.round(done / total * 100);
+    const word = { d: 'DONE', p: 'IN PROGRESS', r: 'READY', b: 'BLOCKED' };
+    const stWord = { done: ['Done', 's-done'], active: ['In progress', 's-progress'], ahead: ['Ahead', 's-ready'] };
+    const docsOf = (i) => D.docs.filter((x) => x.links.indexOf(i) >= 0);
+
+    // ---------- overview ----------
+    const CY = 292;
+    const docY = (j) => CY + (j - 2.5) * 66;
+    const rowTop = (i) => 56 + i * 60;
+    const coreDoc = (j) => 'M348,' + CY + ' C374,' + CY + ' 374,' + docY(j) + ' 400,' + docY(j) + ' ';
+    const docPh = (j, i) => { const y0 = docY(j), ry = rowTop(i) + 18; return 'M572,' + y0 + ' C616,' + y0 + ' 616,' + ry + ' 660,' + ry + ' '; };
+    const gen = 'M52,' + CY + ' C64,' + CY + ' 64,252 76,252 M52,' + CY + ' L76,' + CY + ' M52,' + CY + ' C64,' + CY + ' 64,332 76,332 M76,252 L164,252 M76,292 L164,292 M76,332 L164,332 M164,252 C178,252 176,' + CY + ' 186,' + CY + ' M164,' + CY + ' L186,' + CY + ' M164,332 C178,332 176,' + CY + ' 186,' + CY + ' M214,' + CY + ' L252,' + CY;
+    const isPhSel = /^p\d$/.test(sel || '');
+    const selDoc = D.docs.find((x) => x.k === sel);
+    const isGenSel = ['idea', 'research', 'report'].indexOf(sel) >= 0;
+    const rel = {};
+    let hl = '', base = '', core = '', coreOff = '', lit = '';
+    D.docs.forEach((d, j) => {
+      const written = days >= d.written;
+      if (written) core += coreDoc(j); else coreOff += coreDoc(j);
+      d.links.forEach((i) => { base += docPh(j, i); if (written && phases[i].state !== 'ahead') lit += docPh(j, i); });
+      if (isPhSel && d.links.indexOf(+sel[1]) >= 0) { rel[d.k] = 1; hl += coreDoc(j) + docPh(j, +sel[1]); }
+      if (sel === d.k) { d.links.forEach((i) => { rel['p' + i] = 1; hl += docPh(j, i); }); hl += coreDoc(j); }
+      if (sel === 'core') hl += coreDoc(j);
+    });
+    rel[sel] = 1;
+    const dimmable = level === 'overview' && focus && (isPhSel || !!selDoc);
+    const far = (k) => (dimmable && !rel[k] ? ' far' : '');
+    const ov = {
+      base: base || 'M0,0', gen, core: core || 'M0,0', coreOff: coreOff || 'M0,0', lit: (core + lit) || 'M0,0', hl: hl || 'M0,0', hlg: isGenSel ? gen : 'M0,0',
+      g: { idea: sel === 'idea' ? 'on' : '', research: sel === 'research' ? 'on' : '', report: sel === 'report' ? 'on' : '', core: sel === 'core' ? 'on' : '' },
+      pick: { idea: go('overview', null, 'idea'), research: go('overview', null, 'research'), report: go('overview', null, 'report'), core: go('overview', null, 'core') },
+      genOpen: isGenSel, openGen: go('genesis', null, isGenSel ? sel : 'idea'),
+      docs: D.docs.map((d, j) => ({ code: d.code, name: d.name, top: docY(j) - 27, delay: (j * 1.2 + 0.6).toFixed(1), sub: 'Feeds ' + d.links.length + ' phases',
+        cls: (sel === d.k ? 'on' : (rel[d.k] && isPhSel ? 'rel' : '')) + (days >= d.written ? '' : ' unwritten') + far(d.k), pick: go('overview', null, d.k) })),
+      rows: phases.map((x) => ({
+        num: x.p.num, name: x.p.name, top: rowTop(x.i), openTop: rowTop(x.i) + 4, pct: x.pct, bd: (x.i * 0.9 + 1).toFixed(1),
+        word: x.state === 'done' ? 'DONE' : (x.state === 'active' ? x.pct + '%' : 'AHEAD'),
+        cls: x.state + (sel === 'p' + x.i ? ' on' : '') + far('p' + x.i), on: sel === 'p' + x.i,
+        aria: 'Phase ' + x.p.num + ', ' + x.p.name + ', ' + (x.state === 'done' ? 'done' : x.pct + '% done') + '. Double-click to open.',
+        pick: go('overview', null, 'p' + x.i), open: go('phase', x.i, null),
+        cells: x.all.map((t, j) => ({ cls: 'c-' + t.cur, x: j * 11, d: ((j * 0.37) % 3).toFixed(2) }))
+      }))
+    };
+
+    // ---------- phase level ----------
+    const PX = phases[ph];
+    const MS = PX.p.ms;
+    const half = Math.ceil(MS.length / 2);
+    const msRows = MS.length <= 3 ? [MS] : [MS.slice(0, half), MS.slice(half)];
+    const tops = msRows.length === 1 ? [168] : [24, 284];
+    let plEdges = '', plLit = '';
+    const clusters = [];
+    // centre the hexagon and its clusters as one group
+    const rowW = (c) => c * 230 + (c - 1) * 10;
+    const maxW = Math.max.apply(null, msRows.map((r) => rowW(r.length)));
+    const hx = Math.round((940 - (150 + 56 + maxW)) / 2), area = hx + 206;
+    msRows.forEach((row, r) => {
+      const c = row.length, tw = rowW(c), x0 = area + (maxW - tw) / 2;
+      row.forEach((m, idx) => {
+        const cx = Math.round(x0 + idx * 240), top = tops[r];
+        const dn = m.tasks.filter((t) => t.cur === 'd').length, dp = m.tasks.filter((t) => t.cur === 'p').length;
+        const st = dn === m.tasks.length ? 'done' : (dn + dp > 0 ? 'active' : 'ahead');
+        const e = 'M' + (hx + 150) + ',272 C' + (hx + 184) + ',272 ' + (cx - 44) + ',' + (top + 8) + ' ' + (cx - 6) + ',' + (top + 8) + ' ';
+        plEdges += e;
+        if (st !== 'ahead') plLit += e;
+        clusters.push({
+          x: cx, y: top, code: m.code, upper: ' ' + m.name.toUpperCase() + ' ',
+          word: st === 'done' ? 'DONE' : (st === 'active' ? dn + ' OF ' + m.tasks.length : 'AHEAD'), wcls: st === 'done' ? 'w' : (st === 'active' ? 'wp' : 'wa'),
+          tasks: m.tasks.map((t, k) => {
+            const xr = Math.floor(k / 2), xx = X[t.id] || {};
+            return {
+              id: t.id, t: t.t, x: cx + (k % 2) * 92 + (xr % 2 ? 46 : 0), y: top + 26 + xr * 80, bd: ((k + idx) * 0.7).toFixed(1),
+              cls: t.cur + (sel === t.id ? ' on' : ''),
+              foot: xx.dep && t.cur === 'r' ? xx.dep : (t.cur === 'p' && xx.of ? xx.n + ' OF ' + xx.of : (t.cur === 'd' ? t.min + ' MIN' : word[t.cur])),
+              hasLvl: t.cur === 'p', lvl: xx.lvl || 40,
+              aria: t.id + ' ' + t.t + ', ' + word[t.cur].toLowerCase(),
+              pick: go('phase', ph, t.id)
+            };
+          })
+        });
+      });
+    });
+    const pl = { hx, nx: hx - 15, num: PX.p.num, pct: PX.pct, pd: PX.pd, n: PX.n, name: PX.p.name, state: PX.state,
+      word: PX.state === 'done' ? 'DONE' : (PX.state === 'active' ? 'IN PROGRESS' : 'AHEAD'),
+      dash: (506 * PX.pct / 100).toFixed(1) + ' 999',
+      aria: 'Phase ' + PX.p.num + ' summary, ' + PX.pct + '% done', clusters, edges: plEdges || 'M0,0', lit: plLit || 'M0,0', hexCls: sel == null ? 'on' : '', pickHex: go('phase', ph, null) };
+
+    // ---------- genesis level ----------
+    const gs = {}, gp = {};
+    ['idea', 'brain', 'research', 'report', 'decision', 'project'].forEach((k) => { gs[k] = sel === k ? 'on' : ''; gp[k] = go('genesis', null, k); });
+
+    // ---------- panel ----------
+    const base0 = { hasPrimary: false, primaryLabel: '', primary: null, hasStats: false, stats: [], hasList: false, listK: '', list: [], hasChips: false, chipsK: '', chips: [], hasNext: false, nextK: '', next: '', hasDone: false, doneK: '', done: '', hasFeed: false, feedK: 'Activity', feed: [] };
+    const phasePanel = (x, fromOverview) => {
+      const st = stWord[x.state];
+      return Object.assign({}, base0, {
+        tone: 'ember', eyebrow: 'Phase ' + x.p.num + ' · Projects lane', a: x.p.a, em: x.p.em, status: st[0], scls: st[1],
+        meta: x.pd + ' of ' + x.n + ' tasks', hasPrimary: fromOverview, primaryLabel: 'Open phase ' + x.p.num + ' ›', primary: go('phase', x.i, null),
+        hasStats: true, stats: [{ v: x.pct + '%', l: 'Complete' }, { v: x.p.ms.length, l: 'Milestones' }, { v: x.p.sessions, l: 'Sessions' }, { v: x.p.hours + 'h', l: 'Focused' }],
+        hasList: true, listK: 'Milestones', list: x.p.ms.map((m) => { const dn = m.tasks.filter((t) => t.cur === 'd').length; return { k: m.code + ' · ' + m.name, v: dn + ' of ' + m.tasks.length + ' done', hasBar: true, pct: Math.round(dn / m.tasks.length * 100) }; }),
+        hasChips: true, chipsK: 'Built from', chips: docsOf(x.i).map((d) => ({ t: d.full, tone: 'lilac', go: go('overview', null, d.k) })),
+        hasNext: true, nextK: x.state === 'done' ? 'What it delivered' : 'Next step', next: x.p.next, hasDone: true, doneK: x.state === 'done' ? 'Closed' : 'Done when', done: x.p.done,
+        hasFeed: true, feed: x.p.feed
+      });
+    };
+    let d;
+    let task = null, tms = null;
+    if (level === 'phase' && sel) MS.forEach((m) => m.tasks.forEach((t) => { if (t.id === sel) { task = t; tms = m; } }));
+    if (task) {
+      const xx = X[task.id] || {};
+      const st = { d: ['Done', 's-done'], p: ['In progress', 's-progress'], r: ['Ready', 's-ready'], b: ['Blocked', 's-blocked'] }[task.cur];
+      const events = xx.events || [ev2('CREATED', 'From the phase plan, approved in the Inbox', fmt(PX.p.start - 1))].concat(task.cur === 'd' ? [ev2('DONE', 'Closed after its last session', fmt(task.doneDay))] : []);
+      const list = [{ k: 'Milestone', v: tms.code + ' · ' + tms.name, hasBar: false, pct: 0 }, { k: 'Planned', v: task.min + ' minutes', hasBar: false, pct: 0 }];
+      if (xx.of) list.push({ k: 'Sessions', v: xx.n + ' of ' + xx.of, hasBar: true, pct: Math.round(xx.n / xx.of * 100) });
+      if (xx.skills) list.push({ k: 'Skills', v: xx.skills, hasBar: false, pct: 0 });
+      d = Object.assign({}, base0, {
+        tone: 'ember', eyebrow: 'Task ' + task.id + ' · Phase ' + PX.p.num, a: task.t, em: '', status: st[0], scls: st[1], meta: task.cur === 'd' ? 'Done ' + fmt(task.doneDay) : task.min + ' min',
+        hasPrimary: task.cur !== 'd', primaryLabel: task.cur === 'b' ? 'Unblock' : 'Start focus', primary: () => {},
+        hasList: true, listK: 'Details', list,
+        hasChips: true, chipsK: 'Built from', chips: docsOf(ph).map((x) => ({ t: x.full, tone: 'lilac', go: go('overview', null, x.k) })),
+        hasNext: !!(xx.next || xx.done), nextK: task.cur === 'b' ? "What's blocking it" : 'Next step', next: xx.next || 'Done.', hasDone: !!xx.done, doneK: 'Done when', done: xx.done || '',
+        hasFeed: true, feedK: 'Timeline', feed: events
+      });
+    } else if (level === 'phase') {
+      d = phasePanel(PX, false);
+    } else if (level === 'genesis') {
+      const g = D.G[sel] || D.G.research;
+      d = Object.assign({}, base0, {
+        tone: g.tone, eyebrow: g.eyebrow, a: g.a, em: g.em, status: g.status, scls: g.scls, meta: g.meta,
+        hasPrimary: sel === 'project', primaryLabel: 'See the whole constellation ›', primary: go('overview', null, 'core'),
+        hasNext: true, nextK: 'What happened', next: g.next,
+        hasList: true, listK: g.label, list: g.list.map((r) => ({ k: r[0], v: r[1], hasBar: false, pct: 0 }))
+      });
+    } else if (isPhSel) {
+      d = phasePanel(phases[+sel[1]], true);
+    } else if (selDoc) {
+      const fed = selDoc.links.reduce((a, i) => a + phases[i].n, 0);
+      d = Object.assign({}, base0, {
+        tone: 'lilac', eyebrow: 'Document · Writing lane', a: selDoc.a, em: selDoc.em, status: 'Written', scls: 's-lilac', meta: selDoc.meta,
+        hasStats: true, stats: [{ v: fed, l: 'Tasks it informs' }, { v: selDoc.links.length, l: 'Phases fed' }, { v: selDoc.sections, l: 'Sections' }, { v: selDoc.last, l: 'Last edit' }],
+        hasChips: true, chipsK: 'Feeds · open a phase', chips: selDoc.links.map((i) => ({ t: phases[i].p.num + ' ' + phases[i].p.name, tone: 'ember', go: go('phase', i, null) })),
+        hasNext: true, nextK: 'Next edit', next: selDoc.next, hasDone: true, doneK: 'Done when', done: selDoc.done,
+        hasFeed: true, feed: selDoc.feed
+      });
+    } else if (isGenSel) {
+      const g = D.G[sel];
+      d = Object.assign({}, base0, {
+        tone: 'lilac', eyebrow: g.eyebrow, a: g.a, em: g.em, status: g.status, scls: g.scls, meta: g.meta,
+        hasPrimary: true, primaryLabel: 'Open genesis ›', primary: go('genesis', null, sel),
+        hasNext: true, nextK: 'What happened', next: g.next,
+        hasList: true, listK: g.label, list: g.list.map((r) => ({ k: r[0], v: r[1], hasBar: false, pct: 0 }))
+      });
+    } else {
+      d = Object.assign({}, base0, {
+        tone: 'ember', eyebrow: 'Project · Projects lane', a: 'Becoming,', em: 'taking form', status: 'Active', scls: 's-progress', meta: 'Grew from an idea on 15 Sep',
+        hasPrimary: true, primaryLabel: 'Open genesis ›', primary: go('genesis', null, 'idea'),
+        hasStats: true, stats: [{ v: pct + '%', l: 'Formed' }, { v: phDone + '/8', l: 'Phases done' }, { v: 64, l: 'Sessions' }, { v: '71h', l: 'Focused' }],
+        hasList: true, listK: 'Where it came from', list: [{ k: 'Idea', v: 'An evening practice', hasBar: false, pct: 0 }, { k: 'Research', v: '3 threads, 11 sources', hasBar: false, pct: 0 }, { k: 'Report', v: 'Why evenings fail', hasBar: false, pct: 0 }],
+        hasNext: true, nextK: 'Next step', next: 'Finish the two-week trial (5C) and write what changed.', hasDone: true, doneK: 'Done when', done: 'Ten evenings logged, one reflection a week.',
+        hasFeed: true, feed: [D.cc('proposed 3 tasks for 6A. Waiting in Inbox', '2h ago'), D.you('approved a session on 5C', 'yesterday')]
+      });
+    }
+
+    // ---------- navigation ----------
+    const nav = {
+      canBack: level !== 'overview', c0: level === 'overview' ? 'cur' : '', home: go('overview', null, level === 'phase' ? 'p' + ph : 'core'),
+      hasL1: level !== 'overview', l1: level === 'genesis' ? 'Genesis' : 'Phase ' + PX.p.num + ' · ' + PX.p.name,
+      c1: (level === 'phase' && !sel) || level === 'genesis' ? 'cur' : '', l1go: level === 'phase' ? go('phase', ph, null) : go('genesis', null, sel),
+      hasL2: !!task, l2: task ? task.id + ' ' + task.t : '',
+      back: task ? go('phase', ph, null) : go('overview', null, level === 'phase' ? 'p' + ph : 'core'),
+      isPhase: level === 'phase',
+      prev: go('phase', Math.max(0, ph - 1), null), next: go('phase', Math.min(7, ph + 1), null),
+      prevDis: ph === 0, nextDis: ph === 7,
+      prevNum: ph > 0 ? phases[ph - 1].p.num : '', nextNum: ph < 7 ? phases[ph + 1].p.num : '',
+      hint: level === 'overview' ? 'Click to select · double-click a phase, or use the panel button, to go in' : (level === 'phase' ? 'Click a cell for its story' : 'From a thought to a project')
+    };
+
+    const playing = !!s.playing;
+    return {
+      rootCls: this.props.motion === false ? 'still' : '',
+      isOverview: level === 'overview', isPhaseLvl: level === 'phase', isGenesis: level === 'genesis', showScrub: level !== 'genesis',
+      nav, ov, pl, gs, gp, d,
+      core: { pct, dash: (276.46 * pct / 100).toFixed(1) + ' 999' },
+      view: Math.round(view), viewPct: (view / 2.4).toFixed(1),
+      onScrub: (e) => { if (this.timer) { clearInterval(this.timer); this.timer = null; } this.setState({ view: +e.target.value, playing: false }); },
+      play: () => this.play(), playing, paused: !playing, playLabel: playing ? 'Pause replay' : 'Replay how it grew',
+      dateLabel: (view >= 240 ? 'TODAY · ' : '') + fmt(days).toUpperCase() + ' · DAY ' + Math.floor(days),
+      scrubNote: playing ? 'Replaying the build…' : (view >= 240 ? 'Press play to watch it grow from the idea.' : 'Drag to the end for today.'),
+      ticks: [{ l: 6.25, label: 'P0' }, { l: 14.6, label: 'P1' }, { l: 33.3, label: 'P2' }, { l: 50, label: 'P3' }]
+    };
+  }
+}
+</script>
+</body>
+</html>
