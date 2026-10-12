@@ -33,16 +33,18 @@ export type PanelModel = {
 const STATUS: Record<TaskState, [string, string]> = { done: ["Done", "s-done"], doing: ["In progress", "s-progress"], ready: ["Ready", "s-ready"], blocked: ["Blocked", "s-blocked"] };
 const PHASE_STATUS = { done: ["Done", "s-done"], active: ["In progress", "s-progress"], ahead: ["Ahead", "s-ready"] } as const;
 const PROJECT_STATUS: Record<string, string> = { Active: "s-progress", Done: "s-done", Archived: "s-ready" };
-const EVENT_NOTE: Record<string, string> = {
+/** What each task event means, when it carries no note of its own. Shared with the task sheet. */
+export const EVENT_NOTE: Record<string, string> = {
   created: "Added to the plan", started: "Work began", ready: "Marked ready", blocked: "Marked blocked", unblocked: "Unblocked", done: "Marked done",
   reopened: "Reopened", archived: "Archived", restored: "Restored", focused: "A focus session", logged: "A session was logged",
 };
 
-const who = (source: string, initial: string) => source === "app"
+/** Who an activity entry is from: you (the app), or the assistant that proposed it. Shared with the project list. */
+export const who = (source: string, initial: string) => source === "app"
   ? { who: "You", initial: initial || "Y", ai: false }
   : { who: source, initial: source.trim()[0]?.toUpperCase() ?? "A", ai: true };
 
-function activityLine(kind: string, title: string | null, note: string | null) {
+export function activityLine(kind: string, title: string | null, note: string | null) {
   const t = title ? `“${title}”` : "a task";
   switch (kind) {
     case "created": return `added ${t}`;
@@ -111,7 +113,7 @@ export function buildPanel(c: PanelContext): PanelModel {
       return {
         key: `t:${task.id}`, tone: "ember", eyebrow: `Task ${task.code}${group.num ? ` · Phase ${group.num}` : ""}`, a: task.title, em: "", status, scls,
         meta: task.cur === "done" && task.completedAt ? `Done ${dayMonth(task.completedAt)}` : `${task.minutes} min`,
-        primary: real === "done" ? undefined : real === "blocked" ? { label: "Unblock", unblock: task.id } : { label: "Start focus", href: `/today?task=${task.id}` },
+        primary: real === "done" ? undefined : real === "blocked" ? { label: "Unblock", unblock: task.id } : { label: "Start a focus session", href: `/today?task=${task.id}` },
         list: { k: "Details", items },
         chips: docChips(group),
         next: { k: task.cur === "blocked" ? "What's blocking it" : "Next step", v: task.cur === "done" ? "Done." : task.nextStep || "No next step written yet.", doneK: "Done when", done: task.doneWhen },

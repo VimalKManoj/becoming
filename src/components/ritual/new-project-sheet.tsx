@@ -42,14 +42,16 @@ function NewProject({ onClose, onToast }: { onClose: () => void; onToast: (text:
     setError(""); setStage(2);
   }
 
-  async function save(startTonight: boolean) {
+  // Opening the project shows its page in Work, where you choose what to do; nothing starts a
+  // focus session on its own.
+  async function save(openIt: boolean) {
     if (!step.trim() || !doneWhen.trim()) { setError("Name the first step and say when it's done."); return; }
     setBusy(true); setError("");
     try {
       const { projectId } = await create({ title: name.trim(), purpose: why.trim(), step: { title: step.trim(), lane, minutes, energy: 2, doneWhen: doneWhen.trim() } });
       onClose();
-      if (startTonight) { onToast("Project created. Its first step is ready."); router.push(`/today?intent=build&project=${projectId}`); }
-      else { onToast("Saved to Work. Today can suggest its first step when it fits."); router.push("/work"); }
+      if (openIt) { onToast("Project created. Its first step is up next."); router.push(`/work?view=projects&project=${projectId}`); }
+      else { onToast("Saved to Work."); router.push("/work"); }
     } catch (caught) { setError(readableError(caught, "Could not create the project. Please try again.")); }
     finally { setBusy(false); }
   }
@@ -88,7 +90,7 @@ function NewProject({ onClose, onToast }: { onClose: () => void; onToast: (text:
         <label className="r-field">Done when<input className="r-input" style={{ fontSize: 14 }} placeholder="Weight and width scrub smoothly at 60fps." value={doneWhen} onChange={event => setDoneWhen(event.target.value)} maxLength={1000} /></label>
         {alert}
         <div className="r-stack" style={{ gap: 8, marginTop: 6 }}>
-          <button type="submit" className="r-btn" disabled={busy}>{busy ? "Creating…" : "Start the first step tonight"}</button>
+          <button type="submit" className="r-btn" disabled={busy}>{busy ? "Creating…" : "Create and open the project"}</button>
           <button type="button" className="r-ghost" disabled={busy} onClick={() => void save(false)}>Save to Work for later</button>
         </div>
       </form>}

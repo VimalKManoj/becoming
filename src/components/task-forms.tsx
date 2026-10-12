@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -40,26 +41,30 @@ const formText = (data: FormData, name: string) => String(data.get(name) || "").
 export const focusOnMount = (node: HTMLElement | null) => node?.focus();
 
 // ---------- Work's address ----------
-// Today links into Work with ?new=task, ?view=blocked|done|archived|projects and
-// ?project=<id>. In projects, ?visual=1 shows the constellation instead of the list.
+// Today links into Work with ?new=task, ?view=blocked|done|archived|projects,
+// ?project=<id> and ?lane=Showcases|Writing (one lane's open tasks, to choose from).
+// In projects, ?visual=1 shows the constellation instead of the list.
 // The screen reads them on arrival and writes its view back, so a refresh or a shared
 // link opens the same place.
 
 export const taskViews = ["active", "blocked", "done", "archived"] as const;
 export type TaskView = typeof taskViews[number];
-export type WorkRoute = { mode: "tasks" | "projects"; view: TaskView; project: string | null; adding: boolean; visual: boolean };
+export type WorkRoute = { mode: "tasks" | "projects"; view: TaskView; project: string | null; adding: boolean; visual: boolean; lane: Lane | null };
 
 export function workRoute(params: { get: (name: string) => string | null }): WorkRoute {
   const view = params.get("view");
   const project = params.get("project")?.trim() || null;
   const mode = project || view === "projects" ? "projects" : "tasks";
+  // In the Projects view the task view you came from travels as ?tasks=, so coming back keeps it.
+  const taskView = taskViews.find(item => item === (mode === "projects" ? params.get("tasks") : view)) ?? "active";
+  const wantedLane = params.get("lane")?.trim().toLowerCase();
   return {
     mode,
-    // In the Projects view the task view you came from travels as ?tasks=, so coming back keeps it.
-    view: taskViews.find(item => item === (mode === "projects" ? params.get("tasks") : view)) ?? "active",
+    view: taskView,
     project: mode === "projects" ? project : null,
     adding: mode === "tasks" && params.get("new") === "task",
     visual: mode === "projects" && params.get("visual") === "1",
+    lane: mode === "tasks" && taskView === "active" ? lanes.find(item => item.toLowerCase() === wantedLane) ?? null : null,
   };
 }
 
@@ -73,6 +78,7 @@ export function workQuery(route: WorkRoute) {
     if (route.view !== "active") query.set("tasks", route.view);
   } else {
     if (route.view !== "active") query.set("view", route.view);
+    else if (route.lane) query.set("lane", route.lane);
     if (route.adding) query.set("new", "task");
   }
   return query.toString();
@@ -138,13 +144,19 @@ export function Sheet({ labelledBy, eyebrow, onClose, variant = "card", children
     {/* Focus moves into the sheet as it opens; a form's first field, mounting later, takes it from here. */}
     <button type="button" ref={focusOnMount} className="r-close" aria-label="Close" onClick={onClose}>×</button>
   </div>;
-  if (variant === "page") return <div ref={dialog} className="r-overlay sheet" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
-    <div className="r-col r-rise-6" style={{ maxWidth: 560, gap: 16 }}>{head}{children}</div>
-  </div>;
-  return <div ref={dialog} className="r-cap" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
-    <div className="r-cap-back" onClick={onClose} />
-    <div className="r-cap-card w-sheet">{head}{children}</div>
-  </div>;
+  const sheet = variant === "page"
+    ? <div ref={dialog} className="r-overlay sheet" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
+      <div className="r-col r-rise-6" style={{ maxWidth: 560, gap: 16 }}>{head}{children}</div>
+    </div>
+    : <div ref={dialog} className="r-cap" role="dialog" aria-modal="true" aria-labelledby={labelledBy}>
+      <div className="r-cap-back" onClick={onClose} />
+      <div className="r-cap-card w-sheet">{head}{children}</div>
+    </div>;
+  // Rendered in the app frame, not where it's used: the scrolling page is a size container
+  // (and animates in), which would pin a fixed sheet inside the page instead of the window.
+  // Out there it centres on the screen, and the page behind it can't scroll.
+  const frame = typeof document === "undefined" ? null : document.querySelector(".r-app");
+  return frame ? createPortal(sheet, frame) : sheet;
 }
 
 // ---------- Task form ----------

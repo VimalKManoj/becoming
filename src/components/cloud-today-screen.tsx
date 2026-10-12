@@ -28,12 +28,14 @@ type Overview = FunctionReturnType<typeof api.tasks.todayOverview>;
 type Choice = Overview["choices"][number];
 type Project = FunctionReturnType<typeof api.projects.list>[number];
 type Screen = "open" | "which" | "check" | "plan";
-type Intent = "build" | "small" | "write" | "publish" | "resume";
+// "focus" is the explicit way into a focus session: the check-in, then one suggestion with a
+// timer. Build, Small piece and Write open Work instead, where you choose the task yourself.
+type Intent = "build" | "small" | "write" | "publish" | "resume" | "focus";
 type Capacity = { minutes: number; energy: number };
 
 const minuteChoices = [15, 30, 45, 60, 90];
 const energyNames = ["Low", "Steady", "High"];
-const intentLabels: Record<Intent, string> = { build: "Build", small: "Small piece", write: "Write", publish: "Publish", resume: "Pick up" };
+const intentLabels: Record<Intent, string> = { build: "Build", small: "Small piece", write: "Write", publish: "Publish", resume: "Focus", focus: "Focus" };
 const questions = ["What would make tonight feel worth it?", "What's one small thing you could finish tonight?", "What did last time teach you?"];
 const laneColour = (lane: string) => ({ "--dot": lane === "Showcases" ? "#86E3C3" : lane === "Writing" ? "#C9B8F0" : "#FF8A3D" }) as CSSProperties;
 
@@ -131,6 +133,8 @@ function Today() {
   function go(next: Intent | "idea" | "reflect") {
     if (next === "idea") return openCapture("idea");
     if (next === "reflect") return router.push("/journey?view=review");
+    // A small piece or some writing: that lane's open tasks in Work, to choose from.
+    if (next === "small" || next === "write") return router.push(`/work?lane=${next === "small" ? "Showcases" : "Writing"}`);
     setIntent(next); setChosenId(null);
     if (next === "build") { setProjectId(null); setScreen("which"); return; }
     setScreen(next === "publish" ? "plan" : "check");
@@ -145,11 +149,15 @@ function Today() {
 
   // ----- Tonight is done -----
   const lastSession = overview.lastSession;
-  if (screen === "open" && doneDay === rhythm.today && lastSession && daysBetween(lastSession.endedAt, now) === 0) return <>
+  // Tonight's last piece of work: a finished task when that came after the last session.
+  const lastFinish = overview.lastFinish && (!lastSession || overview.lastFinish.at > lastSession.endedAt) ? overview.lastFinish : null;
+  const tonight = lastFinish ? { title: lastFinish.title, line: `${lastFinish.lane} · finished · in Journey`, at: lastFinish.at }
+    : lastSession ? { title: lastSession.title, line: `${lastSession.lane} · ${lastSession.outcome} · saved to Journey`, at: lastSession.endedAt } : null;
+  if (screen === "open" && doneDay === rhythm.today && tonight && daysBetween(tonight.at, now) === 0) return <>
     {onboarding}
     <div className="r-col r-rise" style={{ gap: 22, paddingTop: "clamp(8px,6cqi,64px)" }}>
       <div><div className="r-date">{dateLine(now)}</div><h1 className="r-greet">Tonight is <em>done.</em></h1></div>
-      <div className="t-done-card"><span className="t-check" aria-hidden="true">✓</span><div style={{ minWidth: 0 }}><div style={{ font: "500 15px/1.3 var(--r-sans)" }}>{lastSession.title}</div><div className="r-small" style={{ marginTop: 3 }}>{lastSession.lane} · {lastSession.outcome} · saved to Journey</div></div></div>
+      <div className="t-done-card"><span className="t-check" aria-hidden="true">✓</span><div style={{ minWidth: 0 }}><div style={{ font: "500 15px/1.3 var(--r-sans)" }}>{tonight.title}</div><div className="r-small" style={{ marginTop: 3 }}>{tonight.line}</div></div></div>
       <div className="r-row" style={{ gap: 12, padding: "0 4px" }}><WeekDots days={week.days} size={24} /><span className="r-body" style={{ fontSize: 13.5, color: "var(--r-text)" }}>{week.line}</span></div>
       <p className="r-body" style={{ fontSize: 15, lineHeight: 1.5, color: "var(--r-text)" }}>Rest well. If something&apos;s still buzzing:</p>
       <div className="r-row" style={{ gap: 8 }}>
@@ -161,22 +169,25 @@ function Today() {
   </>;
 
   const name = auth?.user.name ?? null;
-  const daysAway = lastSession ? daysBetween(lastSession.endedAt, now) : 0;
+  // Away means nothing moved forward: no task started, finished or logged, and no session.
+  const daysAway = overview.lastWorkAt ? daysBetween(overview.lastWorkAt, now) : 0;
   const suggestedProject = projects?.find(project => project._id === overview.choices[0]?.projectId) ?? projects?.[0];
 
   // ----- Which project -----
+  // A project opens its page in Work, where you choose the task yourself; its "Plan it for
+  // tonight" (or a task's) brings you back here to the check-in.
   if (screen === "which") return <>{onboarding}<div className="r-col r-top r-rise-6" style={{ gap: 20 }}>
     <button type="button" className="r-back" onClick={() => setScreen("open")}>‹ Build</button>
     <h1 className="r-title-xl">Which project <em>tonight?</em></h1>
     <div className="r-stack" style={{ gap: 10 }}>
       {projects?.length === 0 && <p className="r-lede" style={{ margin: "0 2px 4px" }}>No projects yet. Start one below: a name, why it matters and one first step.</p>}
       {(projects ?? []).map(project => <ProjectChoice key={project._id} project={project} now={now} suggested={project._id === suggestedProject?._id && Boolean(overview.choices[0]?.projectId)}
-        onChoose={() => { setProjectId(project._id); setScreen("check"); }} />)}
+        onChoose={() => router.push(`/work?view=projects&project=${project._id}`)} />)}
       <button type="button" className="t-new" onClick={openNewProject}>
         <span className="t-plus" aria-hidden="true">+</span>
         <span><span style={{ display: "block", font: "500 15px var(--r-sans)" }}>Start a new project</span><span className="r-small" style={{ display: "block", marginTop: 3 }}>A name, why it matters, one first step. About a minute.</span></span>
       </button>
-      <button type="button" className="r-link" style={{ alignSelf: "flex-start", marginTop: 4 }} onClick={() => { setProjectId(null); setScreen("check"); }}>Or any Projects task →</button>
+      <Link className="r-link" style={{ alignSelf: "flex-start", marginTop: 4 }} href="/work?lane=Projects">Or choose from every Projects task →</Link>
     </div>
   </div></>;
 
@@ -244,6 +255,7 @@ function Today() {
     { id: "small", label: "Small piece", sub: "A component or showcase", colour: "#86E3C3" },
     { id: "write", label: "Write", sub: "Draft a note or a post", colour: "#C9B8F0" },
     ...(overview.readyToShare > 0 ? [{ id: "publish" as const, label: "Publish", sub: `${overview.readyToShare} ${overview.readyToShare === 1 ? "thing is" : "things are"} ready to share`, colour: "#86E3C3" }] : []),
+    { id: "focus", label: "Focus session", sub: "A timer and one task", colour: "#FFB27A" },
     { id: "idea", label: "Catch an idea", sub: "Get it out of your head", colour: "#C9B8F0" },
     { id: "reflect", label: "Reflect", sub: "Look back at your week", colour: "#E9DFD6" },
   ];
@@ -252,7 +264,7 @@ function Today() {
     <div className="r-col r-top r-rise t-open">
       <div>
         <div className="r-date">{dateLine(now)}</div>
-        <h1 className="r-greet">{greeting({ now, name, lastSessionAt: lastSession?.endedAt ?? null })}</h1>
+        <h1 className="r-greet">{greeting({ now, name, lastSessionAt: overview.lastWorkAt ?? null })}</h1>
         {profile?.motive && <p className="r-motive">{profile.motive}</p>}
       </div>
       <div className="t-prompt">
@@ -262,14 +274,14 @@ function Today() {
     </div>
     <InboxCard now={now} />
     {daysAway >= 3 && lastSession && <section className="r-col t-gap" aria-labelledby="gap-title">
-      <div className="r-eyebrow-sm" style={{ color: "var(--r-ember-soft)" }}>{daysAway} days since your last session</div>
+      <div className="r-eyebrow-sm" style={{ color: "var(--r-ember-soft)" }}>{daysAway} days since you last moved something forward</div>
       <h2 id="gap-title" className="t-gap-title">Nothing piled up. Here&apos;s where you were.</h2>
       <div className="r-stack" style={{ gap: 8, marginTop: 14 }}>
         <div className="r-inset" style={{ fontSize: 14 }}><span className="r-eyebrow-sm" style={{ letterSpacing: ".1em" }}>{sessionLine(lastSession)}</span><div className="r-body" style={{ marginTop: 4 }}>{lastSession.contribution}</div></div>
         {lastSession.nextStep && <div className="r-dashed"><span className="r-eyebrow-sm" style={{ letterSpacing: ".1em" }}>Your next step</span><div className="r-body" style={{ marginTop: 4 }}>{lastSession.nextStep}</div></div>}
       </div>
       <div className="r-row" style={{ gap: 8, marginTop: 14 }}>
-        {lastSession.outcome === "Made progress" && <button type="button" className="r-btn sm" onClick={() => { setIntent("resume"); setResumeId(lastSession.taskId); setChosenId(null); setScreen("check"); }}>Pick up here</button>}
+        {lastSession.outcome === "Made progress" && <Link className="r-btn sm" href={lastSession.projectId ? `/work?view=projects&project=${lastSession.projectId}` : "/work"}>Pick up here</Link>}
         {lastSession.outcome === "Blocked" && <Link className="r-btn sm" href="/work?view=blocked">Unblock it in Work</Link>}
         <span className="r-small" style={{ fontSize: 13, padding: "0 6px" }}>{lastSession.outcome === "Finished" ? "It's finished. Choose what's next below." : "or choose something else below"}</span>
       </div>

@@ -42,7 +42,16 @@ describe("Work's address", () => {
   const route = (query: string) => workRoute(new URLSearchParams(query));
 
   it("opens active tasks by default", () => {
-    expect(route("")).toEqual({ mode: "tasks", view: "active", project: null, adding: false, visual: false });
+    expect(route("")).toEqual({ mode: "tasks", view: "active", project: null, adding: false, visual: false, lane: null });
+  });
+
+  it("reads one lane (Today's Small piece and Write) on the active tasks only", () => {
+    expect(route("lane=Showcases")).toMatchObject({ mode: "tasks", view: "active", lane: "Showcases" });
+    expect(route("lane=writing")).toMatchObject({ lane: "Writing" });
+    expect(route("lane=Poems")).toMatchObject({ lane: null });
+    expect(route("view=done&lane=Writing")).toMatchObject({ view: "done", lane: null });
+    expect(route("view=projects&lane=Writing")).toMatchObject({ mode: "projects", lane: null });
+    expect(workQuery({ mode: "tasks", view: "active", project: null, adding: false, visual: false, lane: "Showcases" })).toBe("lane=Showcases");
   });
 
   it("reads Today's links: a new task, a task view, projects and one project", () => {
@@ -60,7 +69,7 @@ describe("Work's address", () => {
 
   it("keeps the task view while you look at projects", () => {
     expect(route("view=projects&tasks=blocked")).toMatchObject({ mode: "projects", view: "blocked" });
-    expect(workQuery({ mode: "projects", view: "done", project: null, adding: false, visual: false })).toBe("view=projects&tasks=done");
+    expect(workQuery({ mode: "projects", view: "done", project: null, adding: false, visual: false, lane: null })).toBe("view=projects&tasks=done");
   });
 
   it("reads the Visual switch in projects only", () => {
@@ -68,12 +77,12 @@ describe("Work's address", () => {
     expect(route("project=p1&visual=1")).toMatchObject({ mode: "projects", project: "p1", visual: true });
     expect(route("view=projects&visual=yes")).toMatchObject({ visual: false });
     expect(route("view=done&visual=1")).toMatchObject({ mode: "tasks", visual: false });
-    expect(workQuery({ mode: "tasks", view: "active", project: null, adding: false, visual: true })).toBe("");
-    expect(workQuery({ mode: "projects", view: "active", project: "p1", adding: false, visual: true })).toBe("view=projects&project=p1&visual=1");
+    expect(workQuery({ mode: "tasks", view: "active", project: null, adding: false, visual: true, lane: null })).toBe("");
+    expect(workQuery({ mode: "projects", view: "active", project: "p1", adding: false, visual: true, lane: null })).toBe("view=projects&project=p1&visual=1");
   });
 
   it("writes back an address that reads as the same route", () => {
-    for (const query of ["", "view=done", "new=task", "view=archived&new=task", "view=projects", "view=projects&project=p1", "view=projects&tasks=blocked", "view=projects&visual=1", "view=projects&project=p1&visual=1&tasks=done"]) {
+    for (const query of ["", "view=done", "new=task", "view=archived&new=task", "view=projects", "view=projects&project=p1", "view=projects&tasks=blocked", "view=projects&visual=1", "view=projects&project=p1&visual=1&tasks=done", "lane=Showcases", "lane=Writing&new=task"]) {
       expect(route(workQuery(route(query)))).toEqual(route(query));
     }
     expect(workQuery(route("view=active"))).toBe("");

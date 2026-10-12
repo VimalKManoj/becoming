@@ -10,6 +10,7 @@ import { fitFor, pinnedNote, rankFocuses } from "./lib/recommend";
 import { clearPinIf, dependencyValues, effortValues, nextStepValue, prerequisiteCleared, smallerStepValues } from "./lib/taskRules";
 import { httpUrl, tagList } from "./lib/validate";
 import { logEvent } from "./lib/taskEvents";
+import { progressKinds } from "./lib/work";
 import { archiveTask, restoreTask } from "./lib/taskArchive";
 
 // Work shows one view at a time so finished and archived tasks don't crowd active work.
@@ -43,6 +44,23 @@ export const listPage = query({
       : ctx.db.query("tasks").withIndex("by_owner_status", q => q.eq("owner", owner).eq("status", viewStatus[view])).order("desc");
     const result = await tasks.paginate(args.paginationOpts);
     return { ...result, page: await taskCards(ctx, owner, result.page) };
+  },
+});
+
+// Work's "Not in a project": open tasks (In progress, Ready, Blocked) that belong to no
+// project, in progress first, with how many sessions each has had. Project tasks stay
+// inside their project's page. Bounded at 200, far more than a personal workspace holds loose.
+export const looseOpen = query({
+  args: {},
+  handler: async ctx => {
+    const owner = await requireOwner(ctx);
+    const [working, blocked] = await Promise.all([
+      ctx.db.query("tasks").withIndex("by_owner_status", q => q.eq("owner", owner).gte("status", "In progress").lte("status", "Ready")).order("asc").take(400),
+      ctx.db.query("tasks").withIndex("by_owner_status", q => q.eq("owner", owner).eq("status", "Blocked")).order("desc").take(200),
+    ]);
+    const loose = [...working, ...blocked].filter(task => !task.projectId).slice(0, 200);
+    const sessions = await Promise.all(loose.map(task => ctx.db.query("sessions").withIndex("by_task", q => q.eq("taskId", task._id)).collect()));
+    return (await taskCards(ctx, owner, loose)).map((card, i) => ({ ...card, sessions: sessions[i].length }));
   },
 });
 
@@ -266,6 +284,10 @@ export async function todayFor(ctx: QueryCtx, owner: string, args: TodayArgs) {
       ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique(),
     ]);
     const pinnedTask = profile?.pinnedTaskId ? await ctx.db.get(profile.pinnedTaskId) : null;
+    // Work, not only focus: the latest task moved forward (started, finished, logged) and the latest finished.
+    const moves = (await ctx.db.query("taskEvents").withIndex("by_owner_at", q => q.eq("owner", owner)).order("desc").take(60)).filter(event => progressKinds.has(event.kind));
+    const finishedEvent = moves.find(event => event.kind === "done");
+    const finishedTask = finishedEvent ? await ctx.db.get(finishedEvent.taskId) : null;
     const pinnedOpen = pinnedTask?.owner === owner && (pinnedTask.status === "Ready" || pinnedTask.status === "In progress") ? pinnedTask : null;
     const ready = pinnedOpen?.status === "Ready" && !readyPool.some(task => task._id === pinnedOpen._id) ? [...readyPool, pinnedOpen] : readyPool;
     const inProgress = pinnedOpen?.status === "In progress" && !inProgressPool.some(task => task._id === pinnedOpen._id) ? [...inProgressPool, pinnedOpen] : inProgressPool;
@@ -341,7 +363,9 @@ export async function todayFor(ctx: QueryCtx, owner: string, args: TodayArgs) {
       linedUpCount: plan?.taskIds.length ?? 0,
       pinned,
       laneFocus: profile?.laneFocus ?? null,
-      lastSession: last ? { title: last.title, lane: last.lane, outcome: last.outcome, contribution: last.contribution, nextStep: last.nextStep, endedAt: last.endedAt, startedAt: last.startedAt ?? null, taskId: last.taskId } : null,
+      lastWorkAt: Math.max(last?.endedAt ?? 0, moves[0]?.at ?? 0) || null,
+      lastFinish: finishedEvent && finishedTask && finishedTask.owner === owner ? { title: finishedTask.title, lane: finishedTask.lane, at: finishedEvent.at } : null,
+      lastSession: last ? { title: last.title, lane: last.lane, outcome: last.outcome, contribution: last.contribution, nextStep: last.nextStep, endedAt: last.endedAt, startedAt: last.startedAt ?? null, taskId: last.taskId, projectId: last.projectId ?? null } : null,
       active: active ? {
         _id: active._id, taskId: active.taskId, startedAt: active.startedAt,
         title: active.focusTitle ?? activeTask?.title ?? "Focused work",
