@@ -46,8 +46,13 @@
 .cx .tb{height:36px;min-width:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line3);background:rgba(255,240,225,.03);color:var(--text) !important;font:500 12px var(--mono) !important;cursor:pointer}
 .cx .tb:hover{color:var(--ink) !important;border-color:rgba(255,170,110,.35)}
 .cx .tb:disabled{opacity:.35;cursor:default}
-.cx .canvas{flex:1;min-height:0;overflow:auto;scrollbar-width:none;position:relative}
-.cx .canvas::-webkit-scrollbar{display:none}
+.cx .zm{display:flex;gap:6px;margin-left:12px;flex:none}
+.cx .zm .tb{min-width:36px;padding:0 10px}
+/* The stage never scrolls: the map is dragged (or moved with the wheel) when it doesn't fit. */
+.cx .canvas{flex:1;min-height:0;overflow:hidden;position:relative}
+.cx .pan{position:absolute;left:0;top:0}
+.cx .canvas.pannable{cursor:grab}
+.cx .canvas.dragging,.cx .canvas.dragging *{cursor:grabbing !important;user-select:none}
 .cx .inner{position:relative;width:940px;height:544px;margin:0 auto}
 .cx .lvl{position:absolute;inset:0;animation:cx-enter .55s cubic-bezier(.22,1,.36,1) both}
 .cx .keyline{flex:none;height:44px;display:flex;align-items:center;gap:18px;padding:0 18px;border-top:1px solid var(--line);overflow:hidden;white-space:nowrap}
@@ -222,23 +227,7 @@
 .cx .tgo{position:absolute;left:260px;width:240px;height:44px;margin-top:-22px;border:0;background:transparent;cursor:pointer;border-radius:12px;padding:0}
 .cx .tgo.on{outline:1px dashed rgba(228,218,250,.6)}
 
-/* scrub */
-.cx .scrub{display:flex;align-items:center;gap:16px;height:60px;padding:0 20px 0 8px;border-radius:99px;background:linear-gradient(160deg,rgba(255,240,225,.05),rgba(255,240,225,.02));border:1px solid var(--line)}
-.cx .play{flex:none;width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer;background:linear-gradient(180deg,#FF9F58,#F06A2A);color:#1A0E08 !important;box-shadow:0 8px 24px rgba(255,122,47,.3);padding:0}
-.cx .track{flex:1;min-width:0}
-.cx .tltop{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px}
-.cx .tdate{font:500 11px var(--mono);letter-spacing:.1em;color:var(--ember-s);white-space:nowrap}
-.cx .tnote{font:400 12px var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cx .rangewrap{position:relative;height:16px}
-.cx .range{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;height:3px;padding:0;border:0;border-radius:99px;margin:6px 0 0;outline:none;cursor:pointer}
-.cx .range:focus-visible{outline:2px solid #FFC08F;outline-offset:6px}
-.cx .range::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#FFE1C4;box-shadow:0 0 0 4px rgba(255,138,61,.22);cursor:pointer}
-.cx .range::-moz-range-thumb{width:14px;height:14px;border:0;border-radius:50%;background:#FFE1C4;box-shadow:0 0 0 4px rgba(255,138,61,.22)}
-.cx .tk{position:absolute;top:-1px;width:1px;height:14px;background:rgba(255,235,215,.22);pointer-events:none}
-.cx .tk span{position:absolute;left:4px;top:-1px;font:500 9px var(--mono);color:var(--muted);letter-spacing:.08em}
-.cx .formed{flex:none;display:flex;align-items:baseline;gap:7px;padding-left:16px;border-left:1px solid var(--line)}
-.cx .formed b{font:500 12px/1 var(--mono);letter-spacing:.12em;color:var(--ink)}
-.cx .formed span{font:500 12px/1 var(--mono);letter-spacing:.12em;color:var(--muted)}
+/* genesis note */
 .cx .gnote{display:flex;align-items:center;gap:14px;min-height:60px;padding:0 22px;border-radius:99px;background:linear-gradient(160deg,rgba(201,184,240,.07),rgba(255,240,225,.02));border:1px solid var(--line);font:400 13px var(--sans);color:var(--text)}
 .cx .gnote b{flex:none;font:500 11px var(--mono);letter-spacing:.1em;color:var(--lilac-t);font-weight:500}
 
@@ -293,6 +282,22 @@
 .cx .ubrow{display:flex;gap:8px}
 .cx .ubrow .btn{flex:1}
 
+
+/* Fill mode: the project's Visual page. The map and its panel are exactly one screen tall
+   (less the page's top and bottom padding), so scrolling the page stops where the map fills
+   the view; the map is scaled to fit inside it (desktop; phones keep the usual layout). */
+@media (min-width: 900px){
+  .cx.fill .body{flex:none;height:calc(100dvh - 96px);flex-wrap:nowrap}
+  .cx.fill .leftcol{min-height:0}
+  .cx.fill .stagewrap{height:auto;flex:1;min-height:0}
+  .cx.fill .panel{max-height:none;min-height:0}
+  .cx.fill .canvas.pannable{touch-action:none}
+}
+/* The column names stay at the top of the stage while the map is dragged up or down, over a
+   soft band in the stage's colour so the map slides beneath them (only when it can be dragged). */
+.cx .colh{transform:translateY(var(--unpan,0px))}
+.cx .canvas.pannable .colh{z-index:3}
+.cx .canvas.pannable .lvl::before{content:"";position:absolute;left:0;right:0;top:0;height:64px;z-index:2;pointer-events:none;transform:translateY(var(--unpan,0px));background:linear-gradient(180deg,rgba(17,12,10,.97) 72%,rgba(17,12,10,0))}
 
 @media (prefers-reduced-motion: reduce){.cx *,.cx *::before,.cx *::after{animation:none !important;transition:none !important}}
 @media (max-width: 899px){.cx .title{font-size:32px}.cx .panel{max-width:none;max-height:none}.cx .chint{display:none}}

@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FocusEvent, type PointerEvent, type UIEvent } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Bone, Skeleton } from "@/components/skeleton";
 import { authClient } from "@/lib/auth-client";
 import {
-  DAY, INNER_W, STEPS_PER_DAY, dayMonth, genesisLayout, genesisNote, groupLabel, groupShort, groupsAt, overviewLayout, phaseLayout, plural,
+  INNER_W, dayMonth, genesisLayout, genesisNote, groupLabel, groupShort, groupsAt, overviewLayout, phaseLayout, plural,
   type CDoc, type Constellation, type GTask,
 } from "./model";
 import { GenesisLevel, Overview, PhaseLevel, type Level } from "./levels";
@@ -19,65 +19,51 @@ import { Panel, buildPanel } from "./panel";
 
 type Nav = { level: Level; ph: number; sel: string | null };
 
-export function ConstellationView({ projectId }: { projectId: Id<"projects"> }) {
+/** `fill`: take the height the page gives it (the project's Visual page fills the screen). */
+export function ConstellationView({ projectId, fill = false }: { projectId: Id<"projects">; fill?: boolean }) {
   const data = useQuery(api.constellation.get, { projectId });
-  if (data === undefined) return <ConstellationSkeleton />;
+  if (data === undefined) return <ConstellationSkeleton fill={fill} />;
   if (data === null) return <div className="cx"><div className="pc"><div className="eyebrow">Visual</div><p className="body14">This project could not be found. It may have been deleted.</p></div></div>;
-  return <ConstellationMap key={projectId} data={data} />;
+  return <ConstellationMap key={projectId} data={data} fill={fill} />;
 }
 
-function ConstellationMap({ data }: { data: Constellation }) {
+type Size = { w: number; h: number };
+type Drag = { id: number; x: number; y: number; fromX: number; fromY: number; moved: boolean };
+
+function ConstellationMap({ data, fill }: { data: Constellation; fill: boolean }) {
   const { data: session } = authClient.useSession();
   const initial = session?.user.name?.trim()[0]?.toUpperCase() ?? "";
   const [nav, setNav] = useState<Nav>({ level: "overview", ph: 0, sel: "core" });
-  const [view, setView] = useState<number | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [canvasW, setCanvasW] = useState<number | null>(null);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [size, setSize] = useState<Size | null>(null);
+  // Where the map has been dragged and zoomed to, for one level at a time (a new level starts fitted).
+  const [pan, setPan] = useState({ key: "", x: 0, y: 0, zoom: 1 });
+  const [dragging, setDragging] = useState(false);
+  const drag = useRef<Drag | null>(null);
+  // The wheel listener lives outside React (it must be able to stop the browser's own zoom),
+  // so it reads the latest zoom function from here.
+  const wheelZoom = useRef<(factor: number, cx: number, cy: number) => void>(() => {});
 
-  useEffect(() => {
-    const box = timer;
-    return () => { if (box.current) clearInterval(box.current); };
-  }, []);
-  // The design's 940px canvas scales down a little to fit a narrower stage, then scrolls.
+  // The design's 940px canvas scales to fit its stage; beyond that, and whenever it's zoomed
+  // in, the map is dragged rather than scrolled. Pinch or Ctrl + scroll zooms around the pointer.
   const measure = useCallback((el: HTMLDivElement | null) => {
     if (!el) return;
-    const observer = new ResizeObserver(entries => setCanvasW(entries[0]?.contentRect.width ?? null));
+    const observer = new ResizeObserver(entries => { const box = entries[0]?.contentRect; if (box) setSize({ w: box.width, h: box.height }); });
     observer.observe(el);
-    return () => observer.disconnect();
+    const onWheel = (event: globalThis.WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      const box = el.getBoundingClientRect();
+      wheelZoom.current(Math.exp(-event.deltaY * 0.0025), event.clientX - box.left, event.clientY - box.top);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => { observer.disconnect(); el.removeEventListener("wheel", onWheel); };
   }, []);
 
-  // ---- replay: the map at a chosen day, from real dates ----
-  const { start, now } = data.timeline;
-  const max = Math.max(1, Math.round(((now - start) / DAY) * STEPS_PER_DAY));
-  const shown = view === null ? max : Math.min(view, max);
-  const atEnd = shown >= max;
-  const at = atEnd ? null : start + (shown / STEPS_PER_DAY) * DAY;
-  const groups = useMemo(() => groupsAt(data, at), [data, at]);
-  const written = (d: CDoc) => d.writtenAt !== null && (at === null || d.writtenAt <= at);
+  const groups = useMemo(() => groupsAt(data, null), [data]);
+  const written = (d: CDoc) => d.writtenAt !== null;
   const total = groups.reduce((n, g) => n + g.n, 0), done = groups.reduce((n, g) => n + g.pd, 0);
   const pct = total ? Math.round((done / total) * 100) : 0;
   const phDone = groups.filter(g => g.phaseId && g.state === "done").length;
-
-  const stop = () => { if (timer.current) { clearInterval(timer.current); timer.current = null; } };
-  const play = () => {
-    if (timer.current) { stop(); setPlaying(false); return; }
-    let v = 0;
-    const step = max / 200;
-    setView(0);
-    setPlaying(true);
-    timer.current = setInterval(() => {
-      v += step;
-      if (v >= max) { stop(); setView(null); setPlaying(false); return; }
-      setView(v);
-    }, 50);
-  };
-  const onScrub = (event: ChangeEvent<HTMLInputElement>) => {
-    stop();
-    setPlaying(false);
-    const v = Number(event.target.value);
-    setView(v >= max ? null : v);
-  };
 
   // ---- where you are ----
   const genesis = useMemo(() => genesisLayout(data), [data]);
@@ -109,18 +95,62 @@ function ConstellationMap({ data }: { data: Constellation }) {
     hint: level === "overview" ? "Click to select · double-click a phase, or use the panel button, to go in" : level === "phase" ? "Click a cell for its story" : "From a thought to a project",
   };
 
-  const scale = canvasW ? Math.min(1, Math.max(0.72, canvasW / INNER_W)) : 1;
-  const viewPct = ((shown / max) * 100).toFixed(1);
-  const span = Math.max(1, now - start);
-  const ticks: { l: number; label: string }[] = [];
-  for (const g of groups) {
-    if (!g.phaseId || g.startedAt === null) continue;
-    const l = Math.min(100, Math.max(0, ((g.startedAt - start) / span) * 100));
-    if (ticks.length && l - ticks[ticks.length - 1].l < 4) continue;
-    ticks.push({ l: +l.toFixed(1), label: `P${Number(g.num)}` });
-  }
-  const dateLabel = `${atEnd ? "TODAY · " : ""}${dayMonth(at ?? now).toUpperCase()} · DAY ${Math.floor(shown / STEPS_PER_DAY)}`;
-  const scrubNote = playing ? "Replaying the build…" : atEnd ? `Press play to watch it grow${data.genesis.idea ? " from the idea" : ""}.` : "Drag to the end for today.";
+  // ---- moving the map: centred across when it fits, dragged within its edges when it doesn't ----
+  // Filling the page, the whole map is scaled to fit its stage (down to half size); elsewhere
+  // it scales to the width only. Whatever still doesn't fit is dragged.
+  const fit = size ? (fill ? Math.min(size.w / INNER_W, size.h / H) : size.w / INNER_W) : 1;
+  const fitted = Math.min(1, Math.max(fill ? 0.5 : 0.72, fit));
+  const viewKey = `${level}:${ph}`;
+  const wanted = pan.key === viewKey ? pan : { x: 0, y: 0, zoom: 1 };
+  // Zoom is relative to the fitted size: from half of it up to three times.
+  const zoomRange = (z: number) => Math.min(3, Math.max(0.5, z));
+  const scale = fitted * wanted.zoom;
+  const mapW = INNER_W * scale, mapH = H * scale;
+  const clampTo = (value: number, content: number, box: number, centre: boolean) => content <= box ? (centre ? (box - content) / 2 : 0) : Math.min(0, Math.max(box - content, value));
+  const x = size ? clampTo(wanted.x, mapW, size.w, true) : 0;
+  const y = size ? clampTo(wanted.y, mapH, size.h, false) : 0;
+  const pannable = Boolean(size) && (mapW > size!.w + 1 || mapH > size!.h + 1);
+  const moveTo = (nx: number, ny: number) => setPan({ key: viewKey, x: nx, y: ny, zoom: wanted.zoom });
+  /** Zooms by `factor`, keeping the point at (cx, cy) on the stage where it is (default: the middle). */
+  const zoomBy = (factor: number, cx = (size?.w ?? 0) / 2, cy = (size?.h ?? 0) / 2) => {
+    const zoom = zoomRange(wanted.zoom * factor), next = fitted * zoom;
+    const mx = (cx - x) / scale, my = (cy - y) / scale;
+    setPan({ key: viewKey, x: cx - mx * next, y: cy - my * next, zoom });
+  };
+  const resetZoom = () => setPan({ key: viewKey, x: 0, y: 0, zoom: 1 });
+  useEffect(() => { wheelZoom.current = zoomBy; });
+  const hint = pannable ? `${crumbs.hint} · drag to move, pinch to zoom` : crumbs.hint;
+
+  const canvasEvents = {
+    onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0 || !pannable) return;
+      drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY, fromX: x, fromY: y, moved: false };
+    },
+    onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
+      const d = drag.current;
+      if (!d || d.id !== event.pointerId) return;
+      const dx = event.clientX - d.x, dy = event.clientY - d.y;
+      if (!d.moved && Math.hypot(dx, dy) < 5) return;
+      // Past 5px it's a drag: capturing the pointer also means the click that ends it selects nothing.
+      if (!d.moved) {
+        d.moved = true;
+        try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* the pointer already lifted */ }
+        setDragging(true);
+      }
+      moveTo(d.fromX + dx, d.fromY + dy);
+    },
+    onPointerUp: () => { if (drag.current?.moved) setDragging(false); drag.current = null; },
+    onPointerCancel: () => { if (drag.current?.moved) setDragging(false); drag.current = null; },
+    // Tabbing to something off-stage brings it into view by moving the map, never by scrolling.
+    onFocus: (event: FocusEvent<HTMLDivElement>) => {
+      const box = event.currentTarget.getBoundingClientRect(), r = (event.target as HTMLElement).getBoundingClientRect();
+      const nx = r.left < box.left ? x + box.left - r.left + 16 : r.right > box.right ? x - (r.right - box.right) - 16 : x;
+      const ny = r.top < box.top ? y + box.top - r.top + 16 : r.bottom > box.bottom ? y - (r.bottom - box.bottom) - 16 : y;
+      if (nx !== x || ny !== y) moveTo(nx, ny);
+    },
+    onScroll: (event: UIEvent<HTMLDivElement>) => { event.currentTarget.scrollTop = 0; event.currentTarget.scrollLeft = 0; },
+  };
+
   const note = data.genesis.idea ? genesisNote(data.genesis.idea.createdAt, data.project.createdAt) : null;
 
   const meta = [
@@ -131,7 +161,7 @@ function ConstellationMap({ data }: { data: Constellation }) {
   const anyBrief = (genesis?.briefs ?? 0) > 0;
   const briefNames = genesis?.briefNames ?? [];
 
-  return <div className="cx">
+  return <div className={`cx${fill ? " fill" : ""}`}>
     <div className="trow">
       <div>
         <h1 className="title">{data.project.title}, <em>taking form</em></h1>
@@ -149,18 +179,26 @@ function ConstellationMap({ data }: { data: Constellation }) {
             <button type="button" className={`crumb ${level === "overview" ? "cur" : ""}`} onClick={crumbs.home} aria-current={level === "overview" ? "location" : undefined}>{data.project.title}</button>
             {level !== "overview" && <><span className="csep" aria-hidden="true">›</span><button type="button" className={`crumb ${crumbs.l1cur ? "cur" : ""}`} onClick={crumbs.l1go} aria-current={crumbs.l1cur ? "location" : undefined}>{crumbs.l1}</button></>}
             {task && <><span className="csep" aria-hidden="true">›</span><span className="crumb cur" aria-current="location">{task.code} {task.title}</span></>}
-            <span className="chint">{crumbs.hint}</span>
+            <span className="chint">{hint}</span>
             {level === "phase" && <div className="pn">
               <button type="button" className="tb" onClick={() => go("phase", Math.max(0, ph - 1), null)} disabled={ph === 0} aria-label="Previous phase">‹ {ph > 0 ? groupShort(groups[ph - 1]) : ""}</button>
               <button type="button" className="tb" onClick={() => go("phase", Math.min(groups.length - 1, ph + 1), null)} disabled={ph >= groups.length - 1} aria-label="Next phase">{ph < groups.length - 1 ? groupShort(groups[ph + 1]) : ""} ›</button>
             </div>}
+            <div className="zm" role="group" aria-label="Zoom">
+              <button type="button" className="tb" onClick={() => zoomBy(1 / 1.25)} disabled={wanted.zoom <= 0.5} aria-label="Zoom out">−</button>
+              <button type="button" className="tb" onClick={resetZoom} title="Fit to the stage" aria-label={`Zoom ${Math.round(scale * 100)}%. Fit to the stage`}>{Math.round(scale * 100)}%</button>
+              <button type="button" className="tb" onClick={() => zoomBy(1.25)} disabled={wanted.zoom >= 3} aria-label="Zoom in">+</button>
+            </div>
           </nav>
 
-          <div className="canvas" ref={measure}>
-            <div className="inner" style={{ height: H, zoom: scale === 1 ? undefined : scale }}>
-              {level === "overview" && <Overview key="overview" data={data} groups={groups} layout={ov} sel={sel} go={go} written={written} pct={pct} />}
-              {level === "phase" && group && pl && <PhaseLevel key={`phase-${ph}`} group={group} layout={pl} sel={sel} go={go} depOf={depOf} />}
-              {level === "genesis" && genesis && <GenesisLevel key="genesis" data={data} layout={genesis} sel={sel} go={go} />}
+          <div className={`canvas${pannable ? " pannable" : ""}${dragging ? " dragging" : ""}`} ref={measure} {...canvasEvents}>
+            <div className="pan" style={{ transform: `translate(${x}px, ${y}px)` }}>
+              {/* --unpan keeps the column names (GENESIS, PROJECT, DOCS, PHASES) at the top while the map is dragged up or down. */}
+              <div className="inner" style={{ height: H, zoom: scale === 1 ? undefined : scale, "--unpan": `${-y / scale}px` } as CSSProperties}>
+                {level === "overview" && <Overview key="overview" data={data} groups={groups} layout={ov} sel={sel} go={go} written={written} pct={pct} />}
+                {level === "phase" && group && pl && <PhaseLevel key={`phase-${ph}`} group={group} layout={pl} sel={sel} go={go} depOf={depOf} />}
+                {level === "genesis" && genesis && <GenesisLevel key="genesis" data={data} layout={genesis} sel={sel} go={go} />}
+              </div>
             </div>
           </div>
 
@@ -195,24 +233,6 @@ function ConstellationMap({ data }: { data: Constellation }) {
           </div>
         </div>
 
-        {level !== "genesis" && <div className="scrub">
-          <button type="button" className="play" onClick={play} aria-label={playing ? "Pause replay" : "Replay how it grew"}>
-            {playing
-              ? <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" rx="1" /><rect x="9.5" y="2" width="3.5" height="12" rx="1" /></svg>
-              : <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.2v11.6c0 .6.7 1 1.2.7l9.2-5.8c.5-.3.5-1 0-1.4L5.2 1.5C4.7 1.2 4 1.6 4 2.2z" /></svg>}
-          </button>
-          <div className="track">
-            <div className="tltop"><span className="tdate">{dateLabel}</span><span className="tnote">{scrubNote}</span></div>
-            <div className="rangewrap">
-              {ticks.map(t => <span key={t.label} className="tk" style={{ left: `${t.l}%` }}><span>{t.label}</span></span>)}
-              <label className="sr" htmlFor="cx-scrub">Replay how the project grew, day by day</label>
-              <input id="cx-scrub" className="range" type="range" min={0} max={max} step={1} value={Math.round(shown)} onChange={onScrub}
-                aria-valuetext={`${dayMonth(at ?? now)}, ${pct}% formed`}
-                style={{ background: `linear-gradient(90deg, #FF8A3D ${viewPct}%, rgba(255,235,215,.12) ${viewPct}%)` }} />
-            </div>
-          </div>
-          <div className="formed"><b>{pct}%</b><span>FORMED</span></div>
-        </div>}
         {level === "genesis" && note && <div className="gnote"><b>{note.span}</b>{note.text}</div>}
       </div>
 
@@ -223,10 +243,10 @@ function ConstellationMap({ data }: { data: Constellation }) {
 
 // ---------- loading ----------
 
-/** The map's shape while it loads: the title, the four columns, the scrubber and the panel. */
-function ConstellationSkeleton() {
+/** The map's shape while it loads: the title, the four columns and the panel. */
+function ConstellationSkeleton({ fill }: { fill: boolean }) {
   const at = (left: number, top: number) => ({ position: "absolute" as const, left, top });
-  return <Skeleton label="Drawing the constellation…" className="cx">
+  return <Skeleton label="Drawing the constellation…" className={`cx${fill ? " fill" : ""}`}>
     <div className="trow" aria-hidden="true"><div><Bone w={360} h={42} className="bone-title" /><span style={{ display: "block", marginTop: 12 }}><Bone w={420} h={11} i={1} /></span></div></div>
     <div className="body" aria-hidden="true">
       <div className="leftcol">
@@ -243,7 +263,6 @@ function ConstellationSkeleton() {
           </div>
           <div className="keyline"><Bone w={320} h={10} i={4} /></div>
         </div>
-        <div className="scrub"><Bone w={44} h={44} shape="circle" /><span style={{ flex: 1 }}><Bone h={10} i={2} /></span><Bone w={90} h={12} i={3} /></div>
       </div>
       <div className="panel">
         <div className="pc head"><Bone w="50%" h={10} /><span style={{ display: "block", marginTop: 14 }}><Bone w="80%" h={28} i={1} className="bone-title" /></span><span style={{ display: "block", marginTop: 14 }}><Bone w={90} h={24} shape="pill" i={2} /></span></div>
