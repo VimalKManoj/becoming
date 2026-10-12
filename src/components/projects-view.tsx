@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useId, useState, type FormEvent } from "react";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -10,7 +9,9 @@ import { caseStudyMarkdown } from "../../convex/lib/caseStudy";
 import { dayKey } from "../../convex/lib/time";
 import { Bone, LinesSkeleton, Skeleton } from "@/components/skeleton";
 import { ConstellationView } from "@/components/constellation/constellation-view";
-import { Sheet, StatusChip, energies, focusOnMount, type EditableTask, type Lane } from "@/components/task-forms";
+import { ProjectList } from "@/components/project-list";
+import { authClient } from "@/lib/auth-client";
+import { Sheet, StatusChip, focusOnMount, type EditableTask, type Lane } from "@/components/task-forms";
 import { radioKeys } from "@/components/ritual/radio-keys";
 import { useRitual } from "@/components/ritual/ritual-context";
 import { readableError } from "@/lib/errors";
@@ -19,8 +20,9 @@ import { lastWorked } from "@/lib/ritual";
 import { useNow } from "@/lib/use-rhythm";
 
 // Projects in Work (the prototype's project cards and project page): what it's for, the
-// milestone timeline (mint ✓ done, ember-ringed current, hollow later) and the next step,
-// with "Plan it for tonight" opening Today's check-in. Progress is counted from task records.
+// milestone timeline (mint ✓ done, ember-ringed current, hollow later) and Up next: a few open
+// tasks to choose from, each with Start (no timer). Focus sessions only start from a task's
+// own "Start a focus session". Progress is counted from task records.
 // Editing, status, milestone upkeep, the project's tasks and the case-study draft sit in sheets.
 // List | Visual switches the list and the project page to the project constellation; the
 // project page also keeps the constellation's phases and docs (plan: PLAN-project-constellation.md).
@@ -42,7 +44,6 @@ const field = (data: FormData, name: string) => String(data.get(name) || "").tri
 const focusById = (id: string) => requestAnimationFrame(() => document.getElementById(id)?.focus());
 const percentOf = (progress: Progress) => progress.total ? Math.round(progress.done / progress.total * 100) : 0;
 const laneClass = (lane: Lane | null) => `lane-${lane ?? "Projects"}`;
-export const planHref = (projectId: Id<"projects">) => `/today?intent=build&project=${projectId}`;
 
 /** Done milestones, then the first open one is current, the one after it next, the rest later. */
 function milestoneStates(milestones: Pick<Milestone, "completedAt">[]): MilestoneState[] {
@@ -118,7 +119,7 @@ type AreaProps = {
   onVisual: (visual: boolean) => void;
   onOpen:(projectId: Id<"projects"> | null) => void;
   onBack: () => void;
-  onOpenTask: (taskId: Id<"tasks">) => void;
+  onOpenTask: (taskId: Id<"tasks">, step?: "unblock") => void;
   onNewTask: (defaults: Partial<EditableTask>) => void;
 };
 
@@ -131,7 +132,8 @@ export function ProjectsArea({ openId, visual, onVisual, onOpen, onBack, onOpenT
   if (openId && options === undefined) return <ProjectSkeleton />;
   const known = openId ? options?.find(item => item._id === openId) : undefined;
   // Back to Work, with focus on the project's card.
-  if (known) return <ProjectPage key={known._id} projectId={known._id} visual={visual} onVisual={onVisual} onOpenTask={onOpenTask} onNewTask={onNewTask} onBack={() => { onBack(); focusById(`project-${known._id}`); }} />;
+  if (known) return <ProjectPage key={known._id} projectId={known._id} visual={visual} onVisual={onVisual} onOpenTask={onOpenTask} onNewTask={onNewTask}
+    onBack={() => { onBack(); focusById(`project-${known._id}`); }} />;
   return <ProjectsList status={status} onStatus={setStatus} visual={visual} onVisual={onVisual} notFound={Boolean(openId)} onOpen={projectId => onOpen(projectId)} onDismiss={() => onOpen(null)} onBack={onBack} />;
 }
 
@@ -212,10 +214,12 @@ export function ProjectSkeleton() {
   </Skeleton>;
 }
 
-type ProjectSheet = { kind: "edit" } | { kind: "case-study" } | { kind: "add-milestone" } | { kind: "milestone"; id: Id<"milestones"> }
+type ProjectSheet = { kind: "edit" } | { kind: "case-study" } | { kind: "add-milestone"; phaseId?: Id<"phases"> } | { kind: "milestone"; id: Id<"milestones"> }
   | { kind: "add-phase" } | { kind: "phase"; id: Id<"phases"> } | { kind: "add-doc" } | { kind: "doc"; id: Id<"projectDocs"> } | { kind: "delete" } | null;
 
-function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTask }: { projectId: Id<"projects">; visual: boolean; onVisual: (visual: boolean) => void; onBack: () => void; onOpenTask: (taskId: Id<"tasks">) => void; onNewTask: (defaults: Partial<EditableTask>) => void }) {
+function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTask }: { projectId: Id<"projects">; visual: boolean; onVisual: (visual: boolean) => void; onBack: () => void; onOpenTask: (taskId: Id<"tasks">, step?: "unblock") => void; onNewTask: (defaults: Partial<EditableTask>) => void }) {
+  const { openNewProject } = useRitual();
+  const { data: session } = authClient.useSession();
   const project = useQuery(api.projects.get, { projectId });
   // Phases, docs and which phase each milestone sits in come from the project's map.
   const map = useQuery(api.constellation.get, { projectId });
@@ -224,6 +228,10 @@ function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTas
   const addMilestone = useMutation(api.projects.addMilestone);
   const addPhase = useMutation(api.constellation.addPhase);
   const addDoc = useMutation(api.constellation.addDoc);
+  const setTaskStatus = useMutation(api.tasks.setStatus);
+  const setMilestonePhase = useMutation(api.constellation.setMilestonePhase);
+  const setMilestoneSkills = useMutation(api.constellation.setMilestoneSkills);
+  const inbox = useQuery(api.inbox.list);
   const [sheet, setSheet] = useState<ProjectSheet>(null);
   const { busy, save } = useSaver();
 
@@ -237,7 +245,6 @@ function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTas
   const states = milestoneStates(project.milestones);
   const active = project.status === "Active";
   const lane = project.lane;
-  const next = project.nextTask;
   const changeStatus = (status: ProjectStatus, text: string) => void save(() => setStatus({ projectId, status }), text);
   const newTask = (milestoneId?: Id<"milestones">) => onNewTask({ projectId, milestoneId, lane: lane ?? "Projects" });
 
@@ -251,7 +258,15 @@ function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTas
   async function createMilestone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    if (await save(() => addMilestone({ projectId, title: field(data, "title"), doneWhen: field(data, "doneWhen") }), "Milestone added.")) close("milestones-heading");
+    // "+ Add milestone to 05" places it in that phase straight away.
+    const phaseId = sheet?.kind === "add-milestone" ? sheet.phaseId : undefined;
+    const saved = await save(async () => {
+      const milestoneId = await addMilestone({ projectId, title: field(data, "title"), doneWhen: field(data, "doneWhen") });
+      const skills = data.getAll("skills").map(String);
+      if (skills.length) await setMilestoneSkills({ milestoneId, skills });
+      if (phaseId) await setMilestonePhase({ milestoneId, phaseId });
+    }, "Milestone added.");
+    if (saved) close("pl-phases");
   }
 
   async function createPhase(values: PhaseValues) {
@@ -266,70 +281,64 @@ function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTas
   const phaseChoices: PhaseChoice[] | undefined = phases?.map(({ id, num, name }) => ({ id, num, name }));
   const phaseOf = new Map(phases?.flatMap(phase => phase.milestones.map(item => [String(item.id), phase] as const)) ?? []);
 
-  const allTasks = [...project.milestones.flatMap(milestone => milestone.tasks.map(task => ({ task, where: milestone.title }))), ...project.unassigned.map(task => ({ task, where: "" }))];
-  const energy = next ? energies.find(item => item.value === next.energy)?.label : undefined;
+  const initial = session?.user.name?.trim()[0]?.toUpperCase() ?? "";
+  const statusWord = project.status.toLowerCase();
+  // The header both views share: back to Work, where this is, and a new project.
+  const workBar = <div className="hrow">
+    <div className="tabs">
+      <button type="button" className="tab" style={{ display: "inline-flex", alignItems: "center", gap: 6 }} onClick={onBack}>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M7.5 2.5L4 6l3.5 3.5" /></svg>Work
+      </button>
+      <span className="eyebrow" style={{ marginLeft: 4 }}>Projects · {project.title}</span>
+    </div>
+    <div className="hright"><button type="button" className="ghost" onClick={openNewProject}>+ New project</button></div>
+  </div>;
+  const viewSeg = <div className="seg" role="group" aria-label="Projects view">
+    <button type="button" className={visual ? undefined : "on"} aria-pressed={!visual} onClick={() => { if (visual) onVisual(false); }}>List</button>
+    <button type="button" className={visual ? "on" : undefined} aria-pressed={visual} onClick={() => { if (!visual) onVisual(true); }}>Visual</button>
+  </div>;
 
-  return <div className={`w-page r-rise-6${visual ? " w-page-wide" : ""}`}>
-    <button type="button" className="r-back" onClick={onBack}>‹ Work</button>
-    <div className="w-trow">
-      <div className={`w-title-block ${laneClass(lane)}`}>
-        <div className="w-eyebrow"><span className="r-dot" aria-hidden="true" />{lane ?? "Project"} · {project.status.toLowerCase()}</div>
-        {/* Focus lands on the title when the project opens, and again after editing its details. */}
-        <h1 id="project-title" ref={focusOnMount} tabIndex={-1} className="w-project-title">{project.title}</h1>
-        <p className="w-purpose">{project.purpose}</p>
-        {project.outcome && <p className="w-purpose" style={{ marginTop: 6 }}><span className="r-eyebrow-sm">Outcome · </span>{project.outcome}</p>}
+  // Visual: the map's own title is the only title; the List | Visual switch sits on its row.
+  if (visual) return <div className="w-visual r-rise-6">
+    <div className="pl">{workBar}</div>
+    <div className="w-vbody">
+      <div className="pl w-vseg">{viewSeg}</div>
+      <ConstellationView projectId={projectId} fill />
+    </div>
+  </div>;
+
+  return <div className="pl w-page w-page-full r-rise-6">
+    <header style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {workBar}
+      <div className="trow">
+        <div>
+          <div className={`eyebrow ember ${laneClass(lane)}`}><span className="r-dot" aria-hidden="true" />{lane ?? "Projects"} lane · {statusWord}</div>
+          {/* Focus lands on the title when the project opens, and again after editing its details. */}
+          <h1 id="project-title" ref={focusOnMount} tabIndex={-1} className="title" style={{ marginTop: 10 }}>{project.title}{active ? <>, <em>taking form</em></> : null}</h1>
+          <div className="purpose">{project.purpose}</div>
+          {project.outcome && <div className="purpose" style={{ marginTop: 4 }}><span className="r-eyebrow-sm">Outcome · </span>{project.outcome}</div>}
+        </div>
+        {viewSeg}
       </div>
-      <ViewSwitch visual={visual} onVisual={onVisual} />
-    </div>
+      <div className="ladder" aria-label="How a project is organised">
+        <b>PHASE</b><span>a stage, weeks</span><i aria-hidden="true">→</i><b>MILESTONE</b><span>an outcome, a few sessions</span><i aria-hidden="true">→</i><b>TASK</b><span>one evening or less</span>
+      </div>
+    </header>
 
-    {visual ? <ConstellationView projectId={projectId} /> : <>
-    <div className="w-cols">
-      <section className={`w-ms-card ${laneClass(lane)}`} aria-labelledby="milestones-heading">
-        <div className="w-mono-line"><h2 id="milestones-heading" tabIndex={-1} className="w-mono-head">MILESTONES</h2><span>{project.progress.done} / {plural(project.progress.total, "task")} · {percentOf(project.progress)}%</span></div>
-        <div className="r-bar w-ms-bar" role="img" aria-label={`${project.progress.done} of ${plural(project.progress.total, "task")} done`}><span style={{ width: `${percentOf(project.progress)}%` }} /></div>
-        {project.milestones.length === 0 ? <p className="w-none">No milestones yet. Add them when the shape is clearer. Ready tasks still reach Today.</p>
-          : <ol className="w-timeline">{project.milestones.map((milestone, index) => {
-            const state = states[index];
-            const phase = phaseOf.get(String(milestone._id));
-            return <li key={milestone._id}>
-              <button type="button" id={`milestone-${milestone._id}`} className={`w-ms ${state}`} onClick={() => setSheet({ kind: "milestone", id: milestone._id })}>
-                <span className="w-ms-rail" aria-hidden="true"><span className="w-mark">{state === "done" ? "✓" : ""}</span><span className="w-line" /></span>
-                <span className="w-ms-text"><span className="w-ms-name">{milestone.title}</span><span className="w-ms-meta">{phase ? `Phase ${phase.num} · ` : ""}{milestoneMeta(milestone, state)}</span></span>
-              </button>
-            </li>;
-          })}</ol>}
-        <button type="button" id="add-milestone" className="r-link" style={{ marginTop: 6 }} onClick={() => setSheet({ kind: "add-milestone" })}>+ Add milestone</button>
-      </section>
-
-      <section className="w-next" aria-labelledby="next-heading">
-        <h2 id="next-heading" className="r-eyebrow ember">Next step</h2>
-        {!active ? <>
-          <p className="w-next-title">This project is {project.status.toLowerCase()}.</p>
-          <p className="w-next-meta">Its tasks stay out of Today. Make it active to plan it again.</p>
-          <button type="button" className="r-btn block w-plan" disabled={busy} onClick={() => changeStatus("Active", "Project is active again.")}>Make active</button>
-        </> : next ? <>
-          <p className="w-next-title">{next.title}</p>
-          <p className="w-next-meta">{next.minutes} min{next.smallerMinutes ? ` · or a ${next.smallerMinutes} min smaller step` : ""}{energy ? ` · ${energy} energy` : ""}</p>
-          <Link href={planHref(projectId)} className="r-btn block w-plan">Plan it for tonight</Link>
-          <button type="button" className="r-link" style={{ marginTop: 12 }} onClick={() => onOpenTask(next._id)}>Open this task</button>
-        </> : <>
-          <p className="w-next-title">Nothing ready yet.</p>
-          <p className="w-next-meta">Add a task with a clear done-when, and Today can suggest it when it fits.</p>
-          <button type="button" className="r-btn block w-plan" onClick={() => newTask()}>+ Add a task</button>
-        </>}
-      </section>
-    </div>
-
-    <div className="w-cols">
-      <PhasesCard map={map} onOpen={id => setSheet({ kind: "phase", id })} onAdd={() => setSheet({ kind: "add-phase" })} />
-      <DocsCard map={map} onOpen={id => setSheet({ kind: "doc", id })} onAdd={() => setSheet({ kind: "add-doc" })} />
-    </div>
-
-    <section className="r-card w-tasks-card" aria-labelledby="project-tasks-heading">
-      <div className="w-mono-line"><h2 id="project-tasks-heading" className="w-mono-head">TASKS</h2>{active && <button type="button" className="r-ghost xs" onClick={() => newTask()}>+ Add task</button>}</div>
-      {allTasks.length === 0 ? <p className="w-none" style={{ marginTop: 10 }}>No tasks yet.</p>
-        : <ul className="w-rows">{allTasks.map(({ task, where }) => <li key={task._id}><TaskRow task={task} where={where} onOpen={() => onOpenTask(task._id)} /></li>)}</ul>}
-    </section>
+    {map === undefined ? <LinesSkeleton label="Loading the plan…" lines={6} />
+      : map === null ? <p className="r-dashed r-body">This project’s plan couldn’t be loaded.</p>
+        : <ProjectList map={map} active={active} statusWord={statusWord} busy={busy} initial={initial} inboxCount={inbox?.length ?? 0}
+          onOpenTask={onOpenTask}
+          onStart={task => void save(() => setTaskStatus({ taskId: task.id, status: "In progress" }), `Started “${task.title}”.`)}
+          onMakeActive={() => changeStatus("Active", "Project is active again.")}
+          onAddTask={milestoneId => newTask(milestoneId)}
+          onAddMilestone={phaseId => setSheet({ kind: "add-milestone", phaseId })}
+          onAddPhase={() => setSheet({ kind: "add-phase" })}
+          onEditPhase={id => setSheet({ kind: "phase", id })}
+          onEditMilestone={id => setSheet({ kind: "milestone", id })}
+          onAddDoc={() => setSheet({ kind: "add-doc" })}
+          onOpenDoc={id => setSheet({ kind: "doc", id })}
+          onVisual={() => onVisual(true)} />}
 
     <div className="r-row" style={{ gap: 8 }} role="group" aria-label="Project actions">
       <button type="button" id="project-edit" className="r-ghost xs" onClick={() => setSheet({ kind: "edit" })}>Edit details</button>
@@ -341,7 +350,6 @@ function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTas
       <button type="button" id="project-delete" className="r-ghost xs" onClick={() => setSheet({ kind: "delete" })}>Delete project</button>
     </div>
     <p className="r-small">Progress counts completed tasks, so adding a task can lower the percentage. Archived tasks aren’t counted.</p>
-    </>}
 
     {sheet?.kind === "edit" && <Sheet labelledBy="project-form-title" eyebrow="Edit project" variant="page" onClose={() => close("project-edit")}>
       <ProjectForm project={project} busy={busy} onSubmit={event => void edit(event)} onCancel={() => close("project-edit")} />
@@ -441,7 +449,7 @@ function MilestoneSheet({ projectTitle, milestone, state, index, count, canAdd, 
   async function edit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    if (await save(() => updateMilestone({ milestoneId: milestone._id, title: field(data, "title"), doneWhen: field(data, "doneWhen") }), "Milestone saved.")) setMode("view");
+    if (await save(() => updateMilestone({ milestoneId: milestone._id, title: field(data, "title"), doneWhen: field(data, "doneWhen"), skills: data.getAll("skills").map(String) }), "Milestone saved.")) setMode("view");
   }
   const move = (direction: "up" | "down") => void save(() => moveMilestone({ milestoneId: milestone._id, direction }), `Milestone moved ${direction}.`);
   function choosePhase(value: string) {
@@ -491,7 +499,7 @@ function MilestoneSheet({ projectTitle, milestone, state, index, count, canAdd, 
 
 // ---------- Phases ----------
 
-type PhaseValues = { name: string; goal: string; nextStep: string; doneWhen: string };
+type PhaseValues = { name: string; goal: string; nextStep: string; doneWhen: string; skills: string[] };
 const phaseStateWord: Record<PhaseView["state"], string> = { done: "Done", active: "In progress", ahead: "Ahead" };
 
 function phaseMeta(phase: PhaseView) {
@@ -500,26 +508,6 @@ function phaseMeta(phase: PhaseView) {
 }
 
 /** The project's phases in order: number, name, goal and task progress. Each opens its sheet. */
-function PhasesCard({ map, onOpen, onAdd }: { map: Constellation | null | undefined; onOpen: (id: Id<"phases">) => void; onAdd: () => void }) {
-  return <section className="w-ms-card" aria-labelledby="phases-heading">
-    <div className="w-mono-line"><h2 id="phases-heading" tabIndex={-1} className="w-mono-head">PHASES</h2>{map && map.phases.length > 0 && <span>{map.stats.phasesDone} of {plural(map.phases.length, "phase")} done</span>}</div>
-    {map === undefined ? <div style={{ marginTop: 12 }}><LinesSkeleton label="Loading the phases…" lines={3} /></div>
-      : map === null ? <p className="w-none" style={{ marginTop: 10 }}>The plan for this project isn’t available.</p>
-        : map.phases.length === 0 ? <p className="w-none" style={{ marginTop: 10 }}>No phases yet. A phase is a stage of the plan that groups milestones, like “Reliability &amp; real use”. Without phases, the milestones above are the plan.</p>
-          : <ol className="w-phases">{map.phases.map(phase => <li key={phase.id}>
-            <button type="button" id={`phase-${phase.id}`} className={`w-phase ${phase.state}`} onClick={() => onOpen(phase.id)}>
-              <span className="w-phase-num" aria-hidden="true">{phase.num}</span>
-              <span className="w-phase-text">
-                <span className="w-phase-name"><span className="sr-only">Phase {phase.num}: </span>{phase.name}</span>
-                {phase.goal && <span className="w-phase-goal">{phase.goal}</span>}
-                <span className="w-ms-meta">{phaseMeta(phase)}</span>
-                <span className="r-bar thin w-phase-bar" aria-hidden="true"><span style={{ width: `${phase.pct}%` }} /></span>
-              </span>
-            </button>
-          </li>)}</ol>}
-    <button type="button" id="add-phase" className="r-link" style={{ marginTop: 10 }} disabled={!map} onClick={onAdd}>+ Add phase</button>
-  </section>;
-}
 
 function PhaseSheet({ projectTitle, phase, index, count, onClose, onRemoved }: { projectTitle: string; phase: PhaseView; index: number; count: number; onClose: () => void; onRemoved: () => void }) {
   const updatePhase = useMutation(api.constellation.updatePhase);
@@ -569,7 +557,7 @@ function PhaseForm({ phase, busy, onSave, onCancel }: { phase?: PhaseView; busy:
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    onSave({ name: field(data, "name"), goal: field(data, "goal"), nextStep: field(data, "nextStep"), doneWhen: field(data, "doneWhen") });
+    onSave({ name: field(data, "name"), goal: field(data, "goal"), nextStep: field(data, "nextStep"), doneWhen: field(data, "doneWhen"), skills: data.getAll("skills").map(String) });
   }
   return <form className="w-form" onSubmit={submit} aria-label={phase ? `Edit ${phase.name}` : "Add a phase"}>
     <fieldset className="w-fields" disabled={busy}><legend className="sr-only">Phase</legend>
@@ -577,12 +565,26 @@ function PhaseForm({ phase, busy, onSave, onCancel }: { phase?: PhaseView; busy:
       <label className="r-field">Goal · optional<textarea className="r-textarea w-textarea" name="goal" rows={2} maxLength={1000} defaultValue={phase?.goal} placeholder="What this stage is for" /></label>
       <label className="r-field">Next step · optional<textarea className="r-textarea w-textarea" name="nextStep" rows={2} maxLength={2000} defaultValue={phase?.nextStep} /></label>
       <label className="r-field">Done when · optional<input className="r-input" name="doneWhen" maxLength={1000} defaultValue={phase?.doneWhen} /></label>
+      <SkillPicker initial={phase?.skills ?? []} hint="Finished tasks in this phase without skills of their own (or their milestone’s) count for these in the Mind Bloom." />
       <div className="r-row" style={{ gap: 8 }}>
         <button type="submit" className="r-btn sm">{busy ? "Saving…" : "Save phase"}</button>
         <button type="button" className="r-ghost sm" onClick={onCancel}>Cancel</button>
       </div>
     </fieldset>
   </form>;
+}
+
+/** The eight bloom skills as toggles, sent with the form as `skills`. */
+const bloomSkills = ["Frontend", "Interaction", "Motion", "Visual", "Writing", "Research", "Systems", "Shipping"];
+function SkillPicker({ initial, hint }: { initial: string[]; hint: string }) {
+  const [picked, setPicked] = useState(initial);
+  return <div className="r-field" role="group" aria-label="Skills · optional">
+    <span>Skills · optional</span>
+    <div className="r-row" style={{ gap: 6 }}>{bloomSkills.map(skill => <button key={skill} type="button" className="r-chip round h34" aria-pressed={picked.includes(skill)}
+      onClick={() => setPicked(picked.includes(skill) ? picked.filter(s => s !== skill) : [...picked, skill])}>{skill}</button>)}</div>
+    {picked.map(skill => <input key={skill} type="hidden" name="skills" value={skill} />)}
+    <span className="r-small">{hint}</span>
+  </div>;
 }
 
 // ---------- Docs ----------
@@ -596,28 +598,7 @@ function DocLink({ link }: { link: string }) {
     : <code className="w-path">{link}</code>;
 }
 
-function docMeta(doc: DocView) {
-  return [doc.writtenAt ? "Written" : "Planned", doc.sections !== null ? plural(doc.sections, "section") : null,
-    doc.feeds.length ? `Feeds ${doc.feeds.length === 1 ? "phase" : "phases"} ${doc.feeds.join(", ")}` : "Feeds no phase yet"].filter(Boolean).join(" · ");
-}
 
-function DocsCard({ map, onOpen, onAdd }: { map: Constellation | null | undefined; onOpen: (id: Id<"projectDocs">) => void; onAdd: () => void }) {
-  const docs = map?.docs;
-  const written = docs?.filter(doc => doc.writtenAt !== null).length ?? 0;
-  return <section className="w-ms-card" aria-labelledby="docs-heading">
-    <div className="w-mono-line"><h2 id="docs-heading" tabIndex={-1} className="w-mono-head">DOCS</h2>{docs && docs.length > 0 && <span>{written} of {plural(docs.length, "doc")} written</span>}</div>
-    {map === undefined ? <div style={{ marginTop: 12 }}><LinesSkeleton label="Loading the docs…" lines={3} /></div>
-      : map === null ? <p className="w-none" style={{ marginTop: 10 }}>This project’s docs aren’t available.</p>
-        : map.docs.length === 0 ? <p className="w-none" style={{ marginTop: 10 }}>No docs yet. Note the documents the plan stands on, like a PRD or a system design. The writing stays in your repo; Becoming keeps a link and the phases each one feeds.</p>
-          : <ul className="w-docs">{map.docs.map(doc => <li key={doc.id}>
-            <button type="button" id={`doc-${doc.id}`} className={`w-doc${doc.writtenAt ? "" : " planned"}`} onClick={() => onOpen(doc.id)}>
-              <span className="w-doc-code" aria-hidden="true">{doc.code}</span>
-              <span className="w-row-text"><span className="w-row-title"><span className="sr-only">{doc.code}: </span>{doc.title}</span><span className="w-row-meta">{docMeta(doc)}</span></span>
-            </button>
-          </li>)}</ul>}
-    <button type="button" id="add-doc" className="r-link" style={{ marginTop: 10 }} disabled={!map} onClick={onAdd}>+ Add doc</button>
-  </section>;
-}
 
 function DocSheet({ projectTitle, doc, phases, onClose, onRemoved }: { projectTitle: string; doc: DocView; phases: PhaseChoice[]; onClose: () => void; onRemoved: () => void }) {
   const updateDoc = useMutation(api.constellation.updateDoc);
@@ -736,6 +717,7 @@ function MilestoneForm({ milestone, busy, onSubmit, onCancel }: { milestone?: Mi
     <fieldset className="w-fields" disabled={busy}><legend className="sr-only">Milestone</legend>
       <label className="r-field">Milestone outcome<input ref={focusOnMount} className="r-input" name="title" required maxLength={160} defaultValue={milestone?.title} placeholder="Usable Today flow" /></label>
       <label className="r-field">Done when · optional<input className="r-input" name="doneWhen" maxLength={1000} defaultValue={milestone?.doneWhen} /></label>
+      <SkillPicker initial={milestone?.skills ?? []} hint="Finished tasks in this milestone without skills of their own count for these in the Mind Bloom." />
       <div className="r-row" style={{ gap: 8 }}>
         <button type="submit" className="r-btn sm">{busy ? "Saving…" : "Save milestone"}</button>
         <button type="button" className="r-ghost sm" onClick={onCancel}>Cancel</button>

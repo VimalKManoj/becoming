@@ -36,7 +36,7 @@ export const inboxProposal = v.union(
   v.object({ kind: v.literal("milestone"), projectId: v.id("projects"), title: v.string(), doneWhen: v.optional(v.string()) }),
   v.object({ kind: v.literal("nextStep"), taskId: v.id("tasks"), nextStep: v.string() }),
   // The project constellation (convex/constellation.ts, convex/genesis.ts).
-  v.object({ kind: v.literal("phase"), projectId: v.id("projects"), name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()) }),
+  v.object({ kind: v.literal("phase"), projectId: v.id("projects"), name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()), skills: v.optional(v.array(v.string())) }),
   v.object({
     kind: v.literal("doc"), projectId: v.id("projects"), code: v.string(), title: v.string(), summary: v.optional(v.string()), sections: v.optional(v.number()), link: v.optional(v.string()),
     phaseIds: v.array(v.id("phases")), nextEdit: v.optional(v.string()), doneWhen: v.optional(v.string()), written: v.optional(v.boolean()),
@@ -54,13 +54,14 @@ export const inboxProposal = v.union(
   v.object({
     kind: v.literal("plan"), projectId: v.optional(v.id("projects")), newProject: v.optional(v.object({ title: v.string(), purpose: v.string() })),
     phases: v.array(v.object({
-      name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()),
+      name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()), skills: v.optional(v.array(v.string())),
       milestones: v.array(v.object({
-        title: v.string(), doneWhen: v.optional(v.string()),
+        title: v.string(), doneWhen: v.optional(v.string()), skills: v.optional(v.array(v.string())),
         tasks: v.array(v.object({
           title: v.string(), lane, minutes: v.number(), energy: v.number(), doneWhen: v.string(), plannedSessions: v.optional(v.number()),
           // Work that already happened shows honestly: its status, note and real dates.
           status: v.optional(workingStatus), note: v.optional(v.string()), startedAt: v.optional(v.number()), completedAt: v.optional(v.number()),
+          skills: v.optional(v.array(v.string())),
         })),
       })),
     })),
@@ -104,6 +105,8 @@ export default defineSchema({
   milestones: defineTable({
     owner: v.string(), projectId: v.id("projects"), title: v.string(), doneWhen: v.optional(v.string()),
     order: v.number(), completedAt: v.optional(v.number()),
+    // Skills its tasks practise, inherited by any finished task without its own (the bloom).
+    skills: v.optional(v.array(v.string())),
     // The phase it belongs to (the constellation's phase rows); none = outside any phase.
     phaseId: v.optional(v.id("phases")),
   }).index("by_project", ["projectId", "order"]).index("by_owner", ["owner"]).index("by_phase", ["phaseId", "order"]),
@@ -112,6 +115,8 @@ export default defineSchema({
     owner: v.string(), projectId: v.id("projects"), order: v.number(), name: v.string(),
     // One line on what the phase delivers, its next step and when it counts as done.
     goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()),
+    // Skills its work practises, inherited by finished tasks without their own or their milestone's.
+    skills: v.optional(v.array(v.string())),
   }).index("by_project", ["projectId", "order"]).index("by_owner", ["owner"]),
   // The documents a project's plan stands on (PRD, system design, schema…). The writing lives
   // in your repo; Becoming keeps what it is, where it is, and which phases it feeds.

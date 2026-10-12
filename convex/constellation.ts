@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
+import { bloomSkillValues } from "./lib/bloom";
 import { httpUrl, optionalText } from "./lib/validate";
 
 // The project constellation (Work → Projects → Visual): one project as a map from its
@@ -77,7 +78,7 @@ export async function constellationFor(ctx: QueryCtx, owner: string, projectId: 
   };
   const milestoneView = (m: Doc<"milestones">, code: string) => {
     const own = tasks.filter(t => t.milestoneId === m._id).map((t, k) => taskView(t, `${code}·${k + 1}`));
-    return { id: m._id, code, title: m.title, doneWhen: m.doneWhen ?? "", completedAt: m.completedAt ?? null, tasks: own, ...summarise(own) };
+    return { id: m._id, code, title: m.title, doneWhen: m.doneWhen ?? "", skills: m.skills ?? [], completedAt: m.completedAt ?? null, tasks: own, ...summarise(own) };
   };
 
   const phaseIds = new Set(phases.map(p => String(p._id)));
@@ -86,7 +87,7 @@ export async function constellationFor(ctx: QueryCtx, owner: string, projectId: 
     const all = ms.flatMap(m => m.tasks);
     const dates = all.flatMap(t => [t.startedAt, t.completedAt].filter((x): x is number => x !== null));
     return {
-      id: p._id, num: pad(i), order: p.order, name: p.name, goal: p.goal ?? "", nextStep: p.nextStep ?? "", doneWhen: p.doneWhen ?? "",
+      id: p._id, num: pad(i), order: p.order, name: p.name, goal: p.goal ?? "", nextStep: p.nextStep ?? "", doneWhen: p.doneWhen ?? "", skills: p.skills ?? [],
       milestones: ms, startedAt: dates.length ? Math.min(...dates) : null, endedAt: dates.length && all.every(t => t.state === "done") ? Math.max(...dates) : null,
       ...summarise(all),
     };
@@ -158,11 +159,17 @@ export const taskStory = query({
 
 // ---------- Phases ----------
 
-const phaseFields = { name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()) };
-type PhaseInput = { name: string; goal?: string; nextStep?: string; doneWhen?: string };
+const phaseFields = { name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()), skills: v.optional(v.array(v.string())) };
+type PhaseInput = { name: string; goal?: string; nextStep?: string; doneWhen?: string; skills?: string[] };
+/** The eight bloom skills only; anything else is refused with the list. */
+export function skillsValue(input: string[] | undefined) {
+  try { return bloomSkillValues(input); } catch (caught) { throw new ConvexError((caught as Error).message); }
+}
 const phaseValues = (args: PhaseInput) => ({
   name: nonempty(args.name, 120), goal: optionalText(args.goal, 1000, "the phase goal"),
   nextStep: optionalText(args.nextStep, 2000, "the next step"), doneWhen: optionalText(args.doneWhen, 1000, "the done-when"),
+  // Skills change only when they're sent, so an edit without them keeps the ones it has.
+  ...(args.skills !== undefined ? { skills: skillsValue(args.skills) } : {}),
 });
 
 export async function addPhaseFor(ctx: MutationCtx, owner: string, projectId: Id<"projects">, args: PhaseInput) {
@@ -312,5 +319,28 @@ export const removeDoc = mutation({
     const doc = await ctx.db.get(args.docId);
     assertOwner(doc, owner);
     await ctx.db.delete(doc._id);
+  },
+});
+
+// ---------- Skills on a phase or milestone (Journey's tidy-up card) ----------
+// Only the skills change, nothing else about the phase or milestone. Finished tasks without
+// skills of their own count for their milestone's, or else their phase's (the Mind Bloom).
+
+export const setPhaseSkills = mutation({
+  args: { phaseId: v.id("phases"), skills: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const phase = await ownedPhase(ctx, owner, args.phaseId);
+    await ctx.db.patch(phase._id, { skills: skillsValue(args.skills) });
+  },
+});
+
+export const setMilestoneSkills = mutation({
+  args: { milestoneId: v.id("milestones"), skills: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const milestone = await ctx.db.get(args.milestoneId);
+    assertOwner(milestone, owner);
+    await ctx.db.patch(milestone!._id, { skills: skillsValue(args.skills) });
   },
 });

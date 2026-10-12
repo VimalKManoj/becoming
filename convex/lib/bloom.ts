@@ -22,6 +22,17 @@ export const bloomFull = 12;
 const keyOf = (name: string) => name.trim().toLowerCase();
 const index = new Map(bloomSkillList.map((skill, i) => [keyOf(skill.name), i]));
 
+/** Skills for a phase or milestone: only the eight bloom skills, in their canonical spelling, each once. */
+export function bloomSkillValues(input: string[] | undefined) {
+  const out: string[] = [];
+  for (const name of input ?? []) {
+    const at = index.get(keyOf(name));
+    if (at === undefined) throw new Error(`"${name.trim()}" isn't one of the skills: ${bloomSkillList.map(skill => skill.name).join(", ")}.`);
+    if (!out.includes(bloomSkillList[at].name)) out.push(bloomSkillList[at].name);
+  }
+  return out;
+}
+
 export function bloomSkills(sessions: BloomSession[], artifacts: BloomArtifact[], finished: BloomFinished[] = []) {
   const evidence = new Map<string, string[]>();
   for (const artifact of artifacts) {

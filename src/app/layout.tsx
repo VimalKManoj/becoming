@@ -10,6 +10,8 @@ import "../styles/proof.css";
 import "../styles/journey.css";
 import "../styles/settings.css";
 import "../styles/constellation.css";
+import "../styles/project-list.css";
+import "../styles/work-overview.css";
 
 // Three families (documents/DESIGN_SYSTEM.md): Bricolage Grotesque for intent (headlines,
 // questions, titles), Geist for the interface, Geist Mono for time, counts and dates. The

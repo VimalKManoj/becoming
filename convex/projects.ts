@@ -5,6 +5,7 @@ import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
 import { optionalText } from "./lib/validate";
 import { effortValues } from "./lib/taskRules";
 import { projectStatus } from "./schema";
+import { skillsValue } from "./constellation";
 import { archiveTask, restoreTask } from "./lib/taskArchive";
 
 // Projects group larger work into ordered milestones and tasks. Progress is always
@@ -58,12 +59,16 @@ export async function projectsFor(ctx: Ctx, owner: string, status: Doc<"projects
       const nextTask = nextTaskOf(tasks);
       const ordered = [...milestones].sort((a, b) => a.order - b.order);
       const current = ordered.findIndex(m => m.completedAt === undefined);
+      const worked = await lastWorkedAt(ctx, owner, project._id);
+      // Any recorded move counts as working on it, not only a focus session: starting or finishing a task too.
+      const moved = Math.max(0, ...tasks.flatMap(task => [task.startedAt ?? 0, task.completedAt ?? 0]));
       return {
         ...projectSummary(project), progress: progress(tasks),
         milestones: { done: milestones.filter(m => m.completedAt !== undefined).length, total: milestones.length, current: current < 0 ? null : current + 1, currentTitle: current < 0 ? null : ordered[current].title },
         nextTask,
         lane: nextTask?.lane ?? tasks[0]?.lane ?? null,
-        lastWorkedAt: await lastWorkedAt(ctx, owner, project._id),
+        lastWorkedAt: worked,
+        lastActiveAt: Math.max(worked ?? 0, moved) || null,
       };
     }));
 }
@@ -97,7 +102,7 @@ export async function projectFor(ctx: Ctx, owner: string, projectId: Id<"project
       projectTasks(ctx, owner, project._id),
       ctx.db.query("milestones").withIndex("by_project", q => q.eq("projectId", project._id)).collect(),
     ]);
-    const taskView = (task: Doc<"tasks">) => ({ _id: task._id, title: task.title, status: task.status, lane: task.lane, minutes: task.minutes, nextStep: task.nextStep, milestoneId: task.milestoneId });
+    const taskView = (task: Doc<"tasks">) => ({ _id: task._id, title: task.title, status: task.status, lane: task.lane, minutes: task.minutes, energy: task.energy, nextStep: task.nextStep, milestoneId: task.milestoneId });
     const nextTask = nextTaskOf(tasks);
     return {
       ...projectSummary(project),
@@ -108,7 +113,7 @@ export async function projectFor(ctx: Ctx, owner: string, projectId: Id<"project
       lastWorkedAt: await lastWorkedAt(ctx, owner, project._id),
       milestones: milestones.map(milestone => {
         const linked = tasks.filter(task => task.milestoneId === milestone._id);
-        return { _id: milestone._id, title: milestone.title, doneWhen: milestone.doneWhen ?? "", order: milestone.order, completedAt: milestone.completedAt, phaseId: milestone.phaseId ?? null, progress: progress(linked), tasks: linked.map(taskView) };
+        return { _id: milestone._id, title: milestone.title, doneWhen: milestone.doneWhen ?? "", order: milestone.order, completedAt: milestone.completedAt, phaseId: milestone.phaseId ?? null, skills: milestone.skills ?? [], progress: progress(linked), tasks: linked.map(taskView) };
       }),
       unassigned: tasks.filter(task => !task.milestoneId || !milestones.some(m => m._id === task.milestoneId)).map(taskView),
     };
@@ -174,18 +179,19 @@ export const addMilestone = mutation({
 });
 
 /** A new last milestone in an owned project. Shared with the Inbox. */
-export async function addMilestoneFor(ctx: MutationCtx, owner: string, args: { projectId: Id<"projects">; title: string; doneWhen?: string }) {
+export async function addMilestoneFor(ctx: MutationCtx, owner: string, args: { projectId: Id<"projects">; title: string; doneWhen?: string; skills?: string[] }) {
   const project = await ownedProject(ctx, owner, args.projectId);
   const last = await ctx.db.query("milestones").withIndex("by_project", q => q.eq("projectId", project._id)).order("desc").first();
-  return ctx.db.insert("milestones", { owner, projectId: project._id, title: nonempty(args.title), doneWhen: optionalText(args.doneWhen, 1000, "the milestone outcome"), order: (last?.order ?? 0) + 1 });
+  return ctx.db.insert("milestones", { owner, projectId: project._id, title: nonempty(args.title), doneWhen: optionalText(args.doneWhen, 1000, "the milestone outcome"), order: (last?.order ?? 0) + 1, ...(args.skills?.length ? { skills: skillsValue(args.skills) } : {}) });
 }
 
 export const updateMilestone = mutation({
-  args: { milestoneId: v.id("milestones"), title: v.string(), doneWhen: v.optional(v.string()) },
+  args: { milestoneId: v.id("milestones"), title: v.string(), doneWhen: v.optional(v.string()), skills: v.optional(v.array(v.string())) },
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
     const milestone = await ownedMilestone(ctx, owner, args.milestoneId);
-    await ctx.db.patch(milestone._id, { title: nonempty(args.title), doneWhen: optionalText(args.doneWhen, 1000, "the milestone outcome") });
+    // Skills (the bloom's eight) change only when sent; its finished tasks without their own inherit them.
+    await ctx.db.patch(milestone._id, { title: nonempty(args.title), doneWhen: optionalText(args.doneWhen, 1000, "the milestone outcome"), ...(args.skills !== undefined ? { skills: skillsValue(args.skills) } : {}) });
     return milestone._id;
   },
 });
