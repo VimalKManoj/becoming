@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -11,20 +11,24 @@ import { Bone, LinesSkeleton, Skeleton } from "@/components/skeleton";
 import { ProjectCard, ProjectCardBones, ProjectsArea, useSaver } from "@/components/projects-view";
 import { BlockForm, DoneForm, NextStepForm, Sheet, StatusChip, TaskForm, energyWords, lanes, taskValues, workQuery, workRoute, type EditableTask, type Lane, type TaskView, type WorkRoute } from "@/components/task-forms";
 import { useRitual } from "@/components/ritual/ritual-context";
+import { WorkOverview } from "@/components/work-overview";
+import { dayMonth } from "@/components/constellation/model";
+import { EVENT_NOTE } from "@/components/constellation/panel";
 import { plural } from "@/lib/format";
 import { useNow } from "@/lib/use-rhythm";
 
 // Work (the prototype's "What you're building."): active projects as wide cards, then one
 // column per lane of open tasks with their status in words. Tapping a task opens its sheet,
 // which holds every lifecycle action; Done, Archived and all projects are linked at the foot.
-// "Plan it for tonight" opens Today's check-in for that task.
+// "Start a focus session" is the only way from here into Today's check-in and timer.
 
 export type Task = FunctionReturnType<typeof api.tasks.listPage>["page"][number];
-type SheetState = { kind: "task"; id: Id<"tasks">; step?: "done" } | { kind: "edit"; id: Id<"tasks"> } | { kind: "new"; defaults?: Partial<EditableTask> } | null;
+type SheetState = { kind: "task"; id: Id<"tasks">; step?: "done" | "unblock" } | { kind: "edit"; id: Id<"tasks"> } | { kind: "new"; defaults?: Partial<EditableTask> } | null;
 type Placement = { projectId: Id<"projects">; text: string } | null;
 type Options = FunctionReturnType<typeof api.projects.options> | undefined;
 
 const laneSubs: Record<Lane, string> = { Projects: "Bigger work, in steps", Showcases: "Small, finished pieces", Writing: "Notes and posts" };
+const laneTitles: Record<Lane, ReactNode> = { Projects: <>Bigger work, <em>in steps.</em></>, Showcases: <>Small, finished <em>pieces.</em></>, Writing: <>Notes and <em>posts.</em></> };
 const listCopy: Record<Exclude<TaskView, "active">, { label: string; title: string; em: string; hint: string; empty: string }> = {
   blocked: { label: "Blocked", title: "What’s in the ", em: "way.", hint: "Kept out of Today until you unblock them with a next step.", empty: "Nothing is blocked. When a session ends blocked, the task waits here with what’s in the way." },
   done: { label: "Done", title: "Finished ", em: "work.", hint: "Tasks you finished in a session’s recap. Reopen one if it turns out to need more.", empty: "Nothing finished yet. Tasks you finish in a session’s recap arrive here." },
@@ -60,6 +64,10 @@ function WorkScreen() {
   const [route, setRoute] = useState(() => workRoute(params));
   const [seen, setSeen] = useState(address);
   const [sheet, setSheet] = useState<SheetState>(null);
+  const now = useNow();
+  const { openCapture, openNewProject } = useRitual();
+  const setTaskStatus = useMutation(api.tasks.setStatus);
+  const { busy, save } = useSaver();
   // Arriving at a new address (a link from Today, or Back) re-reads it. The screen's own
   // writes below describe the route it already shows, so re-reading them changes nothing.
   if (address !== seen) { setSeen(address); setRoute(workRoute(params)); }
@@ -75,9 +83,9 @@ function WorkScreen() {
     else window.history.replaceState(null, "", url);
   }
 
-  const openTask = (id: Id<"tasks">, step?: "done") => setSheet({ kind: "task", id, step });
+  const openTask = (id: Id<"tasks">, step?: "done" | "unblock") => setSheet({ kind: "task", id, step });
   const closeTask = (id: Id<"tasks">) => { setSheet(null); focusById(`task-${id}`); };
-  const toLanes = () => go({ mode: "tasks", view: "active", project: null, adding: false, visual: false });
+  const toLanes = () => go({ mode: "tasks", view: "active", project: null, adding: false, visual: false, lane: null });
   // ?new=task (Today's "add a task" link) opens the full task form.
   const newTask = route.adding ? { defaults: undefined } : sheet?.kind === "new" ? sheet : null;
   const closeNew = () => { if (route.adding) go({ adding: false }, "replace"); setSheet(null); };
@@ -85,8 +93,15 @@ function WorkScreen() {
   return <>
     {route.mode === "projects"
       ? <ProjectsArea openId={route.project} visual={route.visual} onVisual={visual => go({ visual })} onOpen={project => go({ mode: "projects", project })} onBack={toLanes} onOpenTask={openTask} onNewTask={defaults => setSheet({ kind: "new", defaults })} />
+      : route.view === "active" && !route.lane
+        // Work itself: projects as rows, and only the tasks that belong to no project.
+        ? (now === null ? <WorkSkeleton /> : <WorkOverview now={now} busy={busy} onOpenTask={openTask}
+          onStartTask={task => void save(() => setTaskStatus({ taskId: task.id, status: "In progress" }), `Started “${task.title}”.`)}
+          onOpenProject={project => go({ mode: "projects", project, visual: false })}
+          onNewTask={defaults => setSheet({ kind: "new", defaults })} onQuickTask={() => openCapture("task")} onNewProject={openNewProject}
+          onDone={() => go({ view: "done" })} onArchived={() => go({ view: "archived" })} onAllProjects={() => go({ mode: "projects", project: null, visual: false })} />)
       : route.view === "active"
-        ? <Lanes onOpenTask={openTask} onOpenProject={project => go({ mode: "projects", project, visual: false })} onRoute={go} onNewTask={() => setSheet({ kind: "new" })} />
+        ? <Lanes only={route.lane} onOpenTask={openTask} onOpenProject={project => go({ mode: "projects", project, visual: false })} onRoute={go} onAllLanes={toLanes} onNewTask={defaults => setSheet({ kind: "new", defaults })} />
         : <TaskListView view={route.view} onOpenTask={openTask} onRoute={go} onBack={toLanes} />}
     {sheet?.kind === "task" && <TaskSheet key={sheet.id} taskId={sheet.id} initialStep={sheet.step} onClose={() => closeTask(sheet.id)} onEdit={() => setSheet({ kind: "edit", id: sheet.id })}
       onOpenProject={project => { setSheet(null); go({ mode: "projects", project, adding: false, visual: false }); }} />}
@@ -97,7 +112,9 @@ function WorkScreen() {
 
 // ---------- Lanes ----------
 
-function Lanes({ onOpenTask, onOpenProject, onRoute, onNewTask }: { onOpenTask: (id: Id<"tasks">, step?: "done") => void; onOpenProject: (id: Id<"projects">) => void; onRoute: (next: Partial<WorkRoute>) => void; onNewTask: () => void }) {
+// With `only` (?lane=, from Today's Small piece and Write) it shows that one lane's open
+// tasks to choose from. Nothing starts a focus session unless you ask for one on the task.
+function Lanes({ only, onOpenTask, onOpenProject, onRoute, onAllLanes, onNewTask }: { only: Lane | null; onOpenTask: (id: Id<"tasks">, step?: "done" | "unblock") => void; onOpenProject: (id: Id<"projects">) => void; onRoute: (next: Partial<WorkRoute>) => void; onAllLanes: () => void; onNewTask: (defaults?: Partial<EditableTask>) => void }) {
   const active = usePaginatedQuery(api.tasks.listPage, { view: "active" }, { initialNumItems: 48 });
   const blocked = usePaginatedQuery(api.tasks.listPage, { view: "blocked" }, { initialNumItems: 24 });
   const projects = useQuery(api.projects.list, { status: "Active" });
@@ -114,6 +131,25 @@ function Lanes({ onOpenTask, onOpenProject, onRoute, onNewTask }: { onOpenTask: 
   const more = active.status === "CanLoadMore" || blocked.status === "CanLoadMore";
   const loadingMore = active.status === "LoadingMore" || blocked.status === "LoadingMore";
   const projectLaneCount = projects?.filter(project => (project.lane ?? "Projects") === "Projects").length ?? 0;
+
+  if (only) {
+    const items = tasks.filter(task => task.lane === only);
+    return <div className="r-wide r-rise-6 w-work">
+      <button type="button" className="r-back" onClick={onAllLanes}>‹ All work</button>
+      <div className="r-head">
+        <div><div className={`r-eyebrow lane-${only}`}>{only}</div><h1 className="r-title">{laneTitles[only]}</h1><p className="r-lede" style={{ marginTop: 6 }}>Pick what you’ll work on. Open a task to start it, finish it, or start a focus session.</p></div>
+        <button type="button" className="r-ghost sm w-head-btn" onClick={() => onNewTask({ lane: only })}>+ Add a {only === "Writing" ? "piece of writing" : "task"}</button>
+      </div>
+      {loading ? <WorkBodySkeleton /> : <>
+        <section className={`w-lane lane-${only}`} aria-labelledby={`lane-${only}`}>
+          <div className="w-lane-head"><span className="r-dot" aria-hidden="true" /><h2 id={`lane-${only}`} className="w-lane-name">Open in {only}</h2><span className="w-lane-sub">{plural(items.length, "task")}</span></div>
+          {items.length ? <div className="w-grid">{items.map(task => <TaskCard key={task._id} task={task} where={placement(options, task)} pinned={pinned(task)} onOpen={() => onOpenTask(task._id)} onDone={() => onOpenTask(task._id, "done")} />)}</div>
+            : <p className="w-lane-empty">Nothing open in {only} yet. Add one above, or catch an idea first.</p>}
+        </section>
+        {more && <button type="button" className="r-ghost sm" style={{ alignSelf: "flex-start" }} disabled={loadingMore} onClick={() => { if (active.status === "CanLoadMore") active.loadMore(48); if (blocked.status === "CanLoadMore") blocked.loadMore(24); }}>{loadingMore ? "Loading more…" : "Load more tasks"}</button>}
+      </>}
+    </div>;
+  }
 
   return <div className="r-wide r-rise-6 w-work">
     <div className="r-head">
@@ -141,7 +177,7 @@ function Lanes({ onOpenTask, onOpenProject, onRoute, onNewTask }: { onOpenTask: 
         <button type="button" className="r-link" onClick={() => onRoute({ view: "done" })}>Done</button><span aria-hidden="true">·</span>
         <button type="button" className="r-link" onClick={() => onRoute({ view: "archived" })}>Archived</button><span aria-hidden="true">·</span>
         <button type="button" className="r-link" onClick={() => onRoute({ mode: "projects", project: null, visual: false })}>All projects</button><span aria-hidden="true">·</span>
-        <button type="button" className="r-link" onClick={onNewTask}>Add a task with every detail</button>
+        <button type="button" className="r-link" onClick={() => onNewTask()}>Add a task with every detail</button>
       </nav>
     </>}
   </div>;
@@ -197,8 +233,20 @@ function TaskListView({ view, onOpenTask, onRoute, onBack }: { view: Exclude<Tas
 
 // ---------- Sheets ----------
 
+/** A task's place in its project's plan: its code, phase and milestone, and its sessions. */
+function placeInPlan(map: NonNullable<Constellation>, taskId: Id<"tasks">) {
+  for (const phase of map.phases) for (const milestone of phase.milestones) for (const t of milestone.tasks) {
+    if (t.id === taskId) return { code: t.code, phaseId: phase.id, phase: `Phase ${phase.num} ${phase.name}`, milestone: `${milestone.code} ${milestone.title}`, sessions: t.sessions, planned: t.plannedSessions };
+  }
+  for (const milestone of map.loose.milestones) for (const t of milestone.tasks) {
+    if (t.id === taskId) return { code: t.code, phaseId: null, phase: null, milestone: `${milestone.code} ${milestone.title}`, sessions: t.sessions, planned: t.plannedSessions };
+  }
+  const t = map.loose.tasks.find(item => item.id === taskId);
+  return t ? { code: t.code, phaseId: null, phase: null, milestone: null, sessions: t.sessions, planned: t.plannedSessions } : null;
+}
+
 /** Everything about one task, and every move the backend allows from its status. */
-function TaskSheet({ taskId, initialStep, onClose, onEdit, onOpenProject }: { taskId: Id<"tasks">; initialStep?: "done"; onClose: () => void; onEdit: () => void; onOpenProject: (id: Id<"projects">) => void }) {
+function TaskSheet({ taskId, initialStep, onClose, onEdit, onOpenProject }: { taskId: Id<"tasks">; initialStep?: "done" | "unblock"; onClose: () => void; onEdit: () => void; onOpenProject: (id: Id<"projects">) => void }) {
   const task = useQuery(api.tasks.get, { taskId });
   const options = useQuery(api.projects.options);
   const profile = useQuery(api.settings.getProfile);
@@ -210,6 +258,9 @@ function TaskSheet({ taskId, initialStep, onClose, onEdit, onOpenProject }: { ta
   const setStatus = useMutation(api.tasks.setStatus);
   const [step, setStep] = useState<"unblock" | "reopen" | "done" | "block" | null>(initialStep ?? null);
   const { busy, save } = useSaver();
+  // Where it sits in its project's plan (code, phase, milestone, sessions) and its story.
+  const map = useQuery(api.constellation.get, task?.projectId ? { projectId: task.projectId } : "skip");
+  const story = useQuery(api.constellation.taskStory, { taskId });
 
   if (task === undefined) return <Sheet labelledBy="task-sheet-title" eyebrow="Task" onClose={onClose}><h2 id="task-sheet-title" className="sr-only">Task</h2><LinesSkeleton label="Opening the task…" lines={5} /></Sheet>;
   if (task === null) return <Sheet labelledBy="task-sheet-title" eyebrow="Task" onClose={onClose}><h2 id="task-sheet-title" className="w-sheet-title sm">This task isn’t available.</h2></Sheet>;
@@ -219,6 +270,10 @@ function TaskSheet({ taskId, initialStep, onClose, onEdit, onOpenProject }: { ta
   const pinned = open && profile?.pinnedTaskId === task._id;
   const waiting = open ? waitingOn(task) : [];
   const stepLabel = task.status === "Blocked" ? "Blocked by" : task.status === "In progress" ? "Pick up here" : "Next step";
+  const place = map ? placeInPlan(map, taskId) : null;
+  const builtFrom = map && place?.phaseId ? map.docs.filter(d => d.phaseIds.includes(String(place.phaseId))).map(d => d.code) : [];
+  const crumb = place && <span className="w-tcrumb">Task {place.code}
+    {(place.phase || place.milestone) && <span> · {place.phase ?? ""}{place.phase && place.milestone ? " › " : ""}{place.milestone ?? ""}</span>}</span>;
 
   async function moveOn(event: FormEvent<HTMLFormElement>, kind: "unblock" | "reopen") {
     event.preventDefault();
@@ -233,7 +288,7 @@ function TaskSheet({ taskId, initialStep, onClose, onEdit, onOpenProject }: { ta
   const move = (status: "Ready" | "In progress" | "Blocked" | "Done", message: string, extra: { note?: string; skills?: string[] } = {}) =>
     save(() => setStatus({ taskId, status, ...extra }), message).then(saved => { if (saved) setStep(null); });
 
-  return <Sheet labelledBy="task-sheet-title" eyebrow={<span className={`r-row lane-${task.lane}`} style={{ gap: 8 }}><span className="r-dot" aria-hidden="true" />{task.lane}</span>} onClose={onClose}>
+  return <Sheet labelledBy="task-sheet-title" eyebrow={crumb || <span className={`r-row lane-${task.lane}`} style={{ gap: 8 }}><span className="r-dot" aria-hidden="true" />{task.lane}</span>} onClose={onClose}>
     <div>
       <h2 id="task-sheet-title" className="w-sheet-title sm">{task.title}</h2>
       {where && <button type="button" className="r-link" style={{ marginTop: 8 }} onClick={() => onOpenProject(where.projectId)}>{where.text} →</button>}
@@ -252,6 +307,27 @@ function TaskSheet({ taskId, initialStep, onClose, onEdit, onOpenProject }: { ta
       <p className="r-small" style={{ marginTop: 6 }}>Today offers this task once {waiting.length === 1 ? "that is" : "those are"} done.</p>
     </div>}
     {task.smallerStep && <div className="r-inset"><div className="r-eyebrow-sm">Smaller step · {task.smallerMinutes} min</div><div className="r-body" style={{ marginTop: 4 }}>{task.smallerStep}</div><p className="r-small" style={{ marginTop: 4 }}>Done when: {task.smallerDone}</p></div>}
+    {place && (place.planned || place.sessions > 0) && <div>
+      <div className="r-eyebrow-sm">Sessions · {place.planned ? `${place.sessions} of ${place.planned}` : place.sessions}</div>
+      {place.planned && <div className="w-evs" role="img" aria-label={`${place.sessions} of ${place.planned} sessions`}>
+        {Array.from({ length: Math.min(place.planned, 40) }, (_, k) => <span key={k} className={`w-ev${k < place.sessions ? " on" : ""}`} />)}
+      </div>}
+    </div>}
+    {(builtFrom.length > 0 || task.skills.length > 0) && <div>
+      <div className="r-eyebrow-sm">Built from</div>
+      <div className="w-chips">
+        {builtFrom.map(code => <span key={code} className="w-dchip">{code}</span>)}
+        {task.skills.map(skill => <span key={skill} className="w-skill">{skill}</span>)}
+      </div>
+    </div>}
+    {story && story.length > 0 && <div>
+      <div className="r-eyebrow-sm">Timeline</div>
+      <ol className="w-tl">{story.slice(-6).map((e, i) => <li key={`${e.at}-${i}`} className={`w-te${e.source !== "app" ? " ai" : ""}${e.kind === "blocked" ? " blk" : ""}`}>
+        <div className="w-tek">{e.kind.toUpperCase()}{e.source !== "app" && <span className="w-mcp">MCP</span>}</div>
+        <div className="w-tet">{e.note ?? EVENT_NOTE[e.kind] ?? e.kind}</div>
+        <div className="w-tew">{dayMonth(e.at)}{e.source !== "app" ? ` · ${e.source}` : ""}</div>
+      </li>)}</ol>
+    </div>}
     {step === "done" ? <DoneForm busy={busy} onSubmit={(note, skills) => void move("Done", `“${task.title}” is done.`, { note, skills })} onCancel={() => setStep(null)} />
       : step === "block" ? <BlockForm busy={busy} onSubmit={reason => void move("Blocked", `“${task.title}” is blocked. It stays out of Today until you unblock it.`, { note: reason })} onCancel={() => setStep(null)} />
       : step ? <NextStepForm kind={step} busy={busy} onSubmit={event => void moveOn(event, step)} onCancel={() => setStep(null)} />
@@ -264,13 +340,14 @@ function TaskSheet({ taskId, initialStep, onClose, onEdit, onOpenProject }: { ta
           {task.status === "Blocked" && <button type="button" className="r-btn sm" disabled={busy} onClick={() => setStep("unblock")}>Unblock</button>}
           {task.status === "Done" && <button type="button" className="r-btn sm" disabled={busy} onClick={() => setStep("reopen")}>Reopen</button>}
           {task.status === "Archived" && <button type="button" className="r-btn sm" disabled={busy} onClick={() => void save(() => restoreTask({ taskId }), `Restored “${task.title}”.`)}>Restore</button>}
-          {open && <Link href={startHref(task)} className="r-ghost sm">Focus on it tonight</Link>}
+          {open && <Link href={startHref(task)} className="r-ghost sm">Start a focus session</Link>}
           {open && (pinned
             ? <button type="button" className="r-ghost sm" disabled={busy} onClick={() => void save(() => pinTask({}), "Unpinned.")}>Unpin</button>
             : <button type="button" className="r-ghost sm ember" disabled={busy} onClick={() => void save(() => pinTask({ taskId }), `Pinned “${task.title}”. Today offers it first whenever it fits.`)}>Pin for tonight</button>)}
           {task.status !== "Done" && task.status !== "Archived" && <button type="button" className="r-ghost sm" disabled={busy} onClick={onEdit}>Edit</button>}
         </div>
         {task.status !== "Archived" && <p className="r-small"><button type="button" className="r-underline" disabled={busy} onClick={() => void save(() => archiveTask({ taskId }), `Archived “${task.title}”. Its history is kept; restore it from here or Archived.`)}>Archive</button> · hides it everywhere, keeps its history</p>}
+        {task.projectId && <Link className="r-link" style={{ alignSelf: "flex-end" }} href={`/work?view=projects&project=${task.projectId}&visual=1`}>See it on the map ›</Link>}
       </>}
   </Sheet>;
 }

@@ -35,6 +35,33 @@ export const forIdea = query({
   },
 });
 
+/** Ideas whose genesis has begun (research, a report or a decision) but that aren't projects
+ *  yet: Work shows them beside the projects. Archived and activated ideas are left out. */
+export const inProgress = query({
+  args: {},
+  handler: async ctx => {
+    const owner = await requireOwner(ctx);
+    const [ideas, research, reports] = await Promise.all([
+      ctx.db.query("ideas").withIndex("by_owner", q => q.eq("owner", owner)).collect(),
+      ctx.db.query("research").withIndex("by_owner", q => q.eq("owner", owner)).collect(),
+      ctx.db.query("reports").withIndex("by_owner", q => q.eq("owner", owner)).collect(),
+    ]);
+    const projectIdeas = new Set((await ctx.db.query("projects").withIndex("by_owner", q => q.eq("owner", owner)).collect()).flatMap(p => p.ideaId ? [String(p.ideaId)] : []));
+    return ideas.filter(idea => !idea.archivedAt && !idea.taskId && !projectIdeas.has(String(idea._id))).flatMap(idea => {
+      const threads = research.filter(r => r.ideaId === idea._id);
+      const report = reports.filter(r => r.ideaId === idea._id).sort((a, b) => b.writtenAt - a.writtenAt)[0] ?? null;
+      if (!threads.length && !report) return [];
+      const times = [idea._creationTime, ...threads.flatMap(r => [r._creationTime, ...r.sources.map(s => s.at)]), report?.writtenAt ?? 0, report?.decision?.at ?? 0];
+      return [{
+        id: idea._id, title: idea.title, lane: idea.lane, purpose: idea.brainstorm?.problem || idea.notes.split("\n")[0] || "",
+        threads: threads.length, sources: threads.reduce((n, r) => n + r.sources.length, 0),
+        report: Boolean(report), findings: report?.findings.length ?? 0, decision: report?.decision?.verdict ?? null,
+        createdAt: idea._creationTime, lastAt: Math.max(...times),
+      }];
+    }).sort((a, b) => b.lastAt - a.lastAt);
+  },
+});
+
 // ---------- Research ----------
 
 export type SourceInput = { title: string; url?: string; kind: SourceKind };

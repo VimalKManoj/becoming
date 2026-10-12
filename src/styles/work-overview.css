@@ -1,0 +1,128 @@
+/* Becoming · Work ("What you’re building"). The owner’s design, documents/design/work.dc.html,
+   ported rule for rule and scoped under .wo: projects as rows (where each stands, up next) and
+   the tasks that belong to no project. The rail, frame and the design-only badge are left out.
+   Colours point at the --r-* tokens where identical. */
+
+.wo{--ink:var(--r-ink);--ink2:var(--r-ink-2);--text:var(--r-text);--muted:var(--r-muted);--ember:var(--r-ember);--ember-t:var(--r-ember-text);--ember-s:var(--r-ember-soft);--ember-p:var(--r-ember-pale);
+  --mint:var(--r-mint);--mint-t:var(--r-mint-text);--lilac:var(--r-lilac);--lilac-t:var(--r-lilac-text);--red:var(--r-red);--red-t:var(--r-red-text);
+  --line:rgba(255,235,215,.08);--line3:rgba(255,235,215,.12);--line4:rgba(255,235,215,.14);--serif:var(--r-serif);--sans:var(--r-sans);--mono:var(--r-mono);
+  display:flex;flex-direction:column;gap:28px;width:100%;max-width:1180px;margin:0 auto;min-width:0;color:var(--ink);font-family:var(--sans)}
+.wo *{box-sizing:border-box}
+.wo a{color:#FF9A52}.wo a:hover{color:#FFC08F}
+/* The app's global button look is reset (at zero specificity, so the app's own button classes
+   still apply); each part below styles its own. */
+:where(.wo) button{display:inline-flex;align-items:center;justify-content:center;min-height:0;width:auto;margin:0;padding:0;gap:0;border:0;border-radius:0;box-shadow:none;background:transparent;transition:none;filter:none;font:inherit;color:inherit;text-decoration:none}
+:where(.wo) button:hover{filter:none}
+:where(.wo) button:active{transform:none}
+.wo em{font-style:normal;color:var(--ember-t)}
+.wo ul{list-style:none;margin:0;padding:0}
+
+.wo .col{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+.wo .eyebrow{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.wo .eyebrow.ember{color:var(--ember-s)}
+.wo .eyebrow.lilac{color:var(--lilac-t)}
+.wo .eyebrow.mint{color:var(--mint-t)}
+.wo .head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.wo .title{margin:10px 0 0;font:400 clamp(40px,5vw,60px)/1 var(--serif);letter-spacing:-.02em}
+.wo .hbtns{display:flex;gap:10px;flex-wrap:wrap}
+.wo .ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:99px;background:rgba(255,240,225,.06);border:1px solid var(--line4);color:var(--ink) !important;font:500 14px var(--sans) !important;cursor:pointer;text-decoration:none}
+.wo .ghost:hover{background:rgba(255,240,225,.1)}
+.wo .ghost.ember{background:rgba(255,138,61,.12);border-color:rgba(255,170,110,.4);color:var(--ember-p) !important}
+.wo .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:0;border-radius:99px;background:linear-gradient(180deg,#FF9F58,#F06A2A);color:#1A0E08 !important;font:600 13.5px var(--sans) !important;box-shadow:0 8px 24px rgba(255,122,47,.25),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer;white-space:nowrap}
+.wo .soft{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:99px;background:rgba(255,240,225,.06);border:1px solid var(--line4);color:var(--ink) !important;font:500 13px var(--sans) !important;cursor:pointer;white-space:nowrap}
+.wo .soft.lilac{background:rgba(201,184,240,.1);border-color:rgba(201,184,240,.35);color:var(--lilac-t) !important}
+.wo .inbox{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 18px;border-radius:20px;background:linear-gradient(90deg,rgba(201,184,240,.1),rgba(201,184,240,.03));border:1px solid rgba(201,184,240,.22)}
+.wo .inbox .av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:500 12px var(--sans);color:var(--lilac-t);background:rgba(201,184,240,.14);border:1px solid rgba(201,184,240,.35)}
+.wo .inbox .tx{flex:1;min-width:0;font:400 14px/1.4 var(--sans);color:var(--ink2)}
+.wo .inbox .tx span{color:var(--muted)}
+.wo .sec{display:flex;flex-direction:column;gap:14px}
+.wo .sechead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px}
+.wo .sectitle{display:flex;align-items:baseline;gap:12px}
+.wo .sectitle h2{margin:0;font:400 26px/1.1 var(--serif)}
+.wo .sectitle span{font:400 13px var(--sans);color:var(--muted)}
+.wo .sort{display:flex;gap:4px;padding:4px;border-radius:99px;background:rgba(255,240,225,.04);border:1px solid var(--line)}
+.wo .sort button{height:36px;padding:0 14px;border:0;border-radius:99px;background:transparent;color:var(--text) !important;font:500 12.5px var(--sans) !important;cursor:pointer}
+.wo .sort .on{background:rgba(255,138,61,.16);color:var(--ember-p) !important;box-shadow:inset 0 0 0 1px rgba(255,138,61,.45)}
+.wo .prj{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.15fr) minmax(0,1fr);gap:28px;align-items:center;padding:22px 24px;border-radius:26px;background:linear-gradient(160deg,rgba(255,240,225,.05),rgba(255,240,225,.015));border:1px solid var(--line);transition:border-color .3s,background .3s}
+.wo .prj:hover{border-color:rgba(255,170,110,.3)}
+.wo .prj.active{background:radial-gradient(90% 120% at 0% 0%,rgba(255,138,61,.14),transparent 55%),linear-gradient(160deg,rgba(255,240,225,.06),rgba(255,240,225,.015));border-color:rgba(255,170,110,.22)}
+.wo .pst{display:flex;align-items:center;gap:8px;font:500 12px var(--sans);color:var(--muted)}
+.wo .pst i{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.wo .pst.active{color:var(--ember-s)}
+.wo .pst.active i{background:#FF8A3D;box-shadow:0 0 8px #FF8A3D}
+.wo .pst.genesis{color:var(--lilac-t)}
+.wo .pst.genesis i{background:#C9B8F0}
+.wo .pst.paused i{background:transparent;border:1.5px solid var(--muted)}
+.wo .pname{margin:8px 0 0;font:400 28px/1.05 var(--serif);letter-spacing:-.01em}
+.wo .ppurp{margin-top:6px;font:400 13px/1.45 var(--sans);color:var(--text)}
+.wo .where{display:flex;flex-direction:column;gap:8px;min-width:0}
+.wo .wk{font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.wo .wk b{font-weight:500;color:var(--ink2)}
+.wo .wn{font:500 15px/1.3 var(--sans);color:var(--ink)}
+.wo .wm{font:400 12.5px var(--sans);color:var(--muted)}
+.wo .hive{display:flex;align-items:center;gap:5px;margin-top:4px}
+.wo .hx{width:13px;height:15px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,235,215,.24);position:relative}
+.wo .hx::before{content:"";position:absolute;inset:1.3px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#140F0D}
+.wo .hx.d,.wo .hx.d::before{background:linear-gradient(180deg,#FFC08F,#F06A2A)}
+.wo .hx.a{background:#FF8A3D}
+.wo .hx.a::before{background:linear-gradient(180deg,#140F0D 50%,#FF8A3D 50%)}
+.wo .hx.g{background:rgba(201,184,240,.45)}
+.wo .hivelbl{margin-left:8px;font:500 11px var(--mono);color:var(--muted)}
+.wo .bar{display:block;height:3px;border-radius:99px;background:rgba(255,235,215,.09);overflow:hidden}
+.wo .bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#F06A2A,#FFB27A)}
+.wo .bar.lilac span{background:linear-gradient(90deg,#8E84A6,#D9CCF6)}
+.wo .nextbox{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:18px;background:rgba(0,0,0,.2);border:1px solid var(--line)}
+.wo .nk{font:500 10px var(--mono);letter-spacing:.12em;color:var(--ember-s)}
+.wo .nk.lilac{color:var(--lilac-t)}
+.wo .nt{font:400 18px/1.2 var(--serif);color:var(--ink)}
+.wo .nm{font:400 12px var(--sans);color:var(--muted)}
+.wo .nrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.wo .open{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--ember-t) !important;font:500 13.5px var(--sans);text-decoration:none}
+.wo .open:hover{color:var(--ember-p) !important}
+.wo .addrow{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 20px;border-radius:20px;border:1px dashed var(--line4);background:transparent;color:var(--muted) !important;font:500 13.5px var(--sans) !important;cursor:pointer;text-align:left}
+.wo .addrow:hover{border-color:rgba(255,170,110,.4);color:var(--ember-p) !important}
+.wo .lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.wo .lane{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:24px;background:linear-gradient(160deg,rgba(255,240,225,.04),rgba(255,240,225,.01));border:1px solid var(--line)}
+.wo .lhead{display:flex;align-items:baseline;gap:10px;padding:0 4px 4px}
+.wo .ldot{width:8px;height:8px;border-radius:50%;align-self:center}
+.wo .lname{font:500 16px var(--sans)}
+.wo .ldesc{font:400 12.5px var(--sans);color:var(--muted)}
+.wo .lcount{margin-left:auto;font:500 11px var(--mono);color:var(--muted)}
+.wo .task{display:flex;align-items:flex-start;gap:12px;padding:14px 14px 14px 16px;border-radius:18px;background:rgba(255,240,225,.03);border:1px solid rgba(255,235,215,.07);transition:border-color .25s}
+.wo .task:hover{border-color:rgba(255,235,215,.2)}
+.wo .tmain{flex:1;min-width:0}
+.wo .tt{font:500 14.5px/1.35 var(--sans);color:var(--ink)}
+.wo .tm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font:400 12px var(--sans);color:var(--muted)}
+.wo .pill{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:99px;font:500 11px var(--sans);border:1px solid}
+.wo .pill.p{color:var(--ember-p);border-color:rgba(255,138,61,.45);background:rgba(255,138,61,.1)}
+.wo .pill.r{color:var(--text);border-color:var(--line4)}
+.wo .play{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line4);background:rgba(255,240,225,.05);color:var(--ember-p) !important;display:grid;place-items:center;cursor:pointer}
+.wo .play:hover{background:rgba(255,138,61,.14);border-color:rgba(255,170,110,.4)}
+.wo .empty{padding:14px 16px;border-radius:16px;border:1px dashed var(--line4);font:400 13px var(--sans);color:var(--muted)}
+.wo .ladd{align-self:flex-start;min-height:44px;padding:0 4px;border:0;background:none;color:var(--muted) !important;font:500 13px var(--sans) !important;cursor:pointer}
+.wo .ladd:hover{color:var(--ember-p) !important}
+.wo .foot{font:400 12.5px var(--sans);color:var(--muted)}
+.wo .foot a{color:var(--ember-t)}
+.wo .prj:focus-within{border-color:rgba(255,170,110,.35)}
+@media (max-width: 1100px){.wo .prj{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.wo .prj .nextbox{grid-column:1 / -1}.wo .lanes{grid-template-columns:minmax(0,1fr)}}
+@media (max-width: 899px){.wo .prj{grid-template-columns:minmax(0,1fr);gap:16px}}
+
+/* App additions: a Blocked pill (the design drew In progress and Ready), whole task cards that open the task, the links under the loose lanes. */
+.wo .pill.b{color:var(--red-t);border-color:rgba(255,107,91,.45);background:rgba(255,107,91,.08)}
+.wo .topen{flex:1;min-width:0;display:block;padding:0;border:0;background:transparent;text-align:left;cursor:pointer}
+.wo .topen:hover .tt{color:var(--ember-p)}
+.wo .tt,.wo .tm{display:flex}
+.wo .tt{display:block}
+.wo .morelinks{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px}
+.wo .morelinks button{min-height:44px;color:var(--ember-t);font:500 12.5px var(--sans)}
+.wo .morelinks button:hover{color:var(--ember-p)}
+.wo .open{cursor:pointer}
+@media (prefers-reduced-motion: reduce){.wo *,.wo *::before,.wo *::after{animation:none !important;transition:none !important}}
+/* The whole row opens its project (or idea): one covering control under the content, with the
+   row's own action buttons raised above it so they still work on their own. */
+.wo .prj{position:relative;cursor:pointer}
+.wo .rowlink{position:absolute;inset:0;z-index:0;border-radius:26px}
+.wo .rowlink:focus-visible{outline:2px solid #FFC08F;outline-offset:2px}
+.wo .prj > :not(.rowlink){position:relative;z-index:1;pointer-events:none}
+.wo .prj .nrow button,.wo .prj .nrow a{pointer-events:auto}
+.wo .prj:hover .pname{color:var(--ember-p)}
