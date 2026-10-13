@@ -8,7 +8,7 @@ Proposed 9 October 2026.
 - focus runs as a **floating chip** by default;
 - assistant status changes **apply at once with an Undo**.
 
-**Phase 1 is built:** `tasks.setStatus`, the `taskEvents` history, Start / Done / Blocked anywhere in Work and on Today's focus card, and skills on finished tasks in the bloom. Phases 2–6 are next.
+**Phase 1 is built; Phase 2 (rethought, below) is built 12 October:** `tasks.setStatus`, the `taskEvents` history, Start / Done / Blocked anywhere in Work and on Today's focus card, and skills on finished tasks in the bloom. Phases 2–6 are next.
 
 ## Why
 
@@ -104,13 +104,29 @@ Approval: still the Inbox **(decide)**:
 | Phase | What | Size |
 |---|---|---|
 | 1 | `tasks.setStatus` with events; status menu in Work and the task sheet; Start / Done on Today without the timer; skills on tasks | Medium |
-| 2 | `taskEvents` timeline on the task sheet; Journey activity feed; week counting option A; migrating existing sessions into the feed | Medium |
+| 2 | `taskEvents` timeline on the task sheet; Journey activity feed; week counting option A; migrating existing sessions into the feed. **Rethought 12 October, see "Phase 2, rethought" below:** Journey tracks work, not focus | Medium–large |
 | 3 | Focus decoupled: optional task, floating chip, quick stop or stop-and-note, "Log work" | Medium–large |
 | 4 | Today's "In progress" section and the new card actions | Small–medium |
 | 5 | MCP: status tools, `get_activity`, `project_progress`, auto-apply with undo (if chosen) | Medium |
 | 6 | Project insights: tasks done per week, time in progress, milestone burn-up | Later |
 
+**10 October, part of Phase 3 done early (at the owner's request):** focus starts only when asked for. Build, Small piece, Write, a new project, Pick up here and Or choose from every Projects task all open Work, where you choose the task; the project page shows **Up next** (three open tasks, each with Start and no timer) instead of Plan it for tonight. The way into the check-in and timer is the **Focus session** tile on Today or a task's **Start a focus session**. Still ahead in Phase 3: an optional task, the floating chip and quick stop.
+
 Each phase keeps the app working and is testable alone. **Migration:** existing tasks keep their status; existing sessions stay sessions and appear as "focused" events. Nothing is deleted.
+
+## Phase 2, rethought: Journey tracks work, not focus (decided 12 October)
+
+**Why:** Journey counted only focus sessions. 50 finished tasks (moved by hand, by Claude Code, or backfilled from PLAN.md) showed nowhere, and the bloom stayed empty because they carried no skills. Focus is a tool you may use; it isn't what makes progress count.
+
+**Decisions (owner, 12 October, on the recommendations):**
+1. **The unit of progress is something moving forward**: a task finished, started or logged, a milestone or phase completed, wherever it happened (the app, an assistant through MCP, a backfilled plan). A focus session is one optional kind of entry that adds time.
+2. **Journey is a feed of what you did**, newest first and grouped by day: finished, started, blocked and logged tasks, focus sessions with their minutes, milestones and phases completed. Every entry names its source (you, the assistant, or "backfilled from your plan": recorded more than a day after it happened).
+3. **Week, streak and graph count days with progress** (option A from 9 October): a day counts when anything moved forward. The contribution graph weighs a finish above a start; days made only of backfilled work show lighter. **Weeks, the streak and the graph start from the week of your first activity** (backfilled work included), and the bloom's months from that month. Weeks before you first set a target are judged by that first target. The graph shows only the weeks since then, with bigger squares when there are few (owner, 12 October, replacing "from the week you joined", which itself revised "backfilled work counts toward past weeks").
+4. **The bloom grows from finished work.** A finished task's skills are its own, or else its milestone's, or else its phase's. Phases and milestones get skills (8 fixed ones), tagged in the app or by an assistant (`import_plan` and `add_phase` carry skills; re-sending a plan adds skills to phases and milestones that have none). Journey shows a tidy-up card while finished tasks have no skills, to tag them phase by phase. No guessing from the lane.
+5. **Time is enrichment, never the gate.** Sessions keep their minutes, recaps and the estimate and choice insights. A reminder isn't sent once anything moved forward that day, and Today's "Tonight is done" follows the last thing you finished today, from a session or not.
+6. **Later (6):** evidence links on finished tasks (an assistant can attach a commit or PR) becoming Proof drafts, and the weekly review opening with what you finished.
+
+**Built 12 October** (checks: 176 tests, typecheck, lint, build; Journey checked with example data through a stand-in client). **Build:** schema (`skills` on phases and milestones); `journey.feed` (taskEvents joined to tasks, projects and sessions, plus milestone and phase completions); `rhythm.overview` and `journey.activity` return work moments beside sessions; week counting by active days in `use-rhythm.ts` and `week.tsx`; bloom with inherited skills and an untagged count; skill chips on phase and milestone sheets and the tidy-up card; MCP skills; reminders and Today's done screen; tests and docs.
 
 ## What changes elsewhere
 

@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Becoming · Project list</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&amp;family=Geist:wght@300..700&amp;family=Geist+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0B0908}
+*{box-sizing:border-box}
+a{color:#FF9A52}a:hover{color:#FFC08F}
+.bx{--ink:#F4EDE6;--ink2:#E9DFD6;--text:#C9BDB2;--muted:#A99D93;--ember:#FF8A3D;--ember-t:#FF9A52;--ember-s:#FFB27A;--ember-p:#FFC08F;--mint:#86E3C3;--mint-t:#A6EDD4;--lilac:#C9B8F0;--lilac-t:#D9CCF6;--red:#FF6B5B;--red-t:#FFB4AA;--line:rgba(255,235,215,.08);--line3:rgba(255,235,215,.12);--line4:rgba(255,235,215,.14);--serif:'Bricolage Grotesque',system-ui,sans-serif;--sans:'Geist',system-ui,sans-serif;--mono:'Geist Mono',ui-monospace,monospace;
+  position:relative;display:flex;min-height:1800px;color:var(--ink);font-family:var(--sans);background:radial-gradient(90% 40% at 40% -6%,#3A2013 0%,#171110 50%,#0D0B0A 100%)}
+.bx button{font:inherit;color:inherit}
+.bx em{font-style:normal;color:var(--ember-t)}
+ul{list-style:none;margin:0;padding:0}
+
+/* rail */
+.rail{width:92px;flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 0;border-right:1px solid rgba(255,235,215,.07);position:relative;z-index:2}
+.orb-s{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFC08F,#F06A2A 60%,#7A2E0E);box-shadow:0 0 24px rgba(255,138,61,.45);margin-bottom:14px}
+.cap{width:52px;height:52px;border-radius:18px;border:1px solid rgba(255,170,110,.35);background:rgba(255,138,61,.12);color:#FFC08F !important;font:300 26px var(--sans) !important;display:grid;place-items:center;margin-bottom:12px;cursor:pointer;padding:0}
+.nav{width:72px;min-height:56px;padding:8px 0;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted) !important;cursor:pointer}
+.nav.cur{color:#FFC08F !important}
+.navbox{width:48px;height:36px;border-radius:14px;display:grid;place-items:center}
+.nav.cur .navbox{background:rgba(255,138,61,.16)}
+.navl{font:500 11px var(--sans)}
+.gl{display:inline-block;width:13px;height:13px;border:2px solid currentColor}
+.g-today{border-radius:50%}.g-work{border-radius:4px}.g-ideas{border-radius:2px;transform:rotate(45deg)}.g-journey{border-radius:50%;border-style:dashed}
+.avatar{margin-top:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#2A211D;border:1px solid var(--line4);font:500 14px var(--sans);color:var(--ink)}
+
+/* header */
+.main{flex:1;min-width:0;padding:24px 32px 64px;display:flex;flex-direction:column;gap:22px}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.tabs{display:flex;align-items:center;gap:6px}
+.eyebrow{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.eyebrow.ember{color:var(--ember-s)}.eyebrow.lilac{color:var(--lilac-t)}.eyebrow.mint{color:var(--mint-t)}.eyebrow.red{color:var(--red-t)}
+.tab{height:44px;padding:0 16px;border-radius:99px;border:1px solid transparent;background:transparent;color:var(--text) !important;font:500 13.5px var(--sans) !important;cursor:pointer}
+.tab.cur{background:rgba(255,240,225,.06);border-color:var(--line4);color:var(--ink) !important}
+.hright{display:flex;align-items:center;gap:10px}
+.example{font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--lilac-t);border:1px dashed rgba(201,184,240,.45);border-radius:99px;padding:6px 10px}
+.ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 16px;border-radius:99px;background:rgba(255,240,225,.06);border:1px solid var(--line4);color:var(--ink) !important;font:500 13.5px var(--sans) !important;cursor:pointer;text-decoration:none}
+.ghost:hover{background:rgba(255,240,225,.1)}
+.trow{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.title{margin:0;font:400 42px/1 var(--serif);letter-spacing:-.015em}
+.purpose{margin-top:10px;font:400 15px/1.45 var(--sans);color:var(--text)}
+.seg{display:flex;gap:4px;padding:4px;border-radius:99px;background:rgba(255,240,225,.04);border:1px solid var(--line)}
+.seg button,.seg a{height:38px;min-width:44px;padding:0 16px;border-radius:99px;border:0;background:transparent;color:var(--text) !important;font:500 13px var(--sans) !important;cursor:pointer;display:inline-flex;align-items:center;text-decoration:none}
+.seg .on{background:rgba(255,138,61,.16);color:var(--ember-p) !important;box-shadow:inset 0 0 0 1px rgba(255,138,61,.45)}
+.ladder{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.ladder b{font-weight:500;color:var(--ink2)}
+.ladder i{font-style:normal;color:rgba(255,235,215,.3)}
+.ladder span{font:400 12px var(--sans);letter-spacing:0;color:var(--muted)}
+
+/* cards */
+.card{border-radius:26px;padding:22px 24px;background:linear-gradient(160deg,rgba(255,240,225,.055),rgba(255,240,225,.02));border:1px solid var(--line)}
+.card.here{background:radial-gradient(110% 90% at 100% 0%,rgba(255,138,61,.2),transparent 60%),linear-gradient(160deg,rgba(255,240,225,.07),rgba(255,240,225,.02));border-color:rgba(255,170,110,.22)}
+.chead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.cnum{font:500 11px var(--mono);letter-spacing:.1em;color:var(--muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:0;border-radius:99px;background:linear-gradient(180deg,#FF9F58,#F06A2A);color:#1A0E08 !important;font:600 13.5px var(--sans) !important;box-shadow:0 8px 24px rgba(255,122,47,.25),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{color:#1A0E08}
+.soft{display:inline-flex;align-items:center;justify-content:center;height:40px;min-width:44px;padding:0 16px;border-radius:99px;background:rgba(255,240,225,.06);border:1px solid var(--line4);color:var(--ink) !important;font:500 13px var(--sans) !important;cursor:pointer;white-space:nowrap}
+.soft:hover{background:rgba(255,240,225,.1)}
+.soft.red{border-color:rgba(255,107,91,.45);color:var(--red-pale,#FFC4BB) !important;background:transparent}
+.link{border:0;background:none;padding:0;min-height:44px;display:inline-flex;align-items:center;gap:6px;color:var(--ember-t) !important;font:500 13px var(--sans) !important;cursor:pointer;text-decoration:none}
+.link:hover{color:var(--ember-p) !important}
+.bar{display:block;height:3px;border-radius:99px;background:rgba(255,235,215,.09);overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#F06A2A,#FFB27A)}
+.bar.mint span{background:linear-gradient(90deg,#4FBF98,#A6EDD4)}
+
+/* now */
+.now{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px}
+.htitle{margin:12px 0 0;font:400 34px/1.05 var(--serif);letter-spacing:-.01em}
+.goal{margin-top:10px;font:400 14.5px/1.5 var(--sans);color:var(--text);max-width:560px}
+.hstats{display:flex;align-items:center;gap:12px;margin-top:18px}
+.hstats b{display:inline-flex;align-items:center;gap:12px;font:500 14px/1.3 var(--sans);color:var(--ember-p)}
+.hstats b::after{content:"";width:4px;height:4px;border-radius:50%;background:rgba(255,235,215,.3)}
+.hstats span{font:400 14px/1.3 var(--sans);color:var(--text)}
+.steps{display:flex;align-items:stretch;gap:0;margin-top:20px}
+.stp{flex:1;min-width:0;position:relative;padding:12px 12px 12px 0}
+.stp::before{content:"";position:absolute;left:18px;right:0;top:21px;height:1px;background:rgba(255,235,215,.14)}
+.stp:last-child::before{display:none}
+.stp.done::before{background:rgba(134,227,195,.45)}
+.sdot{position:relative;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;border:1.5px solid rgba(255,235,215,.3);background:#140F0D}
+.stp.done .sdot{border-color:#86E3C3;background:#86E3C3}
+.stp.done .sdot::after{content:"";width:4px;height:8px;border:solid #10231C;border-width:0 1.8px 1.8px 0;transform:translate(0,-1px) rotate(45deg)}
+.stp.cur .sdot{border-color:#FF8A3D}
+.stp.cur .sdot::after{content:"";width:8px;height:8px;border-radius:50%;background:#FF8A3D;animation:pulse 3s ease-in-out infinite}
+.scode{margin-top:10px;font:500 10.5px var(--mono);letter-spacing:.1em;color:var(--muted)}
+.sname{margin-top:3px;font:500 13px/1.3 var(--sans);color:var(--ink2)}
+.sword{margin-top:3px;font:400 12px var(--sans);color:var(--muted)}
+.stp.cur .sname{color:var(--ink)}
+.stp.cur .sword{color:var(--ember-s)}
+.hfoot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.hfoot .small{font:400 12.5px var(--sans);color:var(--muted)}
+
+.next{display:flex;flex-direction:column}
+.nx{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.nx:last-of-type{border-bottom:0}
+.nxmain{flex:1;min-width:0}
+.nxt{font:400 19px/1.2 var(--serif);color:var(--ink)}
+.nx.first .nxt{font-size:22px}
+.nxm{margin-top:5px;font:400 12.5px/1.4 var(--sans);color:var(--muted)}
+.nxm b{font-weight:500;color:var(--ember-s)}
+.blocked{display:flex;gap:12px;align-items:center;margin-top:6px;padding:12px 14px;border-radius:16px;border:1px dashed rgba(255,107,91,.4);background:rgba(255,107,91,.05)}
+.blocked .tx{flex:1;min-width:0;font:400 12.5px/1.45 var(--sans);color:var(--text)}
+.blocked .tx b{font-weight:500;color:var(--red-t)}
+
+/* layout */
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.side{display:flex;flex-direction:column;gap:20px}
+
+/* phases */
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:12px;cursor:pointer;font:500 12.5px var(--sans) !important;background:rgba(255,240,225,.04);color:var(--text) !important;border:1px solid rgba(255,235,215,.1)}
+.chip:hover{border-color:rgba(255,170,110,.35)}
+.chip.on{background:rgba(255,138,61,.16);color:var(--ember-p) !important;border-color:rgba(255,138,61,.5)}
+.chip .c{font:500 10.5px var(--mono);color:var(--muted)}
+.spacer{flex:1}
+.focusbar{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px 10px 16px;border-radius:14px;background:rgba(201,184,240,.08);border:1px solid rgba(201,184,240,.25);font:400 13px var(--sans);color:var(--lilac-t);animation:rise .35s both}
+.focusbar .spacer{flex:1}
+.plist{display:flex;flex-direction:column;margin-top:18px}
+.phase{display:flex;gap:12px;transition:opacity .3s}
+.phase.dim{opacity:.38}
+.spine{position:relative;flex:none;width:24px}
+.spine::before{content:"";position:absolute;left:11.5px;top:0;bottom:0;width:1px;background:rgba(255,235,215,.12)}
+.phase.done .spine::before{background:rgba(255,154,82,.35)}
+.phase:first-child .spine::before{top:26px}
+.phase:last-child .spine::before{bottom:auto;height:26px}
+.node{position:absolute;left:5px;top:19px;width:14px;height:16px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,235,215,.32)}
+.node::before{content:"";position:absolute;inset:1.5px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#140F0D}
+.node.done,.node.done::before{background:linear-gradient(180deg,#FFC08F,#F06A2A)}
+.node.active{background:#FF8A3D}
+.node.active::before{background:linear-gradient(180deg,#140F0D 50%,#FF8A3D 50%)}
+.nring{position:absolute;left:-1px;top:14px;width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,138,61,.55);animation:pulse 3s ease-in-out infinite}
+.pcol{flex:1;min-width:0;margin:4px 0;border-radius:18px;transition:background .3s,box-shadow .3s}
+.phase.open .pcol,.phase.now .pcol{background:linear-gradient(160deg,rgba(255,138,61,.1),rgba(255,138,61,.025) 45%,rgba(255,240,225,.015));box-shadow:inset 0 0 0 1px rgba(255,138,61,.24)}
+.phase.fed .pcol{box-shadow:inset 0 0 0 1px rgba(201,184,240,.45)}
+.phead{display:block;width:100%;padding:12px 16px;border:0;border-radius:18px;background:transparent;text-align:left;cursor:pointer;transition:background .25s}
+.phead:hover{background:rgba(255,240,225,.035)}
+.phase.open .phead:hover,.phase.now .phead:hover{background:rgba(255,240,225,.025)}
+.ptop{display:flex;align-items:center;gap:10px;min-height:24px}
+.pnum{flex:none;width:22px;font:500 11px var(--mono);color:var(--muted)}
+.pname{min-width:0;font:500 15.5px/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phase.done .pname{color:var(--text)}
+.nowtag{flex:none;font:600 9.5px/1 var(--mono);letter-spacing:.14em;color:#1A0E08;padding:5px 8px;border-radius:99px;background:linear-gradient(180deg,#FFB27A,#F06A2A)}
+.fedtag{flex:none;font:500 9.5px/1 var(--mono);letter-spacing:.12em;color:var(--lilac-t);padding:4px 8px;border-radius:99px;border:1px solid rgba(201,184,240,.4)}
+.pstatus{flex:none;margin-left:auto;font:500 12px var(--sans);white-space:nowrap;color:var(--muted)}
+.pstatus.done{color:var(--mint-t)}.pstatus.active{color:var(--ember-p)}
+.chev{flex:none;width:16px;height:16px;color:var(--muted);transition:transform .3s}
+.open .phead .chev,.ms.open > .mhead .chev{transform:rotate(180deg)}
+.pgoal{display:block;margin:6px 0 0 32px;font:400 13px/1.5 var(--sans);color:var(--text);max-width:620px}
+.pbarrow{display:flex;align-items:center;gap:14px;margin:12px 0 2px 32px}
+.pbarrow .bar{flex:0 1 360px}
+.pbarrow .t{font:400 12px var(--sans);color:var(--muted);white-space:nowrap}
+.pbody{padding:14px 16px 12px 48px;animation:rise .35s both}
+.pinfo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pin{padding:12px 14px;border-radius:14px;border:1px dashed rgba(255,235,215,.18)}
+.pin .k{font:500 10px var(--mono);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.pin .k.ember{color:var(--ember-s)}
+.pin .v{margin-top:4px;font:400 13px/1.45 var(--sans);color:var(--ink2)}
+.built{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px}
+.built .k{font:500 10px var(--mono);letter-spacing:.12em;color:var(--muted);margin-right:4px}
+.dchip{display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:9px;font:500 10.5px var(--mono);color:var(--lilac-t);background:rgba(201,184,240,.08);border:1px solid rgba(201,184,240,.25)}
+.mlist{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.ms{border-radius:16px;border:1px solid var(--line);background:rgba(10,8,7,.3)}
+.ms.open{border-color:var(--line3)}
+.mhead{display:flex;width:100%;align-items:center;gap:14px;min-height:56px;padding:8px 14px;border:0;background:transparent;text-align:left;cursor:pointer;border-radius:16px}
+.mhead:hover{background:rgba(255,240,225,.03)}
+.mcode{flex:none;display:inline-block;font:500 11px/1 var(--mono);letter-spacing:.06em;padding:6px 8px;border-radius:8px;color:var(--muted);border:1px solid var(--line4)}
+.mcode.done{color:var(--mint-t);border-color:rgba(134,227,195,.35)}
+.mcode.active{color:var(--ember-p);border-color:rgba(255,138,61,.45)}
+.mname{display:block;flex:1;min-width:0;font:500 14px var(--sans);color:var(--ink2)}
+.mprog{flex:none;display:flex;flex-direction:column;gap:6px;width:150px}
+.mprog .t{display:block;font:400 11.5px var(--sans);color:var(--muted)}
+.tasks{padding:0 12px 8px}
+.task{display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 4px;border-top:1px solid var(--line)}
+.tg{flex:none;width:14px;height:16px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,235,215,.28);position:relative}
+.tg::before{content:"";position:absolute;inset:1.4px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#140F0D}
+.tg.d,.tg.d::before{background:linear-gradient(180deg,#FFC08F,#F06A2A)}
+.tg.p{background:#FF8A3D;animation:pulse 3s ease-in-out infinite}
+.tg.p::before{background:linear-gradient(180deg,#140F0D 50%,#FF8A3D 50%)}
+.tg.b{background:#FF6B5B}
+.tg.b::before{background:radial-gradient(circle,#FF6B5B 28%,#140F0D 32%)}
+.tbody{flex:1;min-width:0}
+.tt{font:500 14px/1.3 var(--sans);color:var(--ink)}
+.task.d .tt{color:var(--text)}
+.tm{margin-top:3px;font:400 12px var(--sans);color:var(--muted)}
+.tm b{font-weight:500;color:var(--ember-s)}
+.tm b.red{color:var(--red-t)}
+.pill{flex:none;display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:99px;font:500 11.5px var(--sans);border:1px solid;white-space:nowrap}
+.pill.d{color:var(--mint-t);border-color:rgba(134,227,195,.35);background:rgba(134,227,195,.08)}
+.pill.p{color:var(--ember-p);border-color:rgba(255,138,61,.45);background:rgba(255,138,61,.1)}
+.pill.r{color:var(--text);border-color:var(--line4)}
+.pill.b{color:var(--red-t);border-color:rgba(255,107,91,.45);background:rgba(255,107,91,.08)}
+.act{flex:none;width:104px;display:flex;justify-content:flex-end}
+.add{border:0;background:none;min-height:44px;padding:0 4px;color:var(--ember-t) !important;font:500 13px var(--sans) !important;cursor:pointer;text-align:left;align-self:flex-start}
+.add:hover{color:var(--ember-p) !important}
+.empty{padding:18px;margin-top:12px;border-radius:16px;border:1px dashed var(--line4);font:400 13px var(--sans);color:var(--muted)}
+
+/* side */
+.gsteps{display:flex;flex-direction:column;margin-top:14px;position:relative}
+.gs{position:relative;display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:12px;align-items:start;padding:9px 0}
+.gs::before{content:"";position:absolute;left:10.5px;top:30px;bottom:-6px;width:1px;background:rgba(201,184,240,.25)}
+.gs:last-child::before{display:none}
+.gi{width:22px;height:22px;display:grid;place-items:center;border-radius:7px;background:rgba(201,184,240,.06)}
+.gi i{display:block;width:10px;height:10px;border-radius:2px;transform:rotate(45deg);background:#C9B8F0}
+.gi i.o{border-radius:50%;transform:none;background:transparent;border:1.5px solid #C9B8F0}
+.gi i.doc{width:10px;height:12px;border-radius:2px;transform:none;background:transparent;border:1.5px solid #C9B8F0}
+.gi i.mint{background:#86E3C3}
+.gi i.ember{width:12px;height:12px;border-radius:50%;transform:none;background:radial-gradient(circle at 35% 30%,#FFE1C4,#F06A2A 70%)}
+.gn{font:500 13px var(--sans);color:var(--ink2)}
+.gd{margin-top:2px;font:400 12px var(--sans);color:var(--muted)}
+.gw{font:500 10px var(--mono);letter-spacing:.08em;color:var(--muted);padding-top:3px}
+.docs{display:flex;flex-direction:column;margin-top:10px}
+.doc{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;min-height:60px;padding:8px 8px;border:0;border-top:1px solid var(--line);background:transparent;text-align:left;cursor:pointer;border-radius:12px}
+.doc:first-child{border-top:0}
+.doc:hover{background:rgba(255,240,225,.03)}
+.doc.on{background:rgba(201,184,240,.08)}
+.code{width:44px;height:32px;border-radius:9px;display:grid;place-items:center;font:500 10.5px var(--mono);color:var(--text);background:rgba(255,240,225,.04);border:1px solid rgba(255,235,215,.16)}
+.doc.on .code{color:var(--lilac-t);border-color:rgba(201,184,240,.5)}
+.dn{font:500 13.5px var(--sans);color:var(--ink)}
+.dm{margin-top:2px;font:400 11.5px var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.darrow{font:400 14px var(--sans);color:var(--muted)}
+.feed{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.fi{display:flex;gap:10px;align-items:flex-start}
+.fav{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:500 11px var(--sans);background:#2A211D;border:1px solid var(--line4)}
+.fav.ai{background:rgba(201,184,240,.14);border-color:rgba(201,184,240,.35);color:var(--lilac-t)}
+.ftxt{font:400 12.5px/1.4 var(--sans);color:var(--ink2)}
+.fwho{color:var(--ink);font-weight:500}
+.mcp{font:500 9px var(--mono);letter-spacing:.1em;color:var(--lilac-t);border:1px solid rgba(201,184,240,.35);border-radius:6px;padding:1px 5px;margin-left:4px}
+.fwhen{display:block;font:400 11px var(--mono);color:var(--muted);margin-top:2px}
+
+/* clickable task rows */
+.topen{display:flex;flex:1;min-width:0;align-items:center;gap:12px;min-height:44px;padding:4px 8px 4px 4px;margin-left:-4px;border:0;border-radius:12px;background:transparent;text-align:left;cursor:pointer}
+.topen:hover{background:rgba(255,240,225,.04)}
+.topen:hover .tt{color:var(--ember-p)}
+.tt,.tm{display:block}
+.nxopen{flex:1;min-width:0;display:block;padding:4px 8px;margin-left:-8px;border:0;border-radius:12px;background:transparent;text-align:left;cursor:pointer}
+.nxopen:hover{background:rgba(255,240,225,.04)}
+.nxopen .nxt,.nxopen .nxm{display:block}
+
+/* task modal */
+.scrim{position:fixed;inset:0;z-index:20;border:0;padding:0;background:rgba(8,6,5,.66);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:default;animation:fade .25s both}
+.modal{position:fixed;left:50%;top:50%;z-index:21;width:min(580px,calc(100vw - 32px));max-height:min(760px,calc(100vh - 48px));overflow-y:auto;scrollbar-width:none;transform:translate(-50%,-50%);border-radius:28px;padding:24px 26px 22px;background:radial-gradient(110% 70% at 100% 0%,rgba(255,138,61,.16),transparent 60%),linear-gradient(170deg,#241A15,#151010 60%);border:1px solid rgba(255,170,110,.22);box-shadow:0 30px 80px rgba(0,0,0,.6);animation:pop .35s cubic-bezier(.22,1,.36,1) both}
+.modal::-webkit-scrollbar{display:none}
+.mtop{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.mcrumb{font:500 10.5px/1.6 var(--mono);letter-spacing:.12em;color:var(--ember-s);text-transform:uppercase}
+.mcrumb span{color:var(--muted)}
+.xbtn{flex:none;width:44px;height:44px;margin:-8px -10px 0 0;border-radius:50%;border:1px solid var(--line3);background:rgba(255,240,225,.04);color:var(--text) !important;display:grid;place-items:center;cursor:pointer}
+.xbtn:hover{color:var(--ink) !important;background:rgba(255,240,225,.08)}
+.mtitle{margin:8px 0 0;font:400 30px/1.1 var(--serif);letter-spacing:-.01em}
+.mfacts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}
+.fact{font:500 11px var(--mono);color:var(--muted);padding:5px 9px;border-radius:8px;background:rgba(255,240,225,.05)}
+.msec{margin-top:18px}
+.msec .k{font:500 10px var(--mono);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.msec .k.ember{color:var(--ember-s)}.msec .k.red{color:var(--red-t)}
+.mbox{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.mbox .pin .v{font-size:13.5px}
+.evs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ev{width:16px;height:18.4px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,235,215,.16);position:relative}
+.ev::before{content:"";position:absolute;inset:1.4px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#140F0D}
+.ev.on,.ev.on::before{background:linear-gradient(180deg,#FFB27A,#F06A2A)}
+.mchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.skill{display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:9px;font:500 11.5px var(--sans);color:var(--mint-t);background:rgba(134,227,195,.07);border:1px solid rgba(134,227,195,.25)}
+.tl{position:relative;display:flex;flex-direction:column;gap:12px;margin-top:12px;padding-left:20px}
+.tl::before{content:"";position:absolute;left:4px;top:6px;bottom:6px;width:1px;background:linear-gradient(180deg,rgba(255,170,110,.55),rgba(255,235,215,.08))}
+.te{position:relative}
+.te::before{content:"";position:absolute;left:-20px;top:4px;width:9px;height:9px;border-radius:50%;background:#140F0D;border:1.5px solid #FFB27A}
+.te.ai::before{border-color:#C9B8F0}
+.te.blk::before{border-color:#FF6B5B}
+.tek{font:500 10px var(--mono);letter-spacing:.12em;color:var(--ember-s)}
+.te.ai .tek{color:var(--lilac-t)}.te.blk .tek{color:var(--red-t)}
+.tet{margin-top:2px;font:400 13px/1.4 var(--sans);color:var(--ink2)}
+.tew{font:400 11px var(--mono);color:var(--muted)}
+.mfoot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.mfoot .spacer{flex:1}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%)}}
+
+.phead:focus-visible,.topen:focus-visible,.nxopen:focus-visible,.xbtn:focus-visible,.mhead:focus-visible,.doc:focus-visible,.chip:focus-visible{outline:2px solid #FFC08F;outline-offset:2px}
+.still *,.still *::before,.still *::after{animation:none !important}
+@media (prefers-reduced-motion: reduce){.bx *,.bx *::before,.bx *::after{animation:none !important;transition:none !important}}
+@media (max-width: 1100px){.wrap{grid-template-columns:minmax(0,1fr)}.now{grid-template-columns:minmax(0,1fr)}}
+@media (max-width: 899px){.rail{display:none}.main{padding:20px 16px 48px}.title{font-size:32px}.pbody{padding:0 12px 14px}.pinfo{grid-template-columns:minmax(0,1fr)}.mhead{grid-template-columns:auto minmax(0,1fr) auto}.mprog{display:none}.steps{flex-direction:column}.stp::before{display:none}.task{grid-template-columns:20px minmax(0,1fr) auto}.act{display:none}}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div class="bx {{rootCls}}">
+  <nav class="rail" aria-label="Sections">
+    <span class="orb-s" aria-hidden="true"></span>
+    <button class="cap" aria-label="Quick capture">+</button>
+    <button class="nav"><span class="navbox"><span class="gl g-today"></span></span><span class="navl">Today</span></button>
+    <button class="nav cur" aria-current="page"><span class="navbox"><span class="gl g-work"></span></span><span class="navl">Work</span></button>
+    <button class="nav"><span class="navbox"><span class="gl g-ideas"></span></span><span class="navl">Ideas</span></button>
+    <button class="nav"><span class="navbox"><span class="gl g-journey"></span></span><span class="navl">Journey</span></button>
+    <span class="avatar" aria-label="Settings">V</span>
+  </nav>
+
+  <main class="main">
+    <header style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="hrow">
+        <div class="tabs">
+          <a class="tab" href="Work.dc.html" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none;"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7.5 2.5L4 6l3.5 3.5"></path></svg>Work</a>
+          <span class="eyebrow" style="margin-left: 4px;">Projects · Becoming</span>
+        </div>
+        <div class="hright">
+          <span class="example">EXAMPLE DATA</span>
+          <button class="ghost">+ New project</button>
+        </div>
+      </div>
+      <div class="trow">
+        <div>
+          <div class="eyebrow ember"><span style="width: 7px; height: 7px; border-radius: 50%; background: #FF8A3D; display: inline-block;"></span>Projects lane · active</div>
+          <h1 class="title" style="margin-top: 10px;">Becoming, <em>taking form</em></h1>
+          <div class="purpose">An evening practice that turns small sessions into visible progress.</div>
+        </div>
+        <div class="seg" aria-label="Projects view">
+          <button class="on" aria-pressed="true">List</button>
+          <a href="Main.dc.html">Visual</a>
+        </div>
+      </div>
+      <div class="ladder" aria-label="How a project is organised">
+        <b>PHASE</b><span>a stage, weeks</span><i>→</i><b>MILESTONE</b><span>an outcome, a few sessions</span><i>→</i><b>TASK</b><span>one evening or less</span>
+      </div>
+    </header>
+
+    <section class="now" aria-label="Where you are">
+      <div class="card here">
+        <div class="chead">
+          <div class="eyebrow ember">You are here · Phase {{H.num}} of 08</div>
+          <a class="link" href="Main.dc.html">See it on the map ›</a>
+        </div>
+        <h2 class="htitle">{{H.name}}</h2>
+        <div class="goal">{{H.goal}}</div>
+        <div class="hstats"><b>{{H.pct}}%</b><span>{{H.pd}} of {{H.n}} tasks done in this phase</span></div>
+        <div class="steps" aria-label="Milestones in this phase">
+          <sc-for list="{{H.steps}}" as="s" hint-placeholder-count="3">
+            <div class="stp {{s.cls}}">
+              <span class="sdot"></span>
+              <div class="scode">{{s.code}}</div>
+              <div class="sname">{{s.name}}</div>
+              <div class="sword">{{s.word}}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div class="hfoot">
+          <span class="small">Project: {{proj.pct}}% formed · {{proj.done}} of {{proj.total}} tasks · {{proj.phDone}} of 8 phases done</span>
+          <button class="link" onClick="{{openHere}}">Show this phase ↓</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chead">
+          <div class="eyebrow ember">Up next · pick one</div>
+          <span class="cnum">FROM 5C · TWO-WEEK TRIAL</span>
+        </div>
+        <div class="next" style="margin-top: 6px;">
+          <sc-for list="{{upNext}}" as="u" hint-placeholder-count="3">
+            <div class="nx {{u.cls}}">
+              <button class="nxopen" onClick="{{u.openIt}}" aria-haspopup="dialog">
+                <span class="nxt">{{u.t}}</span>
+                <span class="nxm"><b>{{u.word}}</b> · {{u.meta}}</span>
+              </button>
+              <button class="{{u.btnCls}}">{{u.action}}</button>
+            </div>
+          </sc-for>
+        </div>
+        <div class="blocked">
+          <div class="tx"><b>1 blocked:</b> Push reminders on iOS is waiting on a test device.</div>
+          <button class="soft red">Unblock</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="wrap">
+      <section class="card" aria-label="Phases">
+        <div class="chead">
+          <div>
+            <div class="eyebrow">Phases</div>
+            <div style="margin-top: 6px; font: 400 13px var(--sans); color: var(--muted);">{{proj.phDone}} of 8 done · open one to see its milestones, then its tasks</div>
+          </div>
+          <button class="soft" onClick="{{toggleAll}}">{{allLabel}}</button>
+        </div>
+        <div class="toolbar" role="group" aria-label="Show tasks">
+          <sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+            <button class="chip {{f.cls}}" onClick="{{f.pick}}" aria-pressed="{{f.on}}">{{f.label}} <span class="c">{{f.n}}</span></button>
+          </sc-for>
+        </div>
+        <sc-if value="{{docFocus.on}}" hint-placeholder-val="{{false}}">
+          <div class="focusbar"><span>Showing the phases <b>{{docFocus.name}}</b> feeds</span><span class="spacer"></span><button class="soft" onClick="{{docFocus.clear}}">Clear</button></div>
+        </sc-if>
+
+        <div class="plist">
+          <sc-for list="{{phases}}" as="p" hint-placeholder-count="8">
+            <div class="phase {{p.cls}}">
+              <div class="spine" aria-hidden="true">
+                <sc-if value="{{p.isNow}}" hint-placeholder-val="{{false}}"><span class="nring"></span></sc-if>
+                <span class="node {{p.state}}"></span>
+              </div>
+              <div class="pcol">
+              <button class="phead" onClick="{{p.toggle}}" aria-expanded="{{p.exp}}">
+                <span class="ptop">
+                  <span class="pnum">{{p.num}}</span>
+                  <span class="pname">{{p.name}}</span>
+                  <sc-if value="{{p.isNow}}" hint-placeholder-val="{{false}}"><span class="nowtag">NOW</span></sc-if>
+                  <sc-if value="{{p.isFed}}" hint-placeholder-val="{{false}}"><span class="fedtag">{{p.fedLabel}}</span></sc-if>
+                  <span class="pstatus {{p.state}}">{{p.status}}</span>
+                  <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 6l4 4 4-4"></path></svg>
+                </span>
+                <sc-if value="{{p.showGoal}}" hint-placeholder-val="{{true}}"><span class="pgoal">{{p.goal}}</span></sc-if>
+                <sc-if value="{{p.showBar}}" hint-placeholder-val="{{false}}">
+                  <span class="pbarrow"><span class="bar {{p.barCls}}"><span style="width: {{p.pct}}%;"></span></span><span class="t">{{p.meta}}</span></span>
+                </sc-if>
+              </button>
+
+              <sc-if value="{{p.open}}" hint-placeholder-val="{{false}}">
+                <div class="pbody">
+                  <div class="pinfo">
+                    <div class="pin"><div class="k ember">{{p.nextK}}</div><div class="v">{{p.next}}</div></div>
+                    <div class="pin"><div class="k">{{p.doneK}}</div><div class="v">{{p.done}}</div></div>
+                  </div>
+                  <div class="built"><span class="k">BUILT FROM</span>
+                    <sc-for list="{{p.docs}}" as="c" hint-placeholder-count="3"><span class="dchip">{{c.k}}</span></sc-for>
+                  </div>
+                  <div class="mlist">
+                    <sc-for list="{{p.ms}}" as="m" hint-placeholder-count="3">
+                      <div class="ms {{m.cls}}">
+                        <button class="mhead" onClick="{{m.toggle}}" aria-expanded="{{m.exp}}">
+                          <span class="mcode {{m.state}}">{{m.code}}</span>
+                          <span class="mname">{{m.name}}</span>
+                          <span class="mprog"><span class="t">{{m.word}}</span><span class="bar {{m.barCls}}"><span style="width: {{m.pct}}%;"></span></span></span>
+                          <svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 6l4 4 4-4"></path></svg>
+                        </button>
+                        <sc-if value="{{m.open}}" hint-placeholder-val="{{false}}">
+                          <div class="tasks">
+                            <sc-for list="{{m.tasks}}" as="t" hint-placeholder-count="3">
+                              <div class="task {{t.st}}">
+                                <button class="topen" onClick="{{t.openIt}}" aria-haspopup="dialog">
+                                  <span class="tg {{t.st}}" aria-hidden="true"></span>
+                                  <span class="tbody">
+                                    <span class="tt">{{t.t}}</span>
+                                    <span class="tm">{{t.meta}}<sc-if value="{{t.hasNote}}" hint-placeholder-val="{{false}}"> · <b class="{{t.noteCls}}">{{t.note}}</b></sc-if></span>
+                                  </span>
+                                </button>
+                                <span class="pill {{t.st}}">{{t.word}}</span>
+                                <span class="act"><sc-if value="{{t.hasAct}}" hint-placeholder-val="{{false}}"><button class="soft">{{t.act}}</button></sc-if></span>
+                              </div>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                    <button class="add">{{p.addLabel}}</button>
+                  </div>
+                </div>
+              </sc-if>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="empty">Nothing matches this filter.</div></sc-if>
+        </div>
+        <button class="add" style="margin-top: 10px;">+ Add phase</button>
+      </section>
+
+      <aside class="side">
+        <section class="card" aria-label="Docs">
+          <div class="chead"><div class="eyebrow lilac">Built from · 6 docs</div><span class="cnum">ALL WRITTEN</span></div>
+          <div style="margin-top: 6px; font: 400 12.5px/1.45 var(--sans); color: var(--muted);">Pick a doc to see which phases it feeds.</div>
+          <div class="docs">
+            <sc-for list="{{docs}}" as="d" hint-placeholder-count="6">
+              <button class="doc {{d.cls}}" onClick="{{d.pick}}" aria-pressed="{{d.on}}">
+                <span class="code">{{d.code}}</span>
+                <span style="min-width: 0;"><span class="dn" style="display: block;">{{d.name}}</span><span class="dm" style="display: block;">Feeds {{d.feeds}}</span></span>
+                <span class="darrow">›</span>
+              </button>
+            </sc-for>
+          </div>
+        </section>
+
+        <section class="card" aria-label="Genesis">
+          <div class="chead"><div class="eyebrow lilac">Where it came from</div><a class="link" href="Main.dc.html">Genesis ›</a></div>
+          <div class="gsteps">
+            <div class="gs"><span class="gi" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M8 2.5L13.5 8 8 13.5 2.5 8z" fill="#C9B8F0"></path></svg></span><div><div class="gn">Idea · An evening practice</div><div class="gd">Quick capture</div></div><span class="gw">15 SEP</span></div>
+            <div class="gs"><span class="gi" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="#C9B8F0"><circle cx="3" cy="4" r="1.6"></circle><circle cx="8" cy="4" r="1.6"></circle><circle cx="13" cy="4" r="1.6"></circle><circle cx="5.5" cy="8.5" r="1.6"></circle><circle cx="10.5" cy="8.5" r="1.6"></circle><circle cx="8" cy="13" r="1.6" fill="#F1EBFF"></circle></svg></span><div><div class="gn">Research · 3 threads</div><div class="gd">11 sources, 2 briefs by Claude</div></div><span class="gw">15–16</span></div>
+            <div class="gs"><span class="gi" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C9B8F0" stroke-width="1.3"><path d="M4 1.8h5.5L12.5 4.8v9.4H4z"></path><path d="M6 7.5h4.5M6 10h4.5M6 12.3h3"></path></svg></span><div><div class="gn">Report · Why evenings fail</div><div class="gd">4 findings</div></div><span class="gw">16 SEP</span></div>
+            <div class="gs"><span class="gi" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.2" stroke="#86E3C3" stroke-width="1.3"></circle><path d="M5.2 8.2l2 2 3.8-4" stroke="#A6EDD4" stroke-width="1.5"></path></svg></span><div><div class="gn">Decision · Build it</div><div class="gd">Honest data only</div></div><span class="gw">22:30</span></div>
+            <div class="gs"><span class="gi" aria-hidden="true"><span style="display: block; width: 13px; height: 13px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFE1C4, #F06A2A 70%); box-shadow: 0 0 10px rgba(255,138,61,.5);"></span></span><div><div class="gn">Project · Becoming</div><div class="gd">Then the docs, then the plan</div></div><span class="gw">23:10</span></div>
+          </div>
+        </section>
+
+        <section class="card" aria-label="Activity">
+          <div class="chead"><div class="eyebrow">Activity</div><span class="cnum">2 IN INBOX</span></div>
+          <div class="feed">
+            <div class="fi"><span class="fav ai">C</span><div class="ftxt"><span class="fwho">Claude Code</span><span class="mcp">MCP</span> logged 45 min on 5C·1. Waiting in Inbox<span class="fwhen">2h ago</span></div></div>
+            <div class="fi"><span class="fav ai">C</span><div class="ftxt"><span class="fwho">Claude Code</span><span class="mcp">MCP</span> proposed 3 tasks for 6A. Waiting in Inbox<span class="fwhen">3h ago</span></div></div>
+            <div class="fi"><span class="fav">V</span><div class="ftxt"><span class="fwho">You</span> marked “Restore into an empty workspace” done<span class="fwhen">yesterday</span></div></div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <sc-if value="{{M.on}}" hint-placeholder-val="{{false}}">
+    <button class="scrim" onClick="{{M.close}}" aria-label="Close task"></button>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="task-title">
+      <div class="mtop">
+        <div class="mcrumb">Task {{M.id}} <span>· Phase {{M.phNum}} {{M.phName}} › {{M.msCode}} {{M.msName}}</span></div>
+        <button class="xbtn" onClick="{{M.close}}" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l8 8M11 3l-8 8"></path></svg></button>
+      </div>
+      <h2 class="mtitle" id="task-title">{{M.t}}</h2>
+      <div class="mfacts">
+        <span class="pill {{M.st}}">{{M.word}}</span>
+        <span class="fact">{{M.min}} MIN</span>
+        <span class="fact">PROJECTS LANE</span>
+        <sc-if value="{{M.hasWhen}}" hint-placeholder-val="{{false}}"><span class="fact">{{M.when}}</span></sc-if>
+      </div>
+
+      <sc-if value="{{M.hasBox}}" hint-placeholder-val="{{true}}">
+        <div class="mbox">
+          <div class="pin"><div class="k {{M.nextCls}}">{{M.nextK}}</div><div class="v">{{M.next}}</div></div>
+          <div class="pin"><div class="k">Done when</div><div class="v">{{M.done}}</div></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{M.hasSessions}}" hint-placeholder-val="{{false}}">
+        <div class="msec">
+          <div class="k">Sessions · {{M.n}} of {{M.of}}</div>
+          <div class="evs" aria-label="{{M.n}} of {{M.of}} sessions">
+            <sc-for list="{{M.evs}}" as="e" hint-placeholder-count="10"><span class="ev {{e.cls}}"></span></sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <div class="msec">
+        <div class="k">Built from</div>
+        <div class="mchips">
+          <sc-for list="{{M.docs}}" as="c" hint-placeholder-count="3"><span class="dchip">{{c.k}}</span></sc-for>
+          <sc-for list="{{M.skills}}" as="k" hint-placeholder-count="2"><span class="skill">{{k.k}}</span></sc-for>
+        </div>
+      </div>
+
+      <div class="msec">
+        <div class="k">Timeline</div>
+        <div class="tl">
+          <sc-for list="{{M.events}}" as="e" hint-placeholder-count="2">
+            <div class="te {{e.cls}}"><div class="tek">{{e.k}}<sc-if value="{{e.ai}}" hint-placeholder-val="{{false}}"><span class="mcp">MCP</span></sc-if></div><div class="tet">{{e.t}}</div><div class="tew">{{e.w}}</div></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div class="mfoot">
+        <sc-if value="{{M.hasPrimary}}" hint-placeholder-val="{{true}}"><button class="btn">{{M.primary}}</button></sc-if>
+        <sc-if value="{{M.canDone}}" hint-placeholder-val="{{true}}"><button class="soft">Mark done</button></sc-if>
+        <span class="spacer"></span>
+        <a class="link" href="Main.dc.html">See it on the map ›</a>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"motion":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1800}}'>
+class Component extends DCLogic {
+  data() {
+    if (this._d) return this._d;
+    const mk = (code, name, rows) => ({ code, name, tasks: rows.map((r, i) => ({ id: code + '·' + (i + 1), t: r[0], st: r[1], min: r[2] })) });
+    const P = [
+      { num: '00', name: 'Foundation', goal: 'An independent app you own end to end.', next: 'Delivered a repo that stands on its own, and tokens you own.', done: 'Closed 16 Sep.',
+        ms: [mk('0A', 'Repo & tooling', [['Create the Next.js app', 'd', 45], ['Lint, types and tests', 'd', 60], ['One check command', 'd', 30]]),
+          mk('0B', 'Visual ownership', [['Own the tokens', 'd', 60], ['Fonts and type scale', 'd', 45], ['First screen in your look', 'd', 90]])] },
+      { num: '01', name: 'A useful evening', goal: 'One evening, start to finish, saved in the browser.', next: 'Delivered one whole evening, start to finish, saved locally.', done: 'Closed 18 Sep.',
+        ms: [mk('1A', 'Today, locally', [['Opening question', 'd', 45], ['Ten-second check-in', 'd', 60], ['One clear focus', 'd', 90], ['Save in the browser', 'd', 45]]),
+          mk('1B', 'Focus & recap', [['Focus orb and timer', 'd', 60], ['Recap with outcome', 'd', 60], ['Week dots', 'd', 30], ['Local history', 'd', 45]])] },
+      { num: '02', name: 'Convex, flow by flow', goal: 'Every flow saved privately in Convex, one at a time.', next: 'Delivered every screen reading and writing your own records.', done: 'Closed 23 Sep.',
+        ms: [mk('2A', 'Backend & identity', [['Pick Convex', 'd', 45], ['Identity decision', 'd', 30]]),
+          mk('2B', 'Sign-in', [['Connect Convex', 'd', 60], ['Better Auth sign-in', 'd', 90], ['Private records', 'd', 60]]),
+          mk('2C', 'Cloud tasks', [['Tasks in the cloud', 'd', 90], ['Task statuses', 'd', 45], ['Prerequisites', 'd', 60]]),
+          mk('2D', 'Sessions', [['Cloud sessions', 'd', 60], ['Move local data', 'd', 90]]),
+          mk('2E', 'Journey', [['Journey history', 'd', 60], ['Weekly results', 'd', 45]]),
+          mk('2F', 'Settings', [['Cloud motive', 'd', 30], ['Timezone and target', 'd', 30]])] },
+      { num: '03', name: 'Projects & ideas', goal: 'Projects, ideas and suggestions that explain themselves.', next: 'Delivered ideas that become projects, and a Today that explains its pick.', done: 'Closed 27 Sep.',
+        ms: [mk('3A', 'Projects & milestones', [['Projects table', 'd', 45], ['Ordered milestones', 'd', 60], ['Derived progress', 'd', 45], ['Case-study draft', 'd', 90]]),
+          mk('3B', 'Notebooks & ready work', [['Idea capture', 'd', 30], ['Brainstorm fields', 'd', 60], ['Activate into a project', 'd', 60], ['Smaller first step', 'd', 30]]),
+          mk('3C', 'Balanced suggestions', [['Explain the pick', 'd', 60], ['Lane balance', 'd', 45], ['Pin a task', 'd', 30], ['Favoured lane', 'd', 30]])] },
+      { num: '04', name: 'Motivation & proof', goal: 'Reasons to come back that never guilt you.', next: '4C: one small delight, only if it earns its place.', done: 'It ships, or it is dropped on purpose.',
+        ms: [mk('4A', 'Weekly commitment', [['Weekly target', 'd', 45], ['Streaks that forgive', 'd', 60], ['Planned pauses', 'd', 30]]),
+          mk('4B', 'Proof & publishing', [['Proof statuses', 'd', 45], ['Three-step publish', 'd', 90], ['Portfolio candidates', 'd', 45], ['Screenshots', 'd', 60]]),
+          mk('4C', 'Optional delight', [['Mind Bloom', 'd', 90], ['Bloom ripple', 'd', 45], ['Ripple sound', 'r', 30]])] },
+      { num: '05', name: 'Reliability & real use', goal: 'Data you control, an interface that holds up, and two weeks of real use.', next: 'Log evening 7 of the trial and note one friction.', done: 'Ten evenings logged and the friction list triaged.',
+        ms: [mk('5A', 'Data control', [['JSON export of every record', 'd', 60], ['Restore into an empty workspace', 'd', 90], ['Delete data, keep the account', 'd', 45], ['Delete the whole account', 'd', 45]]),
+          mk('5B', 'Interface quality', [['Skeletons that match each screen', 'd', 60], ['Contrast tests for every token', 'd', 45], ['Keyboard path through Today', 'd', 60], ['Reduced-motion audit', 'd', 30]]),
+          mk('5C', 'Two-week trial', [['Log ten real evenings', 'p', 60], ['Friction list, triaged weekly', 'p', 30], ['Write what changed', 'r', 60], ['Push reminders on iOS', 'b', 45]])] },
+      { num: '06', name: 'Friends & open source', goal: 'A reproducible release friends can use privately.', next: 'Choose a license before inviting reuse (6A).', done: 'A LICENSE file, and a README line on why.',
+        ms: [mk('6A', 'Repo readiness', [['Choose a license', 'r', 30], ['README for strangers', 'r', 60], ['Contributing guide', 'r', 45]]),
+          mk('6B', 'Production', [['Production deploy', 'r', 90], ['Error tracking', 'r', 45], ['Email recovery', 'b', 60]]),
+          mk('6C', 'Friend pilot', [['Invite three friends', 'r', 15], ['Feedback form', 'r', 45], ['Pilot review', 'r', 60]])] },
+      { num: '07', name: 'Connections', goal: 'Optional connections, after the core proves useful.', next: 'Wait. Only after the core proves useful.', done: 'The trial says a connection would help.',
+        ms: [mk('7A', 'Assistants', [['ChatGPT connection', 'r', 90], ['Claude Desktop guide', 'r', 45]]),
+          mk('7B', 'GitHub', [['Commits as evidence', 'r', 90], ['Link pull requests', 'r', 60], ['Import issues as tasks', 'r', 60]])] }
+    ];
+    const notes = {
+      '5C·1': ['6 of 10 evenings', ''], '5C·2': ['7 notes to triage', ''], '5C·3': ['after 5C·1', ''],
+      '5C·4': ['waiting on a test device', 'red'], '6B·3': ['waiting on a sending domain', 'red']
+    };
+    const docs = [
+      { k: 'PRD', name: 'Product brief', links: [0, 1, 3, 4, 6] }, { k: 'SYS', name: 'System design', links: [0, 2, 3, 5, 7] },
+      { k: 'API', name: 'API & MCP', links: [2, 6, 7] }, { k: 'DB', name: 'Schema', links: [2, 3, 4, 5] },
+      { k: 'UI', name: 'UI flow', links: [1, 3, 4, 5] }, { k: 'DS', name: 'Design system', links: [0, 5] }
+    ];
+    const ev = (k, t, w, cls) => ({ k, t, w, cls: cls || '', ai: cls === 'ai' });
+    const X = {
+      '5A·2': { done: 'An export restores into a fresh account with nothing lost.', skills: ['Systems'], when: 'DONE 2 OCT',
+        events: [ev('STARTED', 'First focus session, 50 min', '1 Oct'), ev('LOGGED', '40 min from Claude Code, approved', '2 Oct', 'ai'), ev('DONE', 'Round-trip test passes', '2 Oct')] },
+      '5B·3': { done: 'Open to recap without a mouse.', skills: ['Interaction'], when: 'DONE 5 OCT',
+        events: [ev('LOGGED', '55 min from Claude Code, approved', '5 Oct', 'ai'), ev('DONE', 'Focus order fixed in the plan card', '5 Oct')] },
+      '5C·1': { n: 6, of: 10, next: 'Log evening 7 tonight and note one friction.', done: 'Ten evenings logged in Journey, each with a contribution.', skills: ['Shipping', 'Research'],
+        events: [ev('CREATED', 'Proposed by Claude Code, approved', '2 Oct', 'ai'), ev('STARTED', 'Evening 1, 45 min', '2 Oct'), ev('LOGGED', 'Evening 6, 45 min. Waiting in Inbox', '2h ago', 'ai')] },
+      '5C·2': { n: 1, of: 2, next: 'Triage on Sunday: 7 notes so far.', done: 'Each friction has a task or a reason to ignore it.', skills: ['Research', 'Writing'],
+        events: [ev('STARTED', 'First triage, 3 tasks made', '5 Oct'), ev('FOCUSED', 'Pinned for Sunday by the weekly review', '6 Oct')] },
+      '5C·3': { next: 'Waits on 5C·1. Draft the outline now if you like.', done: 'A short post on what the trial changed, ready to share.', skills: ['Writing'],
+        events: [ev('CREATED', 'From PLAN.md, approved in the Inbox', '30 Sep', 'ai'), ev('READY', 'Depends on Log ten real evenings', '30 Sep')] },
+      '5C·4': { next: 'Waiting on a test device. Borrow one, or move it to 6B.', done: 'A reminder arrives on an iPhone at 21:30.', skills: ['Frontend', 'Shipping'],
+        events: [ev('STARTED', 'Web Push works on Android and desktop', '3 Oct'), ev('BLOCKED', 'No iOS device to test on', '3 Oct', 'blk')] },
+      '6B·3': { next: 'Waiting on a sending domain for recovery emails.', done: 'A reset link arrives and works once.', skills: ['Systems'],
+        events: [ev('CREATED', 'From PLAN.md, approved in the Inbox', '3 Oct', 'ai'), ev('BLOCKED', 'No sending domain yet', '4 Oct', 'blk')] }
+    };
+    this._d = { P, notes, docs, X, ev };
+    return this._d;
+  }
+
+  renderVals() {
+    const D = this.data();
+    const s = this.state || {};
+    const NOW = 5;
+    const openP = s.openP || { 5: true };
+    const openM = s.openM || { '5C': true };
+    const filter = s.filter || 'all';
+    const doc = s.doc || null;
+    const word = { d: 'Done', p: 'In progress', r: 'Ready', b: 'Blocked' };
+    const act = { p: 'Continue', r: 'Start', b: 'Unblock' };
+    const match = (t) => filter === 'all' || (filter === 'open' && (t.st === 'p' || t.st === 'r')) || t.st === filter;
+    const msState = (m) => { const dn = m.tasks.filter((t) => t.st === 'd').length, dp = m.tasks.filter((t) => t.st === 'p').length; return dn === m.tasks.length ? 'done' : (dn + dp > 0 ? 'active' : 'ahead'); };
+
+    let total = 0, done = 0, phDone = 0, counts = { all: 0, open: 0, b: 0, d: 0 };
+    D.P.forEach((p) => p.ms.forEach((m) => m.tasks.forEach((t) => {
+      total++; counts.all++;
+      if (t.st === 'd') { done++; counts.d++; }
+      if (t.st === 'p' || t.st === 'r') counts.open++;
+      if (t.st === 'b') counts.b++;
+    })));
+    const selDoc = D.docs.find((x) => x.k === doc);
+
+    let anyVisible = false;
+    const phases = [];
+    D.P.forEach((p, i) => {
+      const all = [];
+      p.ms.forEach((m) => m.tasks.forEach((t) => all.push(t)));
+      const pd = all.filter((t) => t.st === 'd').length, pp = all.filter((t) => t.st === 'p').length;
+      const state = pd === all.length ? 'done' : (pd + pp > 0 ? 'active' : 'ahead');
+      if (state === 'done') phDone++;
+      const pct = Math.round(pd / all.length * 100);
+      const filtering = filter !== 'all';
+      const ms = p.ms.map((m) => {
+        const vis = m.tasks.filter(match);
+        const st = msState(m), dn = m.tasks.filter((t) => t.st === 'd').length;
+        const open = filtering ? vis.length > 0 : !!openM[m.code];
+        return {
+          code: m.code, name: m.name, state: st, vis: vis.length,
+          word: st === 'done' ? 'Done · ' + dn + ' of ' + m.tasks.length : dn + ' of ' + m.tasks.length + ' done', pct: Math.round(dn / m.tasks.length * 100), barCls: st === 'done' ? 'mint' : '',
+          open, exp: open ? 'true' : 'false', cls: open ? 'open' : '',
+          toggle: () => { const o = Object.assign({}, openM); o[m.code] = !o[m.code]; this.setState({ openM: o, filter: 'all' }); },
+          tasks: (filtering ? vis : m.tasks).map((t) => {
+            const n = D.notes[t.id];
+            return { openIt: () => this.setState({ task: t.id }), id: t.id, t: t.t, min: t.min, meta: t.id + ' · ' + t.min + ' min', st: t.st, word: word[t.st], hasAct: t.st !== 'd', act: act[t.st] || '', hasNote: !!n, note: n ? n[0] : '', noteCls: n ? n[1] : '' };
+          })
+        };
+      }).filter((m) => !filtering || m.vis > 0);
+      if (filtering && ms.length === 0) return;
+      anyVisible = true;
+      const open = filtering ? true : !!openP[i];
+      const isFed = !!selDoc && selDoc.links.indexOf(i) >= 0;
+      phases.push({
+        num: p.num, name: p.name, goal: p.goal, state, pct, pd, n: all.length, msN: p.ms.length,
+        meta: pd + ' of ' + all.length + ' tasks · ' + p.ms.length + ' milestones', addLabel: '+ Add milestone to ' + p.num,
+        fedLabel: selDoc ? 'FED BY ' + selDoc.k : '',
+        status: state === 'done' ? 'Done' : (state === 'active' ? pct + '% · in progress' : 'Ahead'),
+        showGoal: open || state !== 'done', showBar: open || state === 'active',
+        word: state === 'done' ? 'DONE' : (state === 'active' ? pct + '%' : 'AHEAD'), barCls: state === 'done' ? 'mint' : '',
+        isNow: i === NOW, isFed, open, exp: open ? 'true' : 'false',
+        cls: (open ? 'open' : '') + (i === NOW ? ' now' : '') + (selDoc ? (isFed ? ' fed' : ' dim') : ''),
+        nextK: state === 'done' ? 'What it delivered' : 'Next step', next: p.next, doneK: state === 'done' ? 'Closed' : 'Done when', done: p.done,
+        docs: D.docs.filter((x) => x.links.indexOf(i) >= 0).map((x) => ({ k: x.k })),
+        ms,
+        toggle: () => { const o = Object.assign({}, openP); o[i] = !o[i]; this.setState({ openP: o, filter: 'all' }); }
+      });
+    });
+
+    const H = D.P[NOW];
+    const hAll = []; H.ms.forEach((m) => m.tasks.forEach((t) => hAll.push(t)));
+    const hpd = hAll.filter((t) => t.st === 'd').length;
+    const allOpen = D.P.every((_, i) => openP[i]);
+    const fmtFeeds = (links) => links.map((i) => D.P[i].num).join(', ');
+
+    // ---------- task card ----------
+    let M = { on: false };
+    if (s.task) {
+      let T = null, TM = null, TP = null, TI = 0;
+      D.P.forEach((pp, i) => pp.ms.forEach((m) => m.tasks.forEach((t) => { if (t.id === s.task) { T = t; TM = m; TP = pp; TI = i; } })));
+      if (T) {
+        const x = D.X[T.id] || {};
+        const events = x.events || (T.st === 'd'
+          ? [D.ev('CREATED', 'From the phase plan', 'Phase ' + TP.num), D.ev('DONE', 'Closed after its last session', 'Phase ' + TP.num)]
+          : [D.ev('CREATED', 'From the phase plan, approved in the Inbox', 'Phase ' + TP.num), D.ev('READY', 'No sessions logged yet', 'Waiting')]);
+        const nextK = T.st === 'b' ? "What's blocking it" : (T.st === 'd' ? 'What changed' : 'Next step');
+        M = {
+          on: true, close: () => this.setState({ task: null }),
+          id: T.id, t: T.t, st: T.st, word: word[T.st], min: T.min,
+          phNum: TP.num, phName: TP.name, msCode: TM.code, msName: TM.name,
+          hasWhen: !!x.when, when: x.when || '',
+          hasBox: !!(x.next || x.done) || T.st === 'd', nextK, nextCls: T.st === 'b' ? 'red' : 'ember',
+          next: x.next || (T.st === 'd' ? events[events.length - 1].t + '.' : 'Pick a time and start a focus session.'),
+          done: x.done || 'Written when the task was planned. Open it in Work to edit.',
+          hasSessions: !!x.of, n: x.n || 0, of: x.of || 0,
+          evs: Array.from({ length: x.of || 0 }, (_, k) => ({ cls: k < (x.n || 0) ? 'on' : '' })),
+          docs: D.docs.filter((d) => d.links.indexOf(TI) >= 0).map((d) => ({ k: d.k })),
+          skills: (x.skills || []).map((k) => ({ k })),
+          events,
+          hasPrimary: true, primary: T.st === 'd' ? 'Add evidence' : (T.st === 'b' ? 'Unblock' : (T.st === 'p' ? 'Continue focus' : 'Start focus')),
+          canDone: T.st !== 'd'
+        };
+      }
+    }
+
+    return {
+      M,
+      rootCls: this.props.motion === false ? 'still' : '',
+      H: {
+        num: H.num, name: H.name, goal: H.goal, pd: hpd, n: hAll.length, pct: Math.round(hpd / hAll.length * 100),
+        steps: H.ms.map((m) => { const st = msState(m), dn = m.tasks.filter((t) => t.st === 'd').length; return { code: m.code, name: m.name, cls: st === 'done' ? 'done' : (st === 'active' ? 'cur' : ''), word: st === 'done' ? 'Done' : dn + ' of ' + m.tasks.length + ' · 2 in progress' }; })
+      },
+      proj: { pct: Math.round(done / total * 100), done, total, phDone },
+      upNext: [
+        { t: 'Log ten real evenings', word: 'In progress', meta: '5C·1 · 60 min · evening 7 of 10', action: 'Continue', btnCls: 'btn', cls: 'first', openIt: () => this.setState({ task: '5C·1' }) },
+        { t: 'Friction list, triaged weekly', word: 'In progress', meta: '5C·2 · 30 min · 7 notes waiting', action: 'Continue', btnCls: 'soft', cls: '', openIt: () => this.setState({ task: '5C·2' }) },
+        { t: 'Write what changed', word: 'Ready', meta: '5C·3 · 60 min · best after 5C·1', action: 'Start', btnCls: 'soft', cls: '', openIt: () => this.setState({ task: '5C·3' }) }
+      ],
+      openHere: () => { const o = Object.assign({}, openP); o[NOW] = true; this.setState({ openP: o, openM: Object.assign({}, openM, { '5C': true }), filter: 'all', doc: null }); },
+      toggleAll: () => { const o = {}; if (!allOpen) D.P.forEach((_, i) => { o[i] = true; }); this.setState({ openP: o, filter: 'all' }); },
+      allLabel: allOpen ? 'Collapse all' : 'Expand all',
+      filters: [['all', 'All tasks', counts.all], ['open', 'Open', counts.open], ['b', 'Blocked', counts.b], ['d', 'Done', counts.d]].map((f) => ({
+        label: f[1], n: f[2], cls: filter === f[0] ? 'on' : '', on: filter === f[0] ? 'true' : 'false', pick: () => this.setState({ filter: f[0] })
+      })),
+      docFocus: { on: !!selDoc, name: selDoc ? selDoc.name : '', code: selDoc ? selDoc.k : '', clear: () => this.setState({ doc: null }) },
+      docs: D.docs.map((d) => ({ code: d.k, name: d.name, feeds: 'phases ' + fmtFeeds(d.links), cls: doc === d.k ? 'on' : '', on: doc === d.k ? 'true' : 'false',
+        pick: () => { const o = {}; if (doc !== d.k) d.links.forEach((i) => { o[i] = false; }); this.setState({ doc: doc === d.k ? null : d.k, openP: doc === d.k ? openP : o, filter: 'all' }); } })),
+      phases, noMatch: !anyVisible
+    };
+  }
+}
+</script>
+</body>
+</html>

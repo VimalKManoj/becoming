@@ -88,13 +88,14 @@ New tools. Each one is a proposal in the Inbox unless decided otherwise:
 | C2 | **Done.** The List / Visual switch (`?visual=1`), overview, edges, flow, dimming, side panel and legend, in `src/components/constellation/` with styles in `src/styles/constellation.css` (scoped under `.cx`). |
 | C3 | **Done.** Phase level with hexagon, clusters, honeycomb, task story and timeline, breadcrumbs and ‹ ›. |
 | C4 | **Done.** Genesis timeline; Research, Report and Decision sections in Ideas → brainstorm. |
-| C5 | **Done.** The replay scrubber, from `startedAt`, `completedAt`, events and doc dates. |
+| C5 | **Done, then removed from the page on 10 October** at the owner's request: the play/timeline bar is gone for a cleaner page. The replay data (`timeline`, `stateAt`) is still computed, so it can come back. |
 | C6 | **Done.** MCP tools `get_constellation`, `get_phase`, `add_phase`, `add_doc`, `update_doc`, `add_research`, `write_report`, `record_decision` and `import_plan` (see ASSISTANTS.md). `set_phase_next` was folded into the app's phase editing and isn't an MCP tool yet. Becoming's own plan was sent to the Inbox as one `import_plan` item (12 phases, 44 milestones, 74 tasks, 12 docs), waiting for approval. |
 | C7 | **In part.** Phases and docs are added, edited, reordered and linked on the project page (Work → Projects → a project: Phases and Docs cards, and a Phase select on each milestone), and planned sessions on the task form. Editing directly on the map is still ahead. |
 
 **Choices made while building:**
 - **The liquid fill** of an in-progress cell is its sessions out of `plannedSessions`, or else focused minutes out of the estimate.
-- **Narrow screens:** the canvas scales down to 72%, then scrolls sideways, rather than reflowing, so the map keeps the design's shape.
+- **Narrow screens:** the canvas scales down to 72% rather than reflowing, so the map keeps the design's shape.
+- **Fit, zoom and drag (10 October):** the project's Visual page has one header (the map's title); the page scrolls until the map starts, then the map is one screen tall and scaled to fit. It zooms from half to three times the fitted size (− / % / + buttons, pinch or Ctrl + scroll around the pointer) and is dragged when it's bigger than its stage; the column names stay pinned. Nothing scrolls inside the canvas.
 - **Becoming's genesis** is empty until an idea is linked: a plan import can't create research or a report, so they come from Ideas → brainstorm or the genesis tools.
 
 **Verified:** 165 tests, typecheck, lint and build pass. The overview, phase level and genesis rendered against the design's example data at 1440px through a dev-only fixture page, since deleted. A signed-in walkthrough on real data is pending.

@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Becoming · Work</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&amp;family=Geist:wght@300..700&amp;family=Geist+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0;background:#0B0908}
+*{box-sizing:border-box}
+a{color:#FF9A52}a:hover{color:#FFC08F}
+.bx{--ink:#F4EDE6;--ink2:#E9DFD6;--text:#C9BDB2;--muted:#A99D93;--ember:#FF8A3D;--ember-t:#FF9A52;--ember-s:#FFB27A;--ember-p:#FFC08F;--mint:#86E3C3;--mint-t:#A6EDD4;--lilac:#C9B8F0;--lilac-t:#D9CCF6;--red:#FF6B5B;--red-t:#FFB4AA;--line:rgba(255,235,215,.08);--line3:rgba(255,235,215,.12);--line4:rgba(255,235,215,.14);--serif:'Bricolage Grotesque',system-ui,sans-serif;--sans:'Geist',system-ui,sans-serif;--mono:'Geist Mono',ui-monospace,monospace;
+  position:relative;display:flex;min-height:1320px;color:var(--ink);font-family:var(--sans);background:radial-gradient(90% 45% at 40% -8%,#3A2013 0%,#171110 50%,#0D0B0A 100%)}
+.bx button{font:inherit;color:inherit}
+.bx em{font-style:normal;color:var(--ember-t)}
+
+/* rail */
+.rail{width:92px;flex:none;display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 0;border-right:1px solid rgba(255,235,215,.07)}
+.orb-s{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFC08F,#F06A2A 60%,#7A2E0E);box-shadow:0 0 24px rgba(255,138,61,.45);margin-bottom:14px}
+.cap{width:52px;height:52px;border-radius:18px;border:1px solid rgba(255,170,110,.35);background:rgba(255,138,61,.12);color:#FFC08F !important;font:300 26px var(--sans) !important;display:grid;place-items:center;margin-bottom:12px;cursor:pointer;padding:0}
+.nav{width:72px;min-height:56px;padding:8px 0;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted) !important;cursor:pointer}
+.nav.cur{color:#FFC08F !important}
+.navbox{width:48px;height:36px;border-radius:14px;display:grid;place-items:center}
+.nav.cur .navbox{background:rgba(255,138,61,.16)}
+.navl{font:500 11px var(--sans)}
+.gl{display:inline-block;width:13px;height:13px;border:2px solid currentColor}
+.g-today{border-radius:50%}.g-work{border-radius:4px}.g-ideas{border-radius:2px;transform:rotate(45deg)}.g-journey{border-radius:50%;border-style:dashed}
+.avatar{margin-top:auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#2A211D;border:1px solid var(--line4);font:500 14px var(--sans);color:var(--ink)}
+
+/* page */
+.main{flex:1;min-width:0;padding:40px 48px 64px}
+.col{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+.eyebrow{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.eyebrow.ember{color:var(--ember-s)}.eyebrow.lilac{color:var(--lilac-t)}.eyebrow.mint{color:var(--mint-t)}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.title{margin:10px 0 0;font:400 clamp(40px,5vw,60px)/1 var(--serif);letter-spacing:-.02em}
+.hbtns{display:flex;gap:10px;flex-wrap:wrap}
+.ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:99px;background:rgba(255,240,225,.06);border:1px solid var(--line4);color:var(--ink) !important;font:500 14px var(--sans) !important;cursor:pointer;text-decoration:none}
+.ghost:hover{background:rgba(255,240,225,.1)}
+.ghost.ember{background:rgba(255,138,61,.12);border-color:rgba(255,170,110,.4);color:var(--ember-p) !important}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:0;border-radius:99px;background:linear-gradient(180deg,#FF9F58,#F06A2A);color:#1A0E08 !important;font:600 13.5px var(--sans) !important;box-shadow:0 8px 24px rgba(255,122,47,.25),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer;white-space:nowrap}
+.soft{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:99px;background:rgba(255,240,225,.06);border:1px solid var(--line4);color:var(--ink) !important;font:500 13px var(--sans) !important;cursor:pointer;white-space:nowrap}
+.soft.lilac{background:rgba(201,184,240,.1);border-color:rgba(201,184,240,.35);color:var(--lilac-t) !important}
+.example{font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--lilac-t);border:1px dashed rgba(201,184,240,.45);border-radius:99px;padding:6px 10px}
+
+/* inbox strip */
+.inbox{display:flex;align-items:center;gap:14px;padding:12px 12px 12px 18px;border-radius:20px;background:linear-gradient(90deg,rgba(201,184,240,.1),rgba(201,184,240,.03));border:1px solid rgba(201,184,240,.22)}
+.inbox .av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:500 12px var(--sans);color:var(--lilac-t);background:rgba(201,184,240,.14);border:1px solid rgba(201,184,240,.35)}
+.inbox .tx{flex:1;min-width:0;font:400 14px/1.4 var(--sans);color:var(--ink2)}
+.inbox .tx span{color:var(--muted)}
+
+/* sections */
+.sec{display:flex;flex-direction:column;gap:14px}
+.sechead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px}
+.sectitle{display:flex;align-items:baseline;gap:12px}
+.sectitle h2{margin:0;font:400 26px/1.1 var(--serif)}
+.sectitle span{font:400 13px var(--sans);color:var(--muted)}
+.sort{display:flex;gap:4px;padding:4px;border-radius:99px;background:rgba(255,240,225,.04);border:1px solid var(--line)}
+.sort button{height:36px;padding:0 14px;border:0;border-radius:99px;background:transparent;color:var(--text) !important;font:500 12.5px var(--sans) !important;cursor:pointer}
+.sort .on{background:rgba(255,138,61,.16);color:var(--ember-p) !important;box-shadow:inset 0 0 0 1px rgba(255,138,61,.45)}
+
+/* project rows */
+.prj{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.15fr) minmax(0,1fr);gap:28px;align-items:center;padding:22px 24px;border-radius:26px;background:linear-gradient(160deg,rgba(255,240,225,.05),rgba(255,240,225,.015));border:1px solid var(--line);transition:border-color .3s,background .3s}
+.prj:hover{border-color:rgba(255,170,110,.3)}
+.prj.active{background:radial-gradient(90% 120% at 0% 0%,rgba(255,138,61,.14),transparent 55%),linear-gradient(160deg,rgba(255,240,225,.06),rgba(255,240,225,.015));border-color:rgba(255,170,110,.22)}
+.pst{display:flex;align-items:center;gap:8px;font:500 12px var(--sans);color:var(--muted)}
+.pst i{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.pst.active{color:var(--ember-s)}.pst.active i{background:#FF8A3D;box-shadow:0 0 8px #FF8A3D}
+.pst.genesis{color:var(--lilac-t)}.pst.genesis i{background:#C9B8F0}
+.pst.paused i{background:transparent;border:1.5px solid var(--muted)}
+.pname{margin:8px 0 0;font:400 28px/1.05 var(--serif);letter-spacing:-.01em}
+.ppurp{margin-top:6px;font:400 13px/1.45 var(--sans);color:var(--text)}
+.where{display:flex;flex-direction:column;gap:8px;min-width:0}
+.wk{font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--muted)}
+.wk b{font-weight:500;color:var(--ink2)}
+.wn{font:500 15px/1.3 var(--sans);color:var(--ink)}
+.wm{font:400 12.5px var(--sans);color:var(--muted)}
+.hive{display:flex;align-items:center;gap:5px;margin-top:4px}
+.hx{width:13px;height:15px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,235,215,.24);position:relative}
+.hx::before{content:"";position:absolute;inset:1.3px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#140F0D}
+.hx.d,.hx.d::before{background:linear-gradient(180deg,#FFC08F,#F06A2A)}
+.hx.a{background:#FF8A3D}.hx.a::before{background:linear-gradient(180deg,#140F0D 50%,#FF8A3D 50%)}
+.hx.g{background:rgba(201,184,240,.45)}
+.hivelbl{margin-left:8px;font:500 11px var(--mono);color:var(--muted)}
+.bar{display:block;height:3px;border-radius:99px;background:rgba(255,235,215,.09);overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#F06A2A,#FFB27A)}
+.bar.lilac span{background:linear-gradient(90deg,#8E84A6,#D9CCF6)}
+.nextbox{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:18px;background:rgba(0,0,0,.2);border:1px solid var(--line)}
+.nk{font:500 10px var(--mono);letter-spacing:.12em;color:var(--ember-s)}
+.nk.lilac{color:var(--lilac-t)}
+.nt{font:400 18px/1.2 var(--serif);color:var(--ink)}
+.nm{font:400 12px var(--sans);color:var(--muted)}
+.nrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.open{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--ember-t) !important;font:500 13.5px var(--sans);text-decoration:none}
+.open:hover{color:var(--ember-p) !important}
+.addrow{display:flex;align-items:center;gap:10px;min-height:56px;padding:0 20px;border-radius:20px;border:1px dashed var(--line4);background:transparent;color:var(--muted) !important;font:500 13.5px var(--sans) !important;cursor:pointer;text-align:left}
+.addrow:hover{border-color:rgba(255,170,110,.4);color:var(--ember-p) !important}
+
+/* loose lanes */
+.lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.lane{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:24px;background:linear-gradient(160deg,rgba(255,240,225,.04),rgba(255,240,225,.01));border:1px solid var(--line)}
+.lhead{display:flex;align-items:baseline;gap:10px;padding:0 4px 4px}
+.ldot{width:8px;height:8px;border-radius:50%;align-self:center}
+.lname{font:500 16px var(--sans)}
+.ldesc{font:400 12.5px var(--sans);color:var(--muted)}
+.lcount{margin-left:auto;font:500 11px var(--mono);color:var(--muted)}
+.task{display:flex;align-items:flex-start;gap:12px;padding:14px 14px 14px 16px;border-radius:18px;background:rgba(255,240,225,.03);border:1px solid rgba(255,235,215,.07);transition:border-color .25s}
+.task:hover{border-color:rgba(255,235,215,.2)}
+.tmain{flex:1;min-width:0}
+.tt{font:500 14.5px/1.35 var(--sans);color:var(--ink)}
+.tm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font:400 12px var(--sans);color:var(--muted)}
+.pill{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:99px;font:500 11px var(--sans);border:1px solid}
+.pill.p{color:var(--ember-p);border-color:rgba(255,138,61,.45);background:rgba(255,138,61,.1)}
+.pill.r{color:var(--text);border-color:var(--line4)}
+.play{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line4);background:rgba(255,240,225,.05);color:var(--ember-p) !important;display:grid;place-items:center;cursor:pointer}
+.play:hover{background:rgba(255,138,61,.14);border-color:rgba(255,170,110,.4)}
+.empty{padding:14px 16px;border-radius:16px;border:1px dashed var(--line4);font:400 13px var(--sans);color:var(--muted)}
+.ladd{align-self:flex-start;min-height:44px;padding:0 4px;border:0;background:none;color:var(--muted) !important;font:500 13px var(--sans) !important;cursor:pointer}
+.ladd:hover{color:var(--ember-p) !important}
+.foot{font:400 12.5px var(--sans);color:var(--muted)}
+.foot a{color:var(--ember-t)}
+.prj:focus-within{border-color:rgba(255,170,110,.35)}
+@media (max-width: 1100px){.prj{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.prj .nextbox{grid-column:1 / -1}.lanes{grid-template-columns:minmax(0,1fr)}}
+@media (max-width: 899px){.rail{display:none}.main{padding:28px 16px 48px}.prj{grid-template-columns:minmax(0,1fr);gap:16px}}
+</style>
+</helmet>
+<div class="bx">
+  <nav class="rail" aria-label="Sections">
+    <span class="orb-s" aria-hidden="true"></span>
+    <button class="cap" aria-label="Quick capture">+</button>
+    <button class="nav"><span class="navbox"><span class="gl g-today"></span></span><span class="navl">Today</span></button>
+    <button class="nav cur" aria-current="page"><span class="navbox"><span class="gl g-work"></span></span><span class="navl">Work</span></button>
+    <button class="nav"><span class="navbox"><span class="gl g-ideas"></span></span><span class="navl">Ideas</span></button>
+    <button class="nav"><span class="navbox"><span class="gl g-journey"></span></span><span class="navl">Journey</span></button>
+    <span class="avatar" aria-label="Settings">V</span>
+  </nav>
+
+  <main class="main">
+    <div class="col">
+      <header class="head">
+        <div>
+          <div class="eyebrow">Work <span class="example" style="margin-left: 6px;">EXAMPLE DATA</span></div>
+          <h1 class="title">What you’re <em>building.</em></h1>
+        </div>
+        <div class="hbtns">
+          <button class="ghost">+ Add task</button>
+          <button class="ghost ember">+ New project</button>
+        </div>
+      </header>
+
+      <div class="inbox">
+        <span class="av" aria-hidden="true">C</span>
+        <div class="tx">Claude proposed <b>2 changes</b> through MCP <span>· a 45 min session on 5C·1 and 3 tasks for 6A</span></div>
+        <button class="soft lilac">Review in Inbox</button>
+      </div>
+
+      <section class="sec" aria-label="Projects">
+        <div class="sechead">
+          <div class="sectitle"><h2>Projects</h2><span>{{counts}}</span></div>
+          <div class="sort" role="group" aria-label="Order projects">
+            <sc-for list="{{sorts}}" as="o" hint-placeholder-count="2">
+              <button class="{{o.cls}}" onClick="{{o.pick}}" aria-pressed="{{o.on}}">{{o.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <sc-for list="{{projects}}" as="p" hint-placeholder-count="3">
+          <article class="prj {{p.cls}}">
+            <div>
+              <div class="pst {{p.state}}"><i></i>{{p.stateLabel}}</div>
+              <h3 class="pname">{{p.name}}</h3>
+              <div class="ppurp">{{p.purpose}}</div>
+            </div>
+
+            <div class="where">
+              <div class="wk">{{p.whereK}}</div>
+              <div class="wn">{{p.whereName}}</div>
+              <div class="hive" aria-label="{{p.hiveAria}}">
+                <sc-for list="{{p.hive}}" as="h" hint-placeholder-count="8"><span class="hx {{h.c}}"></span></sc-for>
+                <span class="hivelbl">{{p.hiveLbl}}</span>
+              </div>
+              <span class="bar {{p.barCls}}"><span style="width: {{p.pct}}%;"></span></span>
+              <div class="wm">{{p.progress}}</div>
+            </div>
+
+            <div class="nextbox">
+              <div class="nk {{p.nextTone}}">{{p.nextK}}</div>
+              <div class="nt">{{p.next}}</div>
+              <div class="nm">{{p.nextMeta}}</div>
+              <div class="nrow">
+                <button class="{{p.btnCls}}">{{p.action}}</button>
+                <sc-if value="{{p.isGen}}" hint-placeholder-val="{{false}}"><a class="open" href="Main.dc.html">Open genesis →</a></sc-if><sc-if value="{{p.isProj}}" hint-placeholder-val="{{true}}"><a class="open" href="List.dc.html">Open project →</a></sc-if>
+              </div>
+            </div>
+          </article>
+        </sc-for>
+        <button class="addrow">+ New project, or turn an idea into one</button>
+      </section>
+
+      <section class="sec" aria-label="Not in a project">
+        <div class="sechead">
+          <div class="sectitle"><h2>Not in a project</h2><span>Small pieces, writing and one-offs. Project tasks stay inside their project.</span></div>
+        </div>
+        <div class="lanes">
+          <sc-for list="{{lanes}}" as="l" hint-placeholder-count="3">
+            <div class="lane">
+              <div class="lhead"><span class="ldot" style="background: {{l.color}};"></span><span class="lname">{{l.name}}</span><span class="ldesc">{{l.desc}}</span><span class="lcount">{{l.count}}</span></div>
+              <sc-for list="{{l.tasks}}" as="t" hint-placeholder-count="2">
+                <div class="task">
+                  <div class="tmain">
+                    <div class="tt">{{t.t}}</div>
+                    <div class="tm"><span>{{t.meta}}</span><span class="pill {{t.st}}">{{t.word}}</span></div>
+                  </div>
+                  <button class="play" aria-label="Start focus on {{t.t}}"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2.6v10.8c0 .6.6.9 1.1.6l8.4-5.4c.5-.3.5-.9 0-1.2L5.6 2c-.5-.3-1.1 0-1.1.6z"></path></svg></button>
+                </div>
+              </sc-for>
+              <sc-if value="{{l.empty}}" hint-placeholder-val="{{false}}"><div class="empty">{{l.emptyText}}</div></sc-if>
+              <button class="ladd">+ Add to {{l.name}}</button>
+            </div>
+          </sc-for>
+        </div>
+        <div class="foot">Finished work moves to <a href="#">Journey</a>, where it becomes proof.</div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const sort = s.sort || 'next';
+    const P = [
+      { key: 'becoming', name: 'Becoming', purpose: 'An evening practice that turns small sessions into visible progress.', state: 'active', stateLabel: 'Active · worked on today', recent: 3,
+        whereK: 'PHASE 05 OF 08 · MILESTONE 5C', whereName: 'Reliability & real use › Two-week trial', hive: 'dddddaii', pct: 75, progress: '57 of 76 tasks · 75% formed',
+        nextK: 'UP NEXT', next: 'Log ten real evenings', nextMeta: '5C·1 · 60 min · evening 7 of 10', action: 'Continue', btnCls: 'btn', href: 'List.dc.html' },
+      { key: 'portfolio', name: 'Portfolio, rebuilt', purpose: 'A site that shows the work, built from Becoming’s proof.', state: 'paused', stateLabel: 'Paused · last worked 12 days ago', recent: 1,
+        whereK: 'PHASE 01 OF 04 · MILESTONE 1B', whereName: 'Case studies › First two write-ups', hive: 'daii', pct: 30, progress: '6 of 20 tasks · 30%',
+        nextK: 'PICK UP HERE', next: 'Draft the Becoming case study', nextMeta: '1B·1 · 90 min · uses 4 proof items', action: 'Pick up', btnCls: 'soft', href: 'List.dc.html' },
+      { key: 'film', name: 'Film desk', purpose: 'Plan a short film from treatment to shot list.', state: 'genesis', stateLabel: 'Genesis · not a project yet', recent: 2,
+        whereK: 'GENESIS · RESEARCH', whereName: 'Idea › 2 of 3 research threads', hive: 'ggi', pct: 55, progress: '7 sources read · report not written', barCls: 'lilac',
+        nextK: 'NEXT IN GENESIS', next: 'Write the report', nextMeta: 'Turns the research into a decision', action: 'Write it', btnCls: 'soft', href: 'Main.dc.html', nextTone: 'lilac' }
+    ];
+    const hiveMap = { d: 'd', a: 'a', i: '', g: 'g' };
+    const ordered = sort === 'recent' ? P.slice().sort((a, b) => b.recent - a.recent) : P;
+    const projects = ordered.map((p) => {
+      const h = p.hive.split('');
+      const done = h.filter((c) => c === 'd').length;
+      return Object.assign({ barCls: '', nextTone: '' }, p, {
+        cls: p.state === 'active' ? 'active' : '', isGen: p.state === 'genesis', isProj: p.state !== 'genesis',
+        hive: h.map((c) => ({ c: hiveMap[c] })),
+        hiveLbl: p.state === 'genesis' ? 'idea → research → report' : done + ' of ' + h.length + ' phases',
+        hiveAria: p.state === 'genesis' ? 'Genesis in progress' : done + ' of ' + h.length + ' phases done'
+      });
+    });
+    const lanes = [
+      { name: 'Showcases', desc: 'small, finished pieces', color: '#86E3C3', tasks: [
+        { t: 'Orb shader study', meta: '60 min · session 1 of 2', st: 'p', word: 'In progress' },
+        { t: 'Magnetic button with spring', meta: '45 min', st: 'r', word: 'Ready' }] },
+      { name: 'Writing', desc: 'notes and posts', color: '#C9B8F0', tasks: [
+        { t: 'Post: why evenings fail', meta: '60 min · from the Becoming report', st: 'r', word: 'Ready' },
+        { t: 'Notes on Convex auth in practice', meta: '30 min', st: 'r', word: 'Ready' }] },
+      { name: 'One-offs', desc: 'Projects lane, no project', color: '#FF8A3D', tasks: [] }
+    ].map((l) => Object.assign(l, { count: l.tasks.length + ' open', empty: l.tasks.length === 0, emptyText: 'Nothing loose here. Building work lives inside its project.' }));
+    return {
+      counts: '1 active · 1 paused · 1 in genesis',
+      projects, lanes,
+      sorts: [['next', 'Up next'], ['recent', 'Recent']].map((o) => ({ label: o[1], cls: sort === o[0] ? 'on' : '', on: sort === o[0] ? 'true' : 'false', pick: () => this.setState({ sort: o[0] }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

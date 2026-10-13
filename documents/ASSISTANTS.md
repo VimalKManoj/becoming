@@ -30,7 +30,7 @@ The **Claude app** (web, desktop, phone) and **ChatGPT** need "Sign in with Beco
 | `add_task`, `capture_idea`, `add_milestone`, `set_next_step` | proposal | As named. |
 | `get_constellation` | read | One project's whole map: genesis (idea, research, report, decision), docs with the phases each feeds, phases with milestones and task codes and states, and totals. |
 | `get_phase` | read | One phase by number (`"05"`) or name: goal, next step, progress, the docs it's built from, and each milestone's tasks with status, estimate, next step and sessions ("2 of 5"). |
-| `add_phase` | proposal | A new last phase (name, goal, next step, done-when). A name the project already has is refused. |
+| `add_phase` | proposal | A new last phase (name, goal, next step, done-when, and optional `skills`, the bloom's eight). A name the project already has is refused. |
 | `add_doc`, `update_doc` | proposal | A doc's details and link (a repo path such as `documents/PRD.md`, or an https address); the writing stays in the repo. `update_doc` finds the doc by code and changes only the fields given; `""` clears a text field and `feeds` replaces the phases it feeds (by number or name). |
 | `add_research` | proposal | A research thread behind an idea, with its sources (read, interview, tried, or **brief** for a summary the assistant wrote). Sources record the assistant as their author. A thread with the same title gets the new sources added. |
 | `write_report`, `record_decision` | proposal | The idea's report (findings, each with its basis), which replaces the earlier one, and the decision (verdict, rule, kept, dropped). |
@@ -71,6 +71,7 @@ Tasks and projects can be named by id or by a distinctive part of the title. Sev
   - "blocked" is dated at approval;
   - a done task without `started_at` counts as started when it finished;
   - a milestone the plan completes is dated by its last finished task.
+- **Skills** (12 October): phases, milestones and tasks can carry `skills` (Frontend, Interaction, Motion, Visual, Writing, Research, Systems, Shipping). A finished task without its own counts for its milestone's, or else its phase's, in the Mind Bloom. Re-sending a plan adds skills to phases and milestones that have none (it never replaces ones they have), so an assistant can fill in skills for work already imported.
 - **Limits:** tasks that already exist aren't changed by a plan (use `set_next_step` or the app), and docs can't carry their original written date yet (they're dated at approval).
 
 ## How it works

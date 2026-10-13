@@ -254,3 +254,6 @@ See [PLAN-project-constellation.md](PLAN-project-constellation.md) and, for the 
   - Export carries all four tables plus `milestones.phaseId` and `tasks.plannedSessions`. The new arrays are optional, so older backups still restore.
   - Restore maps project, phase and idea ids. It refuses a milestone or doc linked to another project's phase, a missing phase or idea, repeated doc codes in one project, two reports for one idea, more than 40 phases or docs in a project, and unsafe links. The summary counts `phases`, `docs`, `research` and `reports`.
   - "Delete workspace data" removes all four tables.
+
+
+**Journey tracks work, not focus (12 October 2026).** `phases.skills` and `milestones.skills` (optional, the bloom's eight skills) are inherited by finished tasks without their own (`lib/work.ts` `effectiveSkills`); backups carry them. `taskEvents` now also feeds Journey: `rhythm.overview` returns `work` (tasks started, finished or logged, with lane and whether backfilled, meaning recorded more than a day after `at`) and `joinedAt` (the profile's creation, where weeks start); `journey.activity` returns weighted items (session 1, start 1, finish 2); `journey.feed` merges events, sessions and milestone/phase completions newest first; `journey.untagged` groups finished tasks with no skills by phase or milestone. No new tables.

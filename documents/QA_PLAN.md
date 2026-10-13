@@ -142,20 +142,27 @@ Use a fake address such as `qa-a@example.test`. Email isn't verified, so it does
   - **Expect:** you land on that idea's brainstorm (`/ideas?idea=…`) with the text under notes.
 - [x] **Project** (or "+ New project" anywhere): step 1 of 2 asks for the name "QA project", why it matters and the lane → **Next: the first step →**. Step 2 of 2 asks for the first step, estimate and done-when; "‹ QA project" goes back with your text kept.
   - **Expect:** neither step needs scrolling on a laptop screen. **Save to Work for later** puts it in Work with that first step as its next task.
-- [x] Make another and press **Start the first step tonight**.
+- [ ] Make another and press **Create and open the project** (changed 10 October). **Expect:** its project page in Work, with the first step under Up next. No check-in.
   - **Expect:** Today opens the check-in for that project.
 
 ### B5. Work
 
-- [x] Open Work.
-  - **Expect:** "+ Add task" and "+ New project" at the top, active projects as wide cards, then Projects / Showcases / Writing lanes with status chips. An empty lane says so.
+- [ ] Open Work (redesigned 10 October to the Work artboard, `documents/design/work.dc.html`).
+  - **Expect:** "What you’re *building.*" with "+ Add task" and "+ New project"; when assistants have proposals waiting, a lilac strip ("Claude Code proposed 2 changes through MCP · …") with **Review in Inbox** (opens Today).
+  - **Projects:** "Projects · 1 active · 1 paused · 1 in genesis" and Up next | Recent. One row per active project: "Active · worked on today" (or "Paused · last worked 12 days ago" after a week without a move), name and purpose; where it stands ("PHASE 05 OF 12 · MILESTONE 5C", phase › milestone, a hexagon per phase, "n of m phases", a bar and "25 of 40 tasks · 63% formed"); and Up next (or Pick up here) with **Continue** / **Start** / **Pick up**. **Clicking anywhere on a row opens the project**; its action button works on its own without opening it. Ideas whose research has begun show as Genesis rows (idea → research → report → decision) and open the idea. "+ New project, or turn an idea into one" at the end.
+  - **Not in a project:** only tasks that belong to no project, in Showcases, Writing and One-offs (Projects lane, no project), each with minutes, sessions, a status pill and ▶ (starts a focus session on it; none on blocked tasks). Tapping a card opens its sheet. Project tasks are not here. "+ Add to …" starts a task in that lane. Under them: Done tasks · Archived · Done and archived projects · Add a task with every detail.
 - [x] Tap a task.
-  - **Expect:** a task sheet with its status, minutes, energy, project and milestone, done-when, next step, prerequisites and smaller step, and actions: Plan it for tonight, Pin for tonight, Edit, Archive.
+  - **Expect:** a task sheet with its status, minutes, energy, project and milestone, done-when, next step, prerequisites and smaller step, and actions: Start, Mark done…, Blocked…, Start a focus session (the only way from a task into the timer), Pin for tonight, Edit, Archive.
 - [x] **Edit** a task: add a smaller step (15 min) and a prerequisite → save.
 - [x] **Pin for tonight**, then check Settings → How Today chooses shows the pinned task.
-- [x] **Archive** a task, then open **Archived** from the links under the lanes and **Restore** it.
-- [x] Open a project.
-  - **Expect:** "‹ Work", lane · status, name and purpose, the milestones card (or its empty message), and a "Next step" card with **Plan it for tonight**.
+- [x] **Archive** a task, then open **Archived** from the links under "Not in a project" and **Restore** it.
+- [ ] Open a project (redesigned 10 October to the List artboard, `documents/design/project-list.dc.html`).
+  - **Expect, top:** "‹ Work" and "Projects · Becoming", and "+ New project" (the same header on Visual); the lane · status line, "Becoming, *taking form*" and the purpose, List | Visual; the ladder "PHASE a stage, weeks → MILESTONE an outcome, a few sessions → TASK one evening or less". Both views are a little narrower than the screen, centred.
+  - **You are here:** the phase you're working in (work in progress, else your latest started or finished task), with its goal, % and "n of m tasks done", its milestones as steps (done ✓, current pulsing), the project line and **Show this phase ↓** (opens and scrolls to it). Without phases, the current milestone.
+  - **Up next · pick one:** up to three open tasks (in progress first, then that phase's ready ones), each with status, code, minutes and a note (sessions, or "after 5C·1"). **Continue** opens the task, **Start** marks it In progress (no timer). A blocked strip names the first blocked task with **Unblock** (opens its sheet at Unblock).
+  - **Phases card:** the spine with hexagon nodes, NOW on the current phase, status, goal and bar; filters All / Open / Blocked / Done with counts; Expand all. An open phase shows Next step and Done when (What it delivered / Closed when done), the docs it's built from, and its milestones; a milestone opens to its tasks with a status pill and Continue / Start / Unblock, then **+ Add task** and **Edit milestone**. **+ Add milestone to 05** places the new milestone in that phase; **Edit phase**; **+ Add phase**. Work outside any phase shows as one more group.
+  - **Side:** Built from (pick a doc: its phases get "FED BY …", the rest dim, with Open doc and Clear above the list; + Add doc), Where it came from (idea, research, report, decision, project; Genesis › opens Visual), Activity (with "N IN INBOX").
+  - **The task sheet** now shows "Task 5C·1 · Phase 05 … › 5C …" at the top, sessions as hexagons, the docs and skills behind it, its timeline and **See it on the map ›**, as well as its usual actions.
 - [x] Add milestones "Usable" and "Polished"; open one to add a task, move it, rename it, remove it (with confirmation).
 - [x] **Case study draft:** copy and download work. **Mark done**, then **Make active** again.
 - [ ] **Archive a project with open tasks** (changed 9 October): one Ready, one In progress, one Blocked, one Done, plus a task in another project that has one of them as a prerequisite.
@@ -174,14 +181,15 @@ Use a fake address such as `qa-a@example.test`. Email isn't verified, so it does
 - [x] Hover the intent tiles.
   - **Expect:** a slow, smooth lift with a soft shadow, a warm tint fading in and the dot growing; no snapping.
 - [x] **Build**.
-  - **Expect:** "Which project tonight?" every time, with each active project's next step, progress and "Last worked …"; one marked Suggested. "Start a new project" and "Or any Projects task →" below. With no projects it says "No projects yet." above the new-project button.
-- [x] **Start a new project** from there → both steps → **Start the first step tonight**.
-  - **Expect:** the check-in for that new project.
-- [x] Choose a project → the check-in: tap 30 and Steady → **Show my focus →**.
+  - **Expect:** "Which project tonight?" every time, with each active project's next step, progress and "Last worked …"; one marked Suggested. "Start a new project" and "Or choose from every Projects task →" (opens the Projects lane in Work) below. With no projects it says "No projects yet." above the new-project button.
+- [ ] **Start a new project** from there → both steps → **Create and open the project**.
+  - **Expect:** that project's page in Work, not the check-in.
+- [ ] **Choose a project** (changed 10 October). **Expect:** its project page in Work (milestones, Next step, tasks), not the check-in, so you pick the task yourself. Nothing starts a focus session: Up next offers a few tasks with Start, and only a task's **Start a focus session** opens the check-in.
+- [ ] **Focus session** tile (added 10 October), the one explicit way into focus from Today → the check-in: tap 30 and Steady → **Show my focus →**.
   - **Expect:** "‹ Change · BUILD · 30 MIN · STEADY ENERGY", the "Working on" project chips, the focus card (lane · project tag, facts, done when, "Why this:"), and up to two alternatives from other lanes. The card appears once, with no blink or swap; if it's still loading you see a pulsing placeholder in its shape.
 - [x] Press **Choose** on an alternative.
   - **Expect:** a toast, "Your chosen focus", and "Why this: You chose this one yourself."
-- [x] **Small piece** and **Write** scope the focus to Showcases and Writing. With nothing fitting, you see "Nothing fits tonight." with Change tonight and + Add a task.
+- [ ] **Small piece** and **Write** (changed 10 October). **Expect:** Work opens on that lane alone (`/work?lane=Showcases` or `Writing`): "‹ All work", the lane's title, its open tasks as cards and "+ Add a task" (or "+ Add a piece of writing") that starts in that lane. Nothing is picked for you: open a task to start it, or use **Start a focus session** for the timer. An empty lane says so. "‹ All work" returns to the three lanes.
 - [x] **Start focus**.
   - **Expect:** the focus overlay: orb and timer, a quote every 30 seconds (if on), the lo-fi row (if on; play opens the stream in a new tab). Reload: the session is still running.
 - [x] Hover **Cancel session**: it brightens and keeps its underline (never dark). Cancel once (expect a toast, nothing recorded), start again, then **Finish**.
@@ -191,7 +199,7 @@ Use a fake address such as `qa-a@example.test`. Email isn't verified, so it does
   - **Expect:** it asks what's blocking it; the task moves to Blocked.
 - [x] **Offline save test:** open the recap, set DevTools → Network → Offline, press save.
   - **Expect:** the red failed card with **Retry save**; your text stays. Back online, retry saves.
-- [x] **Gap card:** in an account whose last session was 3+ days ago, Today shows "N days since your last session", the last session and its next step, and **Pick up here** (after Made progress), **Unblock it in Work** (after Blocked) or "It's finished. Choose what's next below." (after Finished).
+- [x] **Gap card:** in an account whose last session was 3+ days ago, Today shows "N days since your last session", the last session and its next step, and **Pick up here** (after Made progress; since 10 October it opens that project's page in Work, or Work, instead of the check-in), **Unblock it in Work** (after Blocked) or "It's finished. Choose what's next below." (after Finished).
 - [x] **Sunday:** on a Sunday, a mint card "Look back, then shape next week." → **Begin · 3 min** opens the review. Once next week is planned it shows "Week N is planned" with **Adjust**.
 - [x] **Publish:** once evidence is Ready to share (B8), the Publish intent appears; it leads to the publish flow.
 - [x] Account B with no tasks: Build → check-in → "Nothing's ready yet." and no invented work.
@@ -213,15 +221,16 @@ Use a fake address such as `qa-a@example.test`. Email isn't verified, so it does
 
 - [x] Open Journey.
   - **Expect:** the header with Progress / Proof tabs (arrow keys switch them; the address changes).
-- [x] **Progress:** the 12-month contributions graph (cells fade in; each has a date tooltip), streak and session chips, Mind Bloom for this month (month chips for earlier months), "Review & plan the week", This week, and the three latest sessions with **All sessions →**.
-- [x] **All sessions** (`?view=history`): paginated history with skills and evidence, lane balance, estimates and suggestions, body of work and firsts, your weeks with reflections. **+ Add evidence** on an older session makes a Draft.
+- [ ] **Progress** (changed 12 October: Journey tracks work, not only focus). **Expect:** the graph fills in from tasks finished and started (here, through an assistant, or backfilled from a plan) as well as sessions; a finish counts double; days made only of backfilled work are paler ("Backfilled" in the key); the chips say week streak, longest and "N finished". The Mind Bloom grows from finished tasks (their skills, or their milestone's or phase's) and sessions; the graph, the streak and the month chips start at your first activity (the graph shows only those weeks, with bigger squares when there are few), and weeks before your first target are judged by it. This week counts **days with progress** ("1/3 days"); a dot fills when anything moved forward that day. **Recent work** lists the latest finishes, starts and sessions with their source, and **Everything →**.
+- [ ] **Tidy-up card** under the bloom while finished tasks count for no skill: each phase (or milestone outside a phase) with skill chips and **Save**. Saving makes all its finished tasks bloom; the card goes when none are left. Skills can also be set in a phase's or milestone's edit form.
+- [ ] **Everything** (`?view=history`): the work feed, newest first by day: Finished / Started / Blocked entries (with "via Claude Code" or "(backfilled)" where it applies, and the note), focus sessions with minutes, and green "Milestone complete" / "Phase complete" rows; **Show older work**. A **Focus sessions** view keeps the recap cards, evidence (**+ Add evidence** still works), lane balance, estimates and suggestions. Body of work leads with tasks finished. Your weeks show "n of N days with progress" and start from the week you joined.
 - [x] **Proof tab:** Draft / Ready to share / Published count tiles (they filter), "★ Portfolio candidates", evidence rows with **Open**.
 - [x] Open a Draft: edit details, add a screenshot (PNG under 5 MB works; a PDF and an image over 5 MB are refused), **Mark ready to share**.
 - [x] **Publish it**.
   - **Expect:** the header hides; step 1 Context → step 2 Where (chips, link, "Published on"; a future date is refused) → **Mark as published** → step 3 "It's out in the *world.*" → **Done** with a toast.
 - [x] Back to draft, portfolio candidate toggle, Delete (with confirmation).
 - [x] **Weekly review** (`/journey?view=review`, or Reflect on Today):
-  - Look back: sessions against target, minutes, petal growth, a sentence about the week; write what you learned → Next.
+  - Look back: days with progress against target, tasks finished, focus minutes, petal growth, a sentence about the week's work; write what you learned → Next.
   - Plan ahead: evenings 2–6 or "Plan a pause instead", line up a few steps, an intention → Next.
   - Your week: the summary → **Save my week**.
   - **Expect:** a toast and Today. The lined-up steps now rank first ("Lined up this week") and the prompt card can show your intention.
@@ -260,10 +269,10 @@ Use a fake address such as `qa-a@example.test`. Email isn't verified, so it does
 - [ ] Work → Projects → **Visual**, Becoming selected. **Expect:** the overview as in the design: Genesis ("Started as a project", since no idea is linked yet), the orb with "N% FORMED", 12 docs, 12 phase rows with one cell per task (filled = done, outline = ready, red = blocked). The URL keeps `visual=1` on reload.
 - [ ] Click a doc, then a phase. **Expect:** its edges and the phases or docs it connects light up, the rest dims, and the side panel describes it.
 - [ ] Double-click a phase (or "Open phase NN ›"). **Expect:** the large hexagon with % and "N OF M TASKS", milestones as clusters (coded like 05A), tasks as cells. Click a cell for its story and timeline; ‹ › steps through phases; Back and the breadcrumbs return.
-- [ ] Press play on the scrubber. **Expect:** the map rebuilds day by day from 15 September; dragging to the end shows today.
+- [ ] **The Visual page** (changed 10 October), on a desktop screen. **Expect:** one header ("‹ Work", List | Visual, then "Becoming, taking form"), with no project title and purpose above it and no play/timeline bar below. The page scrolls only until the map starts; then the map and its panel fill the screen, and the whole map is scaled to fit. **Zoom:** − / % / + in the map's top bar (the % fits it again), or pinch / Ctrl + scroll, which zooms around the pointer and never zooms the browser page. Zoomed in, the hint ends "drag to move, pinch to zoom" and the cursor is a hand: drag to move; it stops at the map's edges. The column names (GENESIS, PROJECT, DOCS, PHASES) stay at the top while you drag, over a soft band. A click after a drag selects nothing; a plain click still selects.
 - [ ] Ideas → an idea's brainstorm: add a research thread with a source, a report with a finding, and a decision. Make it active into a new project, then open that project's Visual. **Expect:** Genesis shows the idea, research, report and decision.
 - [ ] On the project page: add a phase, link a doc to it, and set a milestone's Phase. **Expect:** the Visual tab updates at once.
-- [ ] At 390px wide the map scales down, then scrolls sideways; nothing overlaps. Under reduced motion nothing breathes or flows.
+- [ ] At 390px wide the page scrolls as usual, the map scales down and is dragged sideways inside its stage; nothing overlaps. Under reduced motion nothing breathes or flows.
 - [ ] Ask Claude Code "show me the constellation for Becoming" and "what's in phase 09?". **Expect:** answers that match the map.
 
 ### B9. Cross-cutting checks
