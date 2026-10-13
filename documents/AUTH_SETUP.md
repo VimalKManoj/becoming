@@ -40,11 +40,21 @@ Then run `npm run backend` to sync functions and generate component types, and `
 2. In the Convex dashboard for the deployment (dev or production), set `RESEND_API_KEY`.
 3. Without your own domain, Resend sends only to the address of your Resend account, from `onboarding@resend.dev`. That's enough for your own account. To email anyone else, verify a domain in Resend (a few DNS records), then set `EMAIL_FROM`, for example `Becoming <hello@yourdomain.com>`.
 
+**Production's domain (13 October 2026).** The owner's domain is `byvm.in` (GoDaddy DNS). Projects get subdomains, and email for all of them sends from the verified subdomain `mail.byvm.in`.
+- **Resend records** for `mail.byvm.in`:
+  - DKIM: TXT `resend._domainkey.mail`.
+  - Sending: CNAME `rsend.mail` → `rsend-apne1.forge.rmta.net` and CNAME `send.mail` → `send.forge.rmta.net`.
+  - DMARC: TXT `_dmarc` = `v=DMARC1; p=none;`. Keep only one DMARC record; GoDaddy adds its own `p=quarantine` default, and two records count as none.
+- **Production settings:**
+  - `EMAIL_FROM` = `Becoming <becoming@mail.byvm.in>`.
+  - The app lives at `https://becoming.byvm.in` (a Vercel domain, CNAME `becoming`), so `SITE_URL` is that address. `becoming-evenings.vercel.app` redirects to it, because sign-in and email links work only on the `SITE_URL` address.
+- **New registrations:** GoDaddy put the new domain on `client hold` at registration until the account was verified. While on hold, the domain doesn't resolve at all. Check with `https://rdap.org/domain/<domain>`.
+
 **Google sign-in (free).**
 1. Google Cloud Console → a new project → **APIs & Services → OAuth consent screen**: External, app name Becoming, your email as support contact. Scopes: the default email and profile only.
 2. **Credentials → Create credentials → OAuth client ID → Web application.**
-   - Authorized JavaScript origins: `http://localhost:3001` (and later your Vercel address).
-   - Authorized redirect URIs: `http://localhost:3001/api/auth/callback/google` (and later `https://<your-vercel-address>/api/auth/callback/google`). The callback goes to the app's own address, which forwards it to Convex.
+   - Authorized JavaScript origins: `http://localhost:3001` and, for production, `https://becoming.byvm.in`.
+   - Authorized redirect URIs: `http://localhost:3001/api/auth/callback/google` and `https://becoming.byvm.in/api/auth/callback/google`. The callback goes to the app's own address, which forwards it to Convex.
 3. In the Convex dashboard set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (use separate clients, or at least separate redirect URIs, for dev and production). The button appears on the sign-in screen as soon as both are set (`auth.signInOptions`).
 4. While the consent screen is in **Testing**, only the test users you list can sign in (up to 100). Publish it when others should be able to.
 
@@ -55,7 +65,7 @@ Google confirms the address, so a Google sign-in with the same email joins the e
 - An account that existed before 9 October has an unconfirmed email. Its next sign-in sends a confirmation link (in the logs locally).
 - Passwords require 12–128 characters on the server. Sign-in failures use a generic message. Better Auth owns credential hashing and session handling.
 - There is no automatic import of old browser-local data and no friend invitation flow. Account deletion exists in Settings (it confirms the password first).
-- Inviting friends needs a verified sending domain in Resend (until then, email only reaches your own Resend address).
+- Production sends from the verified `mail.byvm.in`, so email reaches any address. Google sign-in is still off in production; its OAuth client should use `https://becoming.byvm.in`.
 
 ## Manual learning check
 
