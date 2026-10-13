@@ -1,6 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query, type MutationCtx } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
 import { requireOwner } from "./lib/ownership";
+import { isBackfilled, progressKinds } from "./lib/work";
 import { commitmentFor } from "./lib/rhythm";
 import { DAY, addDays, isSupportedTimeZone, isWeekKey, weekKey } from "./lib/time";
 import { timezoneValue } from "./lib/validate";
@@ -42,19 +44,30 @@ export const overview = query({
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
     const since = args.now - 27 * 7 * DAY;
-    const [profile, stored, reflections, sessions, plans] = await Promise.all([
+    const [profile, stored, reflections, sessions, plans, events] = await Promise.all([
       ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique(),
       ctx.db.query("weeklyCommitments").withIndex("by_owner_week", q => q.eq("owner", owner)).collect(),
       ctx.db.query("reflections").withIndex("by_owner_week", q => q.eq("owner", owner)).order("desc").take(30),
       ctx.db.query("sessions").withIndex("by_owner_endedAt", q => q.eq("owner", owner).gte("endedAt", since)).take(2000),
       ctx.db.query("weekPlans").withIndex("by_owner_week", q => q.eq("owner", owner)).order("desc").take(4),
+      ctx.db.query("taskEvents").withIndex("by_owner_at", q => q.eq("owner", owner).gte("at", since)).take(4000),
     ]);
+    // Work, not only focus: tasks started, finished or logged count as progress on their day.
+    const moves = events.filter(event => progressKinds.has(event.kind));
+    const lanes = new Map<string, Doc<"tasks">["lane"]>();
+    for (const id of new Set(moves.map(event => String(event.taskId)))) {
+      const task = await ctx.db.get(id as Id<"tasks">);
+      if (task && task.owner === owner) lanes.set(id, task.lane);
+    }
     return {
       timezone: profile?.timezone ?? null,
       commitments: stored.map(item => ({ week: item.week, target: item.target, paused: item.paused })),
       reflections: reflections.map(item => ({ week: item.week, learning: item.learning, intention: item.intention })),
       sessions: sessions.map(item => ({ endedAt: item.endedAt, lane: item.lane, startedAt: item.startedAt ?? null, skills: item.skills ?? [] })),
       plans: plans.map(item => ({ week: item.week, intention: item.intention, taskIds: item.taskIds })),
+      work: moves.flatMap(event => { const lane = lanes.get(String(event.taskId)); return lane ? [{ at: event.at, kind: event.kind, lane, backfilled: isBackfilled(event) }] : []; }),
+      // Weeks and the streak start from the week you joined (your profile's creation).
+      joinedAt: profile?._creationTime ?? null,
       windowStart: since,
     };
   },

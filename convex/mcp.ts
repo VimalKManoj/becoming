@@ -3,6 +3,7 @@ import { httpAction, internalMutation, internalQuery, type MutationCtx, type Que
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { bloomSkillList } from "./lib/bloom";
+import { skillsValue } from "./constellation";
 import { commitmentFor } from "./lib/rhythm";
 import { weekKey, weekRange } from "./lib/time";
 import { hashToken } from "./lib/tokens";
@@ -112,7 +113,7 @@ export const tools = [
     inputSchema: { type: "object", properties: { project: { type: "string", description: "Project id or title" }, phase: { type: "string", description: 'Phase number ("05") or name' } }, required: ["project", "phase"] } },
   { name: "add_phase", title: "Add a phase", annotations: propose,
     description: "Propose a new last phase for a project. Goes to the Inbox for approval.",
-    inputSchema: { type: "object", properties: { project: { type: "string", description: "Project id or title" }, name: { type: "string" }, goal: { type: "string", description: "One line on what the phase delivers" }, next_step: { type: "string" }, done_when: { type: "string" } }, required: ["project", "name"] } },
+    inputSchema: { type: "object", properties: { project: { type: "string", description: "Project id or title" }, name: { type: "string" }, goal: { type: "string", description: "One line on what the phase delivers" }, next_step: { type: "string" }, done_when: { type: "string" }, skills: { type: "array", items: { type: "string", enum: skillNames }, maxItems: 8, description: "Skills its finished tasks practise (inherited by tasks without their own)" } }, required: ["project", "name"] } },
   { name: "add_doc", title: "Add a doc", annotations: propose,
     description: "Propose a document the project's plan stands on (PRD, system design, schema…): its details and a link to the file in the repo (or a web address). The writing stays in the repo. Goes to the Inbox for approval.",
     inputSchema: { type: "object", properties: docProperties, required: ["project", "code", "title"] } },
@@ -136,12 +137,13 @@ export const tools = [
       project: { type: "string", description: "Existing project id or title" },
       new_project: { type: "object", properties: { title: { type: "string" }, purpose: { type: "string" } }, required: ["title", "purpose"] },
       phases: { type: "array", minItems: 1, maxItems: planLimits.phases, items: { type: "object", properties: {
-        name: { type: "string" }, goal: { type: "string" }, next_step: { type: "string" }, done_when: { type: "string" },
+        name: { type: "string" }, goal: { type: "string" }, next_step: { type: "string" }, done_when: { type: "string" }, skills: { type: "array", items: { type: "string", enum: skillNames }, maxItems: 8, description: "Skills its finished tasks practise (inherited by tasks without their own)" },
         milestones: { type: "array", maxItems: planLimits.milestonesPerPhase, items: { type: "object", properties: {
-          title: { type: "string" }, done_when: { type: "string" },
+          title: { type: "string" }, done_when: { type: "string" }, skills: { type: "array", items: { type: "string", enum: skillNames }, maxItems: 8, description: "Skills its finished tasks practise (inherited by tasks without their own)" },
           tasks: { type: "array", maxItems: planLimits.tasksPerMilestone, items: { type: "object", properties: {
             title: { type: "string" }, lane: laneSchema, minutes: { type: "integer", minimum: 5, maximum: 240 }, energy: energySchema, done_when: { type: "string" },
             planned_sessions: { type: "integer", minimum: 1, maximum: 100 },
+            skills: { type: "array", items: { type: "string", enum: skillNames }, maxItems: 5, description: "Skills this task practised" },
             status: { type: "string", enum: ["ready", "in progress", "blocked", "done"], description: "Default ready" },
             note: { type: "string", description: "Required for blocked (what's blocking it); for done, what changed" },
             started_at: { type: "string", description: "ISO date it started; not in the future" },
@@ -189,6 +191,14 @@ function int(input: Input, key: string, min: number, max: number, fallback?: num
   const value = input[key] ?? fallback;
   if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max) throw new ConvexError(`"${key}" must be a whole number from ${min} to ${max}.`);
   return value;
+}
+
+/** Optional skills: the eight bloom skills only. A phase's or milestone's skills count for its finished tasks without their own. */
+function skillsIn(input: Input) {
+  if (input.skills === undefined || input.skills === null) return undefined;
+  if (!Array.isArray(input.skills) || input.skills.some(s => typeof s !== "string")) throw new ConvexError(`"skills" is a list of: ${skillNames.join(", ")}.`);
+  const skills = skillsValue(input.skills as string[]);
+  return skills.length ? skills : undefined;
 }
 
 function laneOf(value: unknown, required = true): Lane | undefined {
@@ -555,17 +565,17 @@ async function planFrom(ctx: Db, owner: string, input: Input): Promise<{ proposa
   const phases: PlanProposal["phases"] = list(input, "phases", planLimits.phases, true).map(phase => {
     const name = text(phase, "name", 120);
     return {
-      name, goal: maybe(phase, "goal", 1000), nextStep: maybe(phase, "next_step", 2000), doneWhen: maybe(phase, "done_when", 1000),
+      name, goal: maybe(phase, "goal", 1000), nextStep: maybe(phase, "next_step", 2000), doneWhen: maybe(phase, "done_when", 1000), skills: skillsIn(phase),
       milestones: list(phase, "milestones", planLimits.milestonesPerPhase).map(m => {
         const title = text(m, "title", 160);
         return {
-          title, doneWhen: maybe(m, "done_when", 1000),
+          title, doneWhen: maybe(m, "done_when", 1000), skills: skillsIn(m),
           tasks: list(m, "tasks", planLimits.tasksPerMilestone).map(t => {
             const taskTitle = text(t, "title", 160);
             const task = {
               title: taskTitle, lane: laneOf(t.lane)!, minutes: int(t, "minutes", 5, 240), energy: energyOf(t.energy), doneWhen: text(t, "done_when", 1000),
               plannedSessions: optionalInt(t, "planned_sessions", 1, 100), status: statusOf(t.status, taskTitle) as Exclude<Doc<"tasks">["status"], "Archived">,
-              note: maybe(t, "note", 2000), startedAt: pastTime(t, "started_at", taskTitle), completedAt: pastTime(t, "completed_at", taskTitle),
+              note: maybe(t, "note", 2000), startedAt: pastTime(t, "started_at", taskTitle), completedAt: pastTime(t, "completed_at", taskTitle), skills: skillsIn(t),
             };
             checkPlannedStatus(task);
             return task;
@@ -676,7 +686,7 @@ async function runPropose(ctx: MutationCtx, owner: string, source: string, tool:
       const name = text(input, "name", 120);
       if (phases.some(p => p.name.toLowerCase() === name.toLowerCase())) throw new ConvexError(`"${project.title}" already has a phase called "${name}".`);
       if (phases.length >= planLimits.phases) throw new ConvexError(`A project can have up to ${planLimits.phases} phases.`);
-      proposal = { kind: "phase", projectId: project._id, name, goal: maybe(input, "goal", 1000), nextStep: maybe(input, "next_step", 2000), doneWhen: maybe(input, "done_when", 1000) };
+      proposal = { kind: "phase", projectId: project._id, name, goal: maybe(input, "goal", 1000), nextStep: maybe(input, "next_step", 2000), doneWhen: maybe(input, "done_when", 1000), skills: skillsIn(input) };
       summary = `Phase ${String(phases.length).padStart(2, "0")} "${name}" in ${project.title}.`;
       break;
     }

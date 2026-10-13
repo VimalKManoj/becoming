@@ -5,7 +5,7 @@ import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
 import { refreshMilestone } from "./lib/projects";
 import { logEvent } from "./lib/taskEvents";
 import { nextStepValue } from "./lib/taskRules";
-import { addDocFor, addPhaseFor, ownedProject, setMilestonePhaseFor, updateDocFor } from "./constellation";
+import { addDocFor, addPhaseFor, ownedProject, setMilestonePhaseFor, skillsValue, updateDocFor } from "./constellation";
 import { addResearchFor, addSourceFor, saveReportFor, setDecisionFor } from "./genesis";
 import { createIdeaFor } from "./ideas";
 import { addMilestoneFor } from "./projects";
@@ -204,22 +204,24 @@ export async function applyPlan(ctx: MutationCtx, owner: string, p: PlanProposal
     const same = existingPhases.find(x => key(x.name) === key(phase.name));
     const phaseId = same?._id ?? await addPhaseFor(ctx, owner, projectId, phase);
     if (!same) counts.phases += 1;
+    // Re-sending a plan adds skills to a phase that has none yet; it never replaces ones it has.
+    else if (phase.skills?.length && !same.skills?.length) await ctx.db.patch(same._id, { skills: skillsValue(phase.skills) });
     phaseIds.push(phaseId);
     const inPhase = same ? await ctx.db.query("milestones").withIndex("by_phase", q => q.eq("phaseId", phaseId)).collect() : [];
     for (const m of phase.milestones) {
       const found = inPhase.find(x => x.owner === owner && key(x.title) === key(m.title));
       let milestoneId = found?._id;
       if (!milestoneId) {
-        milestoneId = await addMilestoneFor(ctx, owner, { projectId, title: m.title, doneWhen: m.doneWhen });
+        milestoneId = await addMilestoneFor(ctx, owner, { projectId, title: m.title, doneWhen: m.doneWhen, skills: m.skills });
         await setMilestonePhaseFor(ctx, owner, milestoneId, phaseId);
         counts.milestones += 1;
-      }
+      } else if (m.skills?.length && found && !found.skills?.length) await ctx.db.patch(found._id, { skills: skillsValue(m.skills) });
       const titles = new Set(found ? (await ctx.db.query("tasks").withIndex("by_milestone", q => q.eq("milestoneId", milestoneId)).collect()).map(t => key(t.title)) : []);
       for (const t of m.tasks) {
         if (titles.has(key(t.title))) { counts.skipped += 1; continue; }
         titles.add(key(t.title));
         checkPlannedStatus(t);
-        const taskId = await createTaskFor(ctx, owner, { title: t.title, lane: t.lane, minutes: t.minutes, energy: t.energy, doneWhen: t.doneWhen, projectId, milestoneId, plannedSessions: t.plannedSessions }, source);
+        const taskId = await createTaskFor(ctx, owner, { title: t.title, lane: t.lane, minutes: t.minutes, energy: t.energy, doneWhen: t.doneWhen, projectId, milestoneId, plannedSessions: t.plannedSessions, skills: t.skills }, source);
         await applyPlannedStatus(ctx, owner, taskId, t, source);
         counts.tasks += 1;
       }

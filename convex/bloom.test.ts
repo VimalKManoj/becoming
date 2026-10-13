@@ -40,8 +40,11 @@ describe("Mind Bloom and the proof pipeline", () => {
     expect(history[1].artifacts[0].skills).toEqual(["Motion", "Interaction"]);
     // A tag outside the eight skills doesn't bloom, and A's sessions never reach B.
     expect((await asB.query(api.journey.bloom, { since })).tagged).toBe(0);
-    // The contributions graph gets every end time in the window.
-    expect(await asA.query(api.journey.activity, { since })).toHaveLength(3);
+    // The contributions graph gets every saved session and every task moved forward in the
+    // window: three sessions (weight 1) and the three tasks they finished (weight 2), none backfilled.
+    const activity = await asA.query(api.journey.activity, { since });
+    expect(activity.map(item => item.weight).sort()).toEqual([1, 1, 1, 2, 2, 2]);
+    expect(activity.some(item => item.backfilled)).toBe(false);
   });
 
   it("limits skills per recap and keeps them in backups", async () => {

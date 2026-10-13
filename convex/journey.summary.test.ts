@@ -11,7 +11,7 @@ describe("lifetime counts and firsts", () => {
     const t = convexTest(schema, modules);
     const asA = t.withIdentity({ subject: "user-a", issuer: "https://auth.example.test" });
     const asB = t.withIdentity({ subject: "user-b", issuer: "https://auth.example.test" });
-    expect(await asA.query(api.journey.summary, {})).toEqual({ lifetime: { sessions: 0, evidence: 0, published: 0, milestones: 0 }, firsts: [] });
+    expect(await asA.query(api.journey.summary, {})).toEqual({ lifetime: { finished: 0, sessions: 0, evidence: 0, published: 0, milestones: 0 }, firsts: [] });
 
     const projectId = await asA.mutation(api.projects.create, { title: "Becoming", purpose: "Practice" });
     const milestoneId = await asA.mutation(api.projects.addMilestone, { projectId, title: "Usable Today" });
@@ -28,8 +28,9 @@ describe("lifetime counts and firsts", () => {
     await asA.mutation(api.proof.setStatus, { artifactId: artifact._id, status: "Published", publishedUrl: "https://example.test/post", publishedOn: "2026-09-30" });
 
     const summary = await asA.query(api.journey.summary, {});
-    expect(summary.lifetime).toEqual({ sessions: 2, evidence: 1, published: 1, milestones: 1 });
-    expect(summary.firsts.map(first => first.kind).sort()).toEqual(["candidate", "milestone", "published", "session", "showcase"]);
+    // Both recaps finished their tasks, so they count as finished work too.
+    expect(summary.lifetime).toEqual({ finished: 2, sessions: 2, evidence: 1, published: 1, milestones: 1 });
+    expect(summary.firsts.map(first => first.kind).sort()).toEqual(["candidate", "finished", "milestone", "published", "session", "showcase"]);
     expect(summary.firsts.find(first => first.kind === "session")).toMatchObject({ detail: "Focus card" });
     expect(summary.firsts.find(first => first.kind === "milestone")).toMatchObject({ detail: "Usable Today" });
     expect(summary.firsts.map(first => first.at)).toEqual([...summary.firsts.map(first => first.at)].sort((a, b) => a - b));

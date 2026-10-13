@@ -6,6 +6,7 @@ import { authComponent } from "./auth";
 import { reminderMessage, sendEmail } from "./lib/email";
 import { commitmentFor } from "./lib/rhythm";
 import { dayKey, weekKey, zonedStartOfDay } from "./lib/time";
+import { progressKinds } from "./lib/work";
 import { pushKeys, sendPush } from "./lib/webpush";
 import { todayFor } from "./tasks";
 
@@ -41,7 +42,10 @@ export const due = internalQuery({
       const zone = profile.timezone!;
       const clock = localClock(now, zone);
       if (profile.lastReminderDay === clock.day || !isDue(clock, profile.reminderTime ?? "20:30", profile.reminderDays ?? "weekdays")) continue;
-      const worked = await ctx.db.query("sessions").withIndex("by_owner_endedAt", q => q.eq("owner", profile.owner).gte("endedAt", zonedStartOfDay(clock.day, zone))).first();
+      // Anything moved forward today means no reminder: a saved session, or a task started, finished or logged.
+      const dayStart = zonedStartOfDay(clock.day, zone);
+      const worked = await ctx.db.query("sessions").withIndex("by_owner_endedAt", q => q.eq("owner", profile.owner).gte("endedAt", dayStart)).first()
+        ?? (await ctx.db.query("taskEvents").withIndex("by_owner_at", q => q.eq("owner", profile.owner).gte("at", dayStart)).take(200)).find(event => progressKinds.has(event.kind));
       const week = weekKey(now, zone);
       const commitments = await ctx.db.query("weeklyCommitments").withIndex("by_owner_week", q => q.eq("owner", profile.owner)).collect();
       if (worked || commitmentFor(week, commitments.map(c => ({ week: c.week, target: c.target, paused: c.paused })))?.paused) continue;

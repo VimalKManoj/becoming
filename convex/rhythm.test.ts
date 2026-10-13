@@ -123,7 +123,7 @@ describe("weekly rhythm", () => {
     expect(mine).toMatchObject({ timezone: "UTC", commitments: [{ week, target: 2, paused: false }] });
     expect(mine.sessions).toHaveLength(1);
     const theirs = await asB.query(api.rhythm.overview, { now });
-    expect(theirs).toEqual({ timezone: null, commitments: [], reflections: [], sessions: [], plans: [], windowStart: theirs.windowStart });
+    expect(theirs).toEqual({ timezone: null, commitments: [], reflections: [], sessions: [], plans: [], work: [], joinedAt: null, windowStart: theirs.windowStart });
   });
 
   it("saves, revises and clears a private weekly reflection", async () => {
