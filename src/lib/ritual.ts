@@ -33,10 +33,10 @@ export function greeting({ now, name, lastSessionAt }: { now: number; name: stri
   return `Good ${part}${who}`;
 }
 
-/** The week's one-line status, as the design words it. */
+/** The week's one-line status, as the design words it. `count` is days with progress (any work, not only focus). */
 export function weekLine({ count, target, streak, configured, paused }: { count: number; target: number | null; streak: number; configured: boolean; paused: boolean }) {
   if (paused) return "A planned pause. Your streak waits for you.";
-  if (!configured || !target) return count ? `${count} ${count === 1 ? "session" : "sessions"} this week.` : "Your week starts with your first session.";
+  if (!configured || !target) return count ? `${count} ${count === 1 ? "day" : "days"} with progress this week.` : "Your week starts with the first thing you move forward.";
   if (count >= target) return `Week met. ${streak} ${streak === 1 ? "week" : "weeks"} in a row. Anything more is a bonus.`;
   const left = target - count;
   return `${left === 1 ? "One more makes" : `${left} more make`} the week. No rush.`;

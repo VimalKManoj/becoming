@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { addDays, weekRange } from "../../../convex/lib/time";
+import { addDays, dayKey, weekRange } from "../../../convex/lib/time";
 import { Bone, Skeleton } from "@/components/skeleton";
 import { radioKeys } from "@/components/ritual/radio-keys";
 import { useRitual } from "@/components/ritual/ritual-context";
@@ -216,8 +216,11 @@ function LookBack({ rhythm, week, lookWeek, learning, onLearning, busy, onNext }
   const bloom = useQuery(api.journey.bloom, { since: range.start, until: range.end });
   const pipeline = useQuery(api.proof.pipeline);
   const sessions = rhythm.sessions.filter(session => session.endedAt >= range.start && session.endedAt < range.end);
+  // Everything that moved forward that week, focus or not; the week counts its days.
+  const work = rhythm.moments.filter(moment => moment.at >= range.start && moment.at < range.end);
+  const finished = work.filter(moment => moment.kind === "done").length;
   const result = rhythm.weeks.find(item => item.week === lookWeek);
-  const count = sessions.length;
+  const count = new Set(work.map(moment => dayKey(moment.at, rhythm.timezone))).size;
   const target = lookWeek === rhythm.currentWeek ? week.target : result?.target ?? null;
   const timed = sessions.flatMap(session => {
     if (session.startedAt === null) return [];
@@ -234,11 +237,12 @@ function LookBack({ rhythm, week, lookWeek, learning, onLearning, busy, onNext }
       <h1 id="review-title" tabIndex={-1} className="r-title">A week, looked <em className="mint">back</em> on.</h1>
     </div>
     <dl className="j-stats">
-      <div><dd>{target ? `${count}/${target}` : count}</dd><dt>{target ? "sessions of your target" : count === 1 ? "session" : "sessions"}</dt></div>
-      <div><dd>{timed.length ? timed.reduce((sum, value) => sum + value, 0) : "–"}</dd><dt>{timed.length ? `minutes${timed.length < count ? " timed" : ""}` : "minutes · none timed"}</dt></div>
+      <div><dd>{target ? `${count}/${target}` : count}</dd><dt>{target ? "days of your target" : count === 1 ? "day with progress" : "days with progress"}</dt></div>
+      <div><dd>{finished}</dd><dt>{finished === 1 ? "task finished" : "tasks finished"}</dt></div>
+      <div><dd>{timed.length ? timed.reduce((sum, value) => sum + value, 0) : "–"}</dd><dt>{timed.length ? `focus minutes${timed.length < sessions.length ? " timed" : ""}` : "focus minutes · none"}</dt></div>
       <div><dd>{growth === undefined ? "…" : `+${growth}`}</dd><dt>petal growth</dt></div>
     </dl>
-    <p className="j-14">{laneStory(sessions.map(session => session.lane), which)}{ready ? ` “${ready}” is ready to share.` : ""}</p>
+    <p className="j-14">{laneStory(work.map(moment => moment.lane), which)}{ready ? ` “${ready}” is ready to share.` : ""}</p>
     <label className="r-field">What did {which} teach you?
       <textarea className="r-textarea" rows={3} maxLength={2000} value={learning} onChange={event => onLearning(event.target.value)} placeholder="One honest sentence is plenty." />
     </label>
@@ -246,13 +250,13 @@ function LookBack({ rhythm, week, lookWeek, learning, onLearning, busy, onNext }
   </div>;
 }
 
-/** "Showcases got most of your attention. Writing got one session." from the week's lanes. */
+/** "Showcases got most of your attention. Writing got one piece of work." from the lanes of the week's work. */
 export function laneStory(sessionLanes: Lane[], which: string) {
-  if (!sessionLanes.length) return `No sessions saved ${which}. A quiet week is information, not a verdict.`;
+  if (!sessionLanes.length) return `Nothing moved forward ${which}. A quiet week is information, not a verdict.`;
   const counts = (["Projects", "Showcases", "Writing"] as Lane[]).map(lane => ({ lane, count: sessionLanes.filter(item => item === lane).length })).filter(item => item.count).sort((a, b) => b.count - a.count);
-  if (counts.length === 1) return `Every session ${which} was ${counts[0].lane}.`;
+  if (counts.length === 1) return `Everything ${which} was ${counts[0].lane}.`;
   const lines = [counts[0].count > counts[1].count ? `${counts[0].lane} got most of your attention.` : `${counts.filter(item => item.count === counts[0].count).map(item => item.lane).join(" and ")} shared your attention.`];
-  for (const item of counts.slice(1)) if (item.count === 1 && item.count < counts[0].count) lines.push(`${item.lane} got one session.`);
+  for (const item of counts.slice(1)) if (item.count === 1 && item.count < counts[0].count) lines.push(`${item.lane} got one piece of work.`);
   return lines.join(" ");
 }
 

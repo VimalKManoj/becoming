@@ -22,7 +22,8 @@ describe("the Ritual design's words", () => {
     expect(weekLine({ count: 3, target: 4, streak: 3, configured: true, paused: false })).toBe("One more makes the week. No rush.");
     expect(weekLine({ count: 1, target: 4, streak: 0, configured: true, paused: false })).toBe("3 more make the week. No rush.");
     expect(weekLine({ count: 4, target: 4, streak: 4, configured: true, paused: false })).toBe("Week met. 4 weeks in a row. Anything more is a bonus.");
-    expect(weekLine({ count: 0, target: null, streak: 0, configured: false, paused: false })).toBe("Your week starts with your first session.");
+    expect(weekLine({ count: 0, target: null, streak: 0, configured: false, paused: false })).toBe("Your week starts with the first thing you move forward.");
+    expect(weekLine({ count: 2, target: null, streak: 0, configured: false, paused: false })).toBe("2 days with progress this week.");
     expect(weekLine({ count: 0, target: 3, streak: 2, configured: true, paused: true })).toBe("A planned pause. Your streak waits for you.");
   });
 

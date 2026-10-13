@@ -7,7 +7,8 @@ import { weekLine } from "@/lib/ritual";
 import { useRhythm, type Rhythm } from "@/lib/use-rhythm";
 
 // The week as the Ritual design shows it: seven dots, each filled in the lane colour of
-// that day's work with its initial (P, S, W), today ringed in ember.
+// that day's work with its initial (P, S, W), today ringed in ember. A day is filled when
+// anything moved forward: a session, or a task started, finished or logged.
 
 type Lane = "Projects" | "Showcases" | "Writing";
 const dayLetters = ["M", "T", "W", "T", "F", "S", "S"];
@@ -19,14 +20,16 @@ export type WeekSummary = ReturnType<typeof summarise>;
 export function summarise(rhythm: Rhythm) {
   const days: WeekDay[] = Array.from({ length: 7 }, (_, index) => {
     const date = addDays(rhythm.currentWeek, index);
-    const sessions = rhythm.sessions.filter(session => dayKey(session.endedAt, rhythm.timezone) === date);
+    // Everything that moved forward that day: sessions and tasks started, finished or logged.
+    const work = rhythm.moments.filter(moment => dayKey(moment.at, rhythm.timezone) === date);
     const tally = new Map<Lane, number>();
-    for (const session of sessions) tally.set(session.lane, (tally.get(session.lane) ?? 0) + 1);
+    for (const moment of work) tally.set(moment.lane, (tally.get(moment.lane) ?? 0) + 1);
     const lane = [...tally].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-    return { letter: dayLetters[index], name: dayNames[index], lane, today: date === rhythm.today, future: date > rhythm.today, count: sessions.length };
+    return { letter: dayLetters[index], name: dayNames[index], lane, today: date === rhythm.today, future: date > rhythm.today, count: work.length };
   });
   const thisWeek = rhythm.thisWeek;
-  const count = days.reduce((sum, day) => sum + day.count, 0);
+  // The week counts days with progress, not how many things happened on them.
+  const count = days.filter(day => day.count > 0).length;
   const target = rhythm.configured ? thisWeek?.target ?? null : null;
   const paused = thisWeek?.status === "paused";
   const streak = rhythm.streak.current;
@@ -54,7 +57,7 @@ export function WeekDots({ days, size = 24, labels = false }: { days: WeekDay[];
     {days.map((day, index) => <li key={index} style={labels ? { display: "flex", flexDirection: "column", alignItems: "center", gap: 6 } : undefined}>
       <span className={`r-wdot${day.lane ? ` on lane-${day.lane}` : ""}${day.today ? " today" : ""}${size >= 34 ? " big" : ""}`} style={{ "--s": `${size}px` } as CSSProperties} aria-hidden="true">{day.lane ? day.lane[0] : ""}</span>
       {labels && <span className="r-small" style={{ fontSize: 11, fontWeight: 500 }} aria-hidden="true">{day.letter}</span>}
-      <span className="sr-only">{day.name}: {day.future ? "later this week" : day.count ? `${day.count} ${day.count === 1 ? "session" : "sessions"}, ${day.lane}` : day.today ? "today, nothing saved yet" : "rest"}</span>
+      <span className="sr-only">{day.name}: {day.future ? "later this week" : day.count ? `${day.count} ${day.count === 1 ? "thing" : "things"} moved forward, mostly ${day.lane}` : day.today ? "today, nothing yet" : "rest"}</span>
     </li>)}
   </ol>;
 }

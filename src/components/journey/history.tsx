@@ -12,11 +12,13 @@ import { useRitual } from "@/components/ritual/ritual-context";
 import { readableError } from "@/lib/errors";
 import { formatDay, formatWeek, minutesBetween, plural } from "@/lib/format";
 import type { Rhythm } from "@/lib/use-rhythm";
-import { dotStyle } from "@/components/journey/progress";
+import { dotStyle, workWord } from "@/components/journey/progress";
 
-// Journey's "All sessions" view (?view=history): every saved recap, newest first, with the
-// body of work, your weeks and reflections, and what the shown sessions say about estimates
-// and suggestions. Reached from Recent sessions on the Progress tab.
+// Journey's history (?view=history): everything you moved forward, newest first: tasks
+// finished, started and blocked (in the app, by an assistant, or backfilled from a plan),
+// sessions, and milestones and phases completed. A second view keeps the focus sessions with
+// their recaps, evidence and what they say about estimates and suggestions. Beside them, the
+// body of work and your weeks.
 
 type Lane = "Projects" | "Showcases" | "Writing";
 export type Session = FunctionReturnType<typeof api.journey.listPage>["page"][number];
@@ -38,11 +40,12 @@ function actualMinutes(session: Session) {
 
 export function JourneyHistory({ rhythm }: { rhythm: Rhythm }) {
   const { results, status, loadMore } = usePaginatedQuery(api.journey.listPage, {}, { initialNumItems: 12 });
+  const [view, setView] = useState<"work" | "sessions">("work");
   return <>
     <div className="j-head">
       <div>
         <Link className="r-back" href="/journey" style={{ marginBottom: 16 }}>‹ Journey</Link>
-        <div className="r-eyebrow">Journey · all sessions</div>
+        <div className="r-eyebrow">Journey · everything</div>
         <h1 className="r-title">Every step, <em>kept.</em></h1>
       </div>
     </div>
@@ -52,7 +55,11 @@ export function JourneyHistory({ rhythm }: { rhythm: Rhythm }) {
         <Weeks rhythm={rhythm} />
       </div>
       <div className="j-history-col">
-        {status === "LoadingFirstPage" ? <Skeleton label="Loading your sessions…" className="skel-stack">{[0, 1, 2].map(n => <CardBones key={n} lines={3} chips={2} i={n * 2} />)}</Skeleton> : <>
+        <div className="w-seg" role="group" aria-label="Show" style={{ alignSelf: "flex-start" }}>
+          <button type="button" className={view === "work" ? "on" : undefined} aria-pressed={view === "work"} onClick={() => setView("work")}>Everything</button>
+          <button type="button" className={view === "sessions" ? "on" : undefined} aria-pressed={view === "sessions"} onClick={() => setView("sessions")}>Focus sessions</button>
+        </div>
+        {view === "work" ? <WorkFeed /> : status === "LoadingFirstPage" ? <Skeleton label="Loading your sessions…" className="skel-stack">{[0, 1, 2].map(n => <CardBones key={n} lines={3} chips={2} i={n * 2} />)}</Skeleton> : <>
           {results.length > 0 && <div className="j-insights">
             <LaneBalance sessions={results} more={status !== "Exhausted"} />
             <EstimatePanel sessions={results} />
@@ -65,7 +72,66 @@ export function JourneyHistory({ rhythm }: { rhythm: Rhythm }) {
   </>;
 }
 
-// ---------- History ----------
+// ---------- Everything you moved forward ----------
+
+type Feed = FunctionReturnType<typeof api.journey.feed>;
+type FeedRow = { key: string; at: number; item?: Feed["items"][number]; marker?: Feed["markers"][number] };
+
+/** The work feed, a page at a time going back in time; each page is its own subscription. */
+function WorkFeed() {
+  const [cursors, setCursors] = useState<(number | undefined)[]>([undefined]);
+  return <section className="r-stack" style={{ gap: 14 }} aria-labelledby="feed-heading">
+    <h2 id="feed-heading" className="j-h16">Everything you moved forward</h2>
+    <p className="r-small">Tasks finished, started and blocked, wherever it happened (here, through an assistant, or backfilled from a plan), focus sessions, and milestones and phases completed.</p>
+    {cursors.map((before, index) => <FeedPage key={before ?? "first"} before={before} last={index === cursors.length - 1} onMore={next => setCursors([...cursors, next])} />)}
+  </section>;
+}
+
+function FeedPage({ before, last, onMore }: { before: number | undefined; last: boolean; onMore: (next: number) => void }) {
+  const page = useQuery(api.journey.feed, before === undefined ? { limit: 30 } : { before, limit: 30 });
+  if (page === undefined) return <Skeleton label="Loading your work…" className="skel-stack">{[0, 1, 2].map(n => <CardBones key={n} lines={2} i={n * 2} />)}</Skeleton>;
+  const rows: FeedRow[] = [
+    ...page.items.map(item => ({ key: item.key, at: item.at, item })),
+    ...page.markers.map(marker => ({ key: marker.key, at: marker.at, marker })),
+  ].sort((a, b) => b.at - a.at);
+  if (!rows.length && before === undefined) return <p className="j-empty-box">Nothing yet. Finish or start a task in <Link href="/work">Work</Link>, or ask an assistant to, and it appears here.</p>;
+  const days: { label: string; rows: FeedRow[] }[] = [];
+  for (const row of rows) {
+    const label = formatDay(row.at);
+    const day = days.at(-1);
+    if (day && day.label === label) day.rows.push(row); else days.push({ label, rows: [row] });
+  }
+  return <>
+    {days.map(day => <section key={`${before ?? 0}-${day.label}`} className="r-stack" style={{ gap: 8 }} aria-label={day.label}>
+      <h3 className="r-eyebrow" style={{ margin: "6px 4px 0" }}>{day.label}</h3>
+      <ol className="j-plain j-feed">{day.rows.map(row => <li key={row.key}>{row.marker ? <MarkerRow marker={row.marker} /> : <ItemRow item={row.item!} />}</li>)}</ol>
+    </section>)}
+    {last && page.next !== null && <button type="button" className="r-ghost sm" style={{ alignSelf: "flex-start" }} onClick={() => onMore(page.next!)}>Show older work</button>}
+  </>;
+}
+
+function ItemRow({ item }: { item: Feed["items"][number] }) {
+  return <div className={`j-feed-item${item.backfilled ? " back" : ""}`}>
+    <span className="r-dot" style={dotStyle(item.lane)} aria-hidden="true" />
+    <div style={{ minWidth: 0 }}>
+      <div className="j-feed-title"><span className="j-feed-kind">{workWord(item)}</span> {item.title}</div>
+      <div className="r-small">{[item.lane, item.project, item.source !== "app" ? `via ${item.source}` : null].filter(Boolean).join(" · ")}</div>
+      {item.note && <div className="j-feed-note">{item.kind === "blocked" ? "Blocked by: " : ""}{item.note}</div>}
+    </div>
+  </div>;
+}
+
+function MarkerRow({ marker }: { marker: Feed["markers"][number] }) {
+  return <div className="j-feed-item marker">
+    <span className="j-feed-mark" aria-hidden="true">{marker.kind === "phase" ? "⬢" : "✓"}</span>
+    <div style={{ minWidth: 0 }}>
+      <div className="j-feed-title"><span className="j-feed-kind">{marker.kind === "phase" ? "Phase complete" : "Milestone complete"}</span> {marker.title}</div>
+      {marker.project && <div className="r-small">{marker.project}</div>}
+    </div>
+  </div>;
+}
+
+// ---------- Focus sessions ----------
 
 /** Sessions grouped by the month they were saved in, newest first, as the browser shows dates. */
 function byMonth(sessions: Session[]) {
@@ -237,7 +303,8 @@ function BodyOfWork() {
   if (summary === undefined) return <Skeleton label="Loading your body of work…"><CardBones lines={3} /></Skeleton>;
   const { lifetime, firsts } = summary;
   const counts: [number, string][] = [
-    [lifetime.sessions, lifetime.sessions === 1 ? "saved session" : "saved sessions"],
+    [lifetime.finished, lifetime.finished === 1 ? "task finished" : "tasks finished"],
+    [lifetime.sessions, lifetime.sessions === 1 ? "focus session" : "focus sessions"],
     [lifetime.evidence, lifetime.evidence === 1 ? "piece of evidence" : "pieces of evidence"],
     [lifetime.published, "published"],
     [lifetime.milestones, lifetime.milestones === 1 ? "milestone completed" : "milestones completed"],
@@ -245,14 +312,14 @@ function BodyOfWork() {
   return <section className="j-card r-stack" style={{ gap: 14 }} aria-labelledby="lifetime-heading">
     <h2 id="lifetime-heading" className="j-h15">Your body of work so far</h2>
     <dl className="j-counts">{counts.map(([count, label]) => <div key={label}><dt>{label}</dt><dd>{count}</dd></div>)}</dl>
-    <p className="r-small">A missed week never takes saved sessions away.</p>
+    <p className="r-small">A missed week never takes finished work away.</p>
     {firsts.length > 0 ? <div className="r-stack" style={{ gap: 10 }}>
       <h3 className="r-eyebrow">Firsts</h3>
       <ol className="j-firsts">{firsts.map(first => <li key={first.kind}>
         <span className="j-mono-12">{formatDay(first.at)}</span>
         <span className="j-13"><strong style={{ fontWeight: 500, color: "var(--r-ink)" }}>{first.label}</strong>{first.detail ? ` · ${first.detail}` : ""}</span>
       </li>)}</ol>
-    </div> : <p className="r-small">Your firsts (first session, first showcase, first published piece) appear here as they happen.</p>}
+    </div> : <p className="r-small">Your firsts (first task finished, first showcase, first published piece) appear here as they happen.</p>}
   </section>;
 }
 
@@ -271,14 +338,14 @@ function Weeks({ rhythm }: { rhythm: Rhythm }) {
       {rhythm.configured && <span className="j-mono-12">{rhythm.streak.current}{rhythm.streakIsLowerBound ? "+" : ""}w streak · longest {rhythm.streak.longest}</span>}
     </div>
     {!rhythm.configured && <p className="j-13">Choose a weekly target in the <Link href="/journey?view=review">weekly review</Link> or <Link href="/settings">Settings</Link> to see each week’s result and your streaks.</p>}
-    <p className="r-small">Paused weeks and the week in progress neither add to nor break a streak. Finished weeks keep the target they had.</p>
+    <p className="r-small">A day counts when anything moved forward: a task finished, started or logged, or a focus session. Weeks start from the week you joined. Paused weeks and the week in progress neither add to nor break a streak; finished weeks keep the target they had.</p>
     <ol className="j-plain j-weeks">{recent.map(item => {
       const reflection = rhythm.reflections.find(note => note.week === item.week);
       const plan = rhythm.plans.find(note => note.week === item.week);
       const [cls, label] = weekStatus[item.status];
       return <li key={item.week}>
         <div className="r-row r-between" style={{ gap: "6px 12px" }}>
-          <span className="j-13"><span className="sr-only">Week of </span><span className="r-mono">{formatWeek(item.week)}</span> <span className="r-small">· {item.target ? `${item.count} of ${plural(item.target, "session")}` : plural(item.count, "session")}</span></span>
+          <span className="j-13"><span className="sr-only">Week of </span><span className="r-mono">{formatWeek(item.week)}</span> <span className="r-small">· {item.target ? `${item.count} of ${plural(item.target, "day")} with progress` : `${plural(item.count, "day")} with progress`}</span></span>
           <span className={`r-status ${cls}`}>{label}</span>
         </div>
         {(reflection?.learning || reflection?.intention || plan?.intention) && <dl className="j-reflection">

@@ -21,7 +21,7 @@ export type Rhythm = ReturnType<typeof deriveRhythm>;
 
 /**
  * Weekly rhythm derived in the browser from stored records: the saved timezone,
- * commitments and session end times. `undefined` while loading.
+ * commitments, and the work done (sessions and task moves). `undefined` while loading.
  */
 export function useRhythm() {
   const now = useNow();
@@ -33,28 +33,43 @@ export function useRhythm() {
 }
 
 type Overview = FunctionReturnType<typeof api.rhythm.overview>;
+/** One piece of work on the timeline: a saved session, or a task started, finished or logged. */
+export type Moment = { at: number; lane: "Projects" | "Showcases" | "Writing"; kind: string; backfilled: boolean };
 
 export function deriveRhythm(data: Overview, now: number) {
   const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const savedZone = data.timezone && isSupportedTimeZone(data.timezone) ? data.timezone : null;
   const timezone = savedZone ?? browserZone;
   const currentWeek = weekKey(now, timezone);
-  const counts = new Map<string, number>();
-  for (const session of data.sessions) {
-    const week = weekKey(session.endedAt, timezone);
-    counts.set(week, (counts.get(week) ?? 0) + 1);
+  // Work, not only focus: a saved session or a task started, finished or logged, from the app,
+  // an assistant or a backfilled plan. A week counts its active days (a day with any of it).
+  const moments: Moment[] = [
+    ...data.sessions.map(session => ({ at: session.endedAt, lane: session.lane, kind: "session", backfilled: false })),
+    ...data.work.map(move => ({ at: move.at, lane: move.lane, kind: move.kind, backfilled: move.backfilled })),
+  ].sort((x, y) => x.at - y.at);
+  const days = new Map<string, Set<string>>();
+  for (const moment of moments) {
+    const week = weekKey(moment.at, timezone);
+    days.set(week, (days.get(week) ?? new Set()).add(dayKey(moment.at, timezone)));
   }
-  // The oldest week touching the query window may be only partly loaded, so evaluation
-  // starts at the first complete week after it.
-  const firstFullWeek = addDays(weekKey(data.windowStart, timezone), 7);
+  const counts = new Map([...days].map(([week, set]) => [week, set.size]));
+  // Weeks start at the week of your first activity (the oldest week touching the query window
+  // may be only partly loaded, so never before the first complete week after it).
+  const firstWork = moments[0] ? weekKey(moments[0].at, timezone) : currentWeek;
+  const loadedWeek = addDays(weekKey(data.windowStart, timezone), 7);
+  const firstFullWeek = firstWork > loadedWeek ? firstWork : loadedWeek;
+  // Weeks before you first chose a target are judged by that first target, so work done
+  // before setting it can still make a streak instead of breaking it as "not set".
+  const earliest = [...data.commitments].sort((x, y) => x.week.localeCompare(y.week))[0];
+  const judged = earliest && earliest.week > firstFullWeek ? [{ week: firstFullWeek, target: earliest.target, paused: false }, ...data.commitments] : data.commitments;
   const weeks: WeekResult[] = [];
   for (let week = currentWeek; week >= firstFullWeek; week = addDays(week, -7)) {
-    weeks.push(evaluateWeek(week, currentWeek, counts.get(week) ?? 0, data.commitments));
+    weeks.push(evaluateWeek(week, currentWeek, counts.get(week) ?? 0, judged));
   }
   const streak = streaks(weeks);
   // If the current run never breaks inside the loaded window, the real streak may be longer.
   const brokeAt = weeks.findIndex(week => week.status === "missed" || week.status === "not-set");
-  const streakIsLowerBound = streak.current > 0 && brokeAt === -1;
+  const streakIsLowerBound = streak.current > 0 && brokeAt === -1 && firstFullWeek === loadedWeek;
   const nextWeek = addDays(currentWeek, 7);
   return {
     configured: Boolean(savedZone) && data.commitments.length > 0,
@@ -71,6 +86,8 @@ export function deriveRhythm(data: Overview, now: number) {
     streak,
     streakIsLowerBound,
     counts,
+    moments,
+    joinedAt: data.joinedAt,
     sessions: data.sessions,
     reflections: data.reflections,
     plans: data.plans,

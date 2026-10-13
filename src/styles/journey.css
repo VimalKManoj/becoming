@@ -32,13 +32,13 @@
 .j-pulse{width:7px;height:7px;border-radius:50%;background:var(--r-ember);box-shadow:0 0 8px var(--r-ember);animation:r-pulse 2.4s ease-in-out infinite}
 .j-graph-body{display:flex;gap:8px;margin-top:18px}
 .j-days{flex:none;display:flex;flex-direction:column;gap:4px;padding-top:19px;font:500 9.5px var(--r-sans);color:var(--r-muted)}
-.j-days span{height:14px;line-height:14px}
+.j-days span{height:var(--cell,14px);line-height:var(--cell,14px)}
 .j-cols{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;display:flex;flex-direction:row-reverse;justify-content:flex-start;gap:4px;padding-bottom:2px}
 .j-cols::-webkit-scrollbar{display:none}
 .j-col{flex:none;display:flex;flex-direction:column;gap:4px;animation:r-cell .45s both}
-.j-month{position:relative;height:15px;width:14px}
+.j-month{position:relative;height:15px;width:var(--cell,14px)}
 .j-month span{position:absolute;left:0;top:0;white-space:nowrap;font:500 10px var(--r-sans);color:var(--r-muted)}
-.j-cell{display:block;width:14px;height:14px;box-sizing:border-box;border-radius:4px;border:1px solid transparent}
+.j-cell{display:block;width:var(--cell,14px);height:var(--cell,14px);box-sizing:border-box;border-radius:calc(var(--cell,14px) * .28);border:1px solid transparent}
 .j-cell.l0,.j-swatch.l0{background:rgba(255,240,225,.06)}
 .j-cell.l1,.j-swatch.l1{background:rgba(255,138,61,.32)}
 .j-cell.l2,.j-swatch.l2{background:rgba(255,138,61,.62)}
@@ -92,7 +92,7 @@
 .j-step-n.on{background:var(--r-mint);color:var(--r-on-mint)}
 .j-rev{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:18px;animation:r-rise .6s both}
 .j-rev h1:focus{outline:none}
-.j-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0}
+.j-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:0}
 .j-stats>div{display:flex;flex-direction:column-reverse;justify-content:flex-end;padding:14px;border-radius:20px;background:rgba(255,240,225,.05);min-width:0}
 .j-stats dd{margin:0;font:500 24px var(--r-mono)}
 .j-stats dt{font:400 12px var(--r-sans);color:var(--r-muted);margin-top:4px}
@@ -172,3 +172,24 @@
 .j-alert{padding:10px 14px;border-radius:14px;background:rgba(255,107,91,.12);border:1px solid rgba(255,107,91,.35);font:400 13px/1.4 var(--r-sans);color:var(--r-red-pale)}
 
 @media(max-width:420px){.j-stats dd,.j-counts dd{font-size:20px}.j-target{width:48px}}
+
+/* Journey tracks work, not only focus (12 October). The bloom's column also holds the tidy-up
+   card; graph days made only of backfilled work (recorded later, like an imported plan) show paler. */
+.j-main-col{flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.j-main-col .j-bloom{flex:none}
+.j-cell.back,.j-swatch.back{opacity:.45}
+.j-tidy{animation:r-rise .7s .1s both}
+.j-tidy-list{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.j-tidy-row{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--r-line)}
+.j-tidy-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.j-tidy-name{font:500 14px/1.3 var(--r-sans);color:var(--r-ink)}
+.j-feed{display:flex;flex-direction:column;gap:6px}
+.j-feed-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:16px;background:rgba(255,240,225,.03);border:1px solid var(--r-line)}
+.j-feed-item .r-dot{margin-top:6px;flex:none}
+.j-feed-item.back{opacity:.7}
+.j-feed-item.marker{background:rgba(134,227,195,.06);border-color:rgba(134,227,195,.22)}
+.j-feed-mark{flex:none;width:18px;text-align:center;color:var(--r-mint-text);font:500 13px/1.6 var(--r-sans)}
+.j-feed-title{font:500 14px/1.35 var(--r-sans);color:var(--r-ink);overflow-wrap:anywhere}
+.j-feed-kind{color:var(--r-ember-soft);font-weight:500}
+.j-feed-item.marker .j-feed-kind{color:var(--r-mint-text)}
+.j-feed-note{margin-top:4px;font:400 12.5px/1.45 var(--r-sans);color:var(--r-text);white-space:pre-line}
