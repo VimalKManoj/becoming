@@ -11,7 +11,9 @@
 :where(.np) input,:where(.np) textarea,:where(.np) select{width:100%;min-width:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;font:inherit;color:inherit}
 .np em{font-style:normal;color:var(--ember-t)}
 /* Less room around this page, so a whole step fits a laptop screen without scrolling. */
-@media (min-width: 900px){.r-scroll:has(> .np){padding-top:28px;padding-bottom:24px}}
+/* The page keeps its bottom space itself (not the scroll area's padding), so the pinned footer
+   reaches the very bottom of the screen with nothing showing below it. */
+@media (min-width: 900px){.r-scroll:has(> .np){padding-top:28px;padding-bottom:0}.np{padding-bottom:24px}}
 
 .np .top{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
 .np .back{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line3);color:var(--text);font:500 13px var(--sans);cursor:pointer}
@@ -38,7 +40,7 @@
 /* One scroll only, the page's: the card grows with its step (a short step needs no scrolling),
    its footer stays pinned to the bottom of the screen on a long one, and the preview stays in
    view beside it. */
-.np .card{display:flex;flex-direction:column;border-radius:28px;background:linear-gradient(160deg,rgba(255,240,225,.05),rgba(255,240,225,.015));border:1px solid var(--line)}
+.np .card{display:flex;flex-direction:column;padding:0;box-shadow:none;border-radius:28px;background:linear-gradient(160deg,rgba(255,240,225,.05),rgba(255,240,225,.015));border:1px solid var(--line)}
 .np .scroll{padding:32px 40px 16px}
 .np .in{max-width:620px;animation:np-enter .45s cubic-bezier(.22,1,.36,1) both}
 .np .q{margin:0;font:400 36px/1.08 var(--serif);letter-spacing:-.015em}
@@ -112,7 +114,11 @@
 .np .min:hover{border-color:rgba(255,170,110,.4)}
 
 /* footer */
-.np .foot{position:sticky;bottom:0;z-index:2;flex:none;display:flex;align-items:center;gap:12px;padding:14px 28px;border-top:1px solid var(--line);border-radius:0 0 28px 28px;background:rgba(24,18,15,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.np .foot{position:sticky;bottom:0;z-index:2;flex:none;display:flex;align-items:center;gap:12px;padding:14px 28px;border-top:1px solid var(--line);border-radius:0 0 28px 28px;background:#18120F}
+/* Pinned over a long step: square corners (rounded ones would show the content behind) and a
+   soft shadow above it; it rounds again where the card ends. */
+.np .foot.stuck{border-radius:0;box-shadow:0 -16px 32px rgba(10,8,7,.6)}
+.np .foot-end{height:1px;margin-top:-1px}
 .np .foot .sp{flex:1}
 .np .textbtn{min-height:44px;padding:0 8px;color:var(--muted);font:500 14px var(--sans);cursor:pointer}
 .np .textbtn:hover{color:var(--ink)}

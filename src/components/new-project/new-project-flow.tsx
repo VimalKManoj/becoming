@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -64,6 +64,16 @@ export function NewProjectFlow({ ideaId, onCancel, onOpenProject }: Props) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<{ projectId: Id<"projects">; firstTaskId: Id<"tasks"> | null } | null>(null);
+  // The footer is pinned to the bottom of the screen while the card goes on below it.
+  const footEnd = useRef<HTMLDivElement>(null);
+  const [stuck, setStuck] = useState(false);
+  useEffect(() => {
+    const end = footEnd.current;
+    if (!end) return;
+    const watch = new IntersectionObserver(([entry]) => setStuck(!entry.isIntersecting), { root: document.getElementById("main"), threshold: 1 });
+    watch.observe(end);
+    return () => watch.disconnect();
+  }, [created]);
 
   const { docs, phases } = plan;
   const picked = docs.filter(d => d.on);
@@ -303,11 +313,12 @@ export function NewProjectFlow({ ideaId, onCancel, onOpenProject }: Props) {
           {content}
           {error && <p className="err" role="alert">{error}</p>}
         </div>
-        {!created && <div className="foot">
+        {!created && <div className={`foot${stuck ? " stuck" : ""}`}>
           {step > 0 && <button type="button" className="textbtn" onClick={() => go(step - 1)}>← Back</button>}
           <span className="sp" />
           <button type="button" className="btn" disabled={busy} onClick={next}>{step === 3 ? (busy ? "Creating…" : "Create project") : "Continue"}</button>
         </div>}
+        {!created && <div ref={footEnd} className="foot-end" aria-hidden="true" />}
       </section>
 
       <aside className="pv" aria-label="Preview">
