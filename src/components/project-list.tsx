@@ -7,6 +7,11 @@ import { activityLine, who } from "@/components/constellation/panel";
 import { StatusControl } from "@/components/tasks/status-control";
 import { QuickAdd } from "@/components/tasks/quick-add";
 import { useTaskMove } from "@/components/tasks/use-task-move";
+import { InlineField } from "@/components/tasks/inline-field";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useRitual } from "@/components/ritual/ritual-context";
+import { readableError } from "@/lib/errors";
 
 // A project's List view: the owner's design (the canvas's List artboard), on the same records
 // as the Visual map (convex/constellation.ts). Phase → milestone → task, with where you are,
@@ -130,6 +135,12 @@ export function ProjectList(props: ProjectListProps) {
   const openMs = openM ?? (currentMs ? { [currentMs.key]: true } : hereMs ? { [hereMs.key]: true } : {});
 
   const moves = useTaskMove();
+  const setProjectNotes = useMutation(api.projects.setNotes);
+  const { showToast } = useRitual();
+  const saveNotes = async (notes: string) => {
+    try { await setProjectNotes({ projectId: map.project.id, notes }); showToast(notes.trim() ? "Notes saved." : "Notes cleared."); return true; }
+    catch (error) { showToast(readableError(error, "Could not save the notes."), "alert"); return false; }
+  };
   // Every row moves with the same status circle (PLAN-one-tap-and-daily-loop, Phase 1).
   const asTask = (t: CTask) => ({ _id: t.id, title: t.title, status: words[stOf[t.state]] });
 
@@ -344,6 +355,10 @@ export function ProjectList(props: ProjectListProps) {
       </section>
 
       <aside className="side">
+        <section className="card pl-notes" aria-labelledby="pl-notes">
+          <div className="chead"><h2 id="pl-notes" className="eyebrow" style={{ margin: 0 }}>Notes</h2></div>
+          <InlineField label="Project notes" value={map.project.notes} empty="Add notes: decisions, links, anything worth keeping" multiline maxLength={10000} className="tk-notes" onSave={saveNotes} />
+        </section>
         <section className="card" aria-labelledby="pl-docs">
           <div className="chead"><h2 id="pl-docs" className="eyebrow lilac" style={{ margin: 0 }}>Built from · {plural(map.docs.length, "doc")}</h2>
             {map.docs.length > 0 && <span className="cnum">{docsWritten === map.docs.length ? "ALL WRITTEN" : `${map.docs.length - docsWritten} PLANNED`}</span>}</div>

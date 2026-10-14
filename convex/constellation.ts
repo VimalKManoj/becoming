@@ -3,7 +3,7 @@ import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/s
 import type { Doc, Id } from "./_generated/dataModel";
 import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
 import { bloomSkillValues } from "./lib/bloom";
-import { httpUrl, optionalText } from "./lib/validate";
+import { httpUrl, notesValue, optionalText } from "./lib/validate";
 
 // The project constellation (Work → Projects → Visual): one project as a map from its
 // genesis (idea, research, report, decision) through its docs to its phases, milestones and
@@ -78,7 +78,7 @@ export async function constellationFor(ctx: QueryCtx, owner: string, projectId: 
   };
   const milestoneView = (m: Doc<"milestones">, code: string) => {
     const own = tasks.filter(t => t.milestoneId === m._id).map((t, k) => taskView(t, `${code}·${k + 1}`));
-    return { id: m._id, code, title: m.title, doneWhen: m.doneWhen ?? "", skills: m.skills ?? [], completedAt: m.completedAt ?? null, tasks: own, ...summarise(own) };
+    return { id: m._id, code, title: m.title, doneWhen: m.doneWhen ?? "", notes: m.notes ?? "", skills: m.skills ?? [], completedAt: m.completedAt ?? null, tasks: own, ...summarise(own) };
   };
 
   const phaseIds = new Set(phases.map(p => String(p._id)));
@@ -87,7 +87,7 @@ export async function constellationFor(ctx: QueryCtx, owner: string, projectId: 
     const all = ms.flatMap(m => m.tasks);
     const dates = all.flatMap(t => [t.startedAt, t.completedAt].filter((x): x is number => x !== null));
     return {
-      id: p._id, num: pad(i), order: p.order, name: p.name, goal: p.goal ?? "", nextStep: p.nextStep ?? "", doneWhen: p.doneWhen ?? "", skills: p.skills ?? [],
+      id: p._id, num: pad(i), order: p.order, name: p.name, goal: p.goal ?? "", nextStep: p.nextStep ?? "", doneWhen: p.doneWhen ?? "", notes: p.notes ?? "", skills: p.skills ?? [],
       milestones: ms, startedAt: dates.length ? Math.min(...dates) : null, endedAt: dates.length && all.every(t => t.state === "done") ? Math.max(...dates) : null,
       ...summarise(all),
     };
@@ -124,7 +124,7 @@ export async function constellationFor(ctx: QueryCtx, owner: string, projectId: 
   const started = [project._creationTime, ownIdea?._creationTime, ...tasks.flatMap(t => [t._creationTime, t.startedAt, t.completedAt])].filter((x): x is number => typeof x === "number");
   const overall = summarise(allTasks);
   return {
-    project: { id: project._id, title: project.title, purpose: project.purpose, outcome: project.outcome ?? "", status: project.status, createdAt: project._creationTime },
+    project: { id: project._id, title: project.title, purpose: project.purpose, outcome: project.outcome ?? "", notes: project.notes ?? "", status: project.status, createdAt: project._creationTime },
     genesis: {
       idea: ownIdea ? { id: ownIdea._id, title: ownIdea.title, notes: ownIdea.notes, lane: ownIdea.lane, createdAt: ownIdea._creationTime, brainstorm: ownIdea.brainstorm ?? null } : null,
       research: research.filter(r => r.owner === owner).map(r => ({ id: r._id, title: r.title, summary: r.summary ?? "", sources: r.sources, createdAt: r._creationTime, source: r.source })),
@@ -342,5 +342,15 @@ export const setMilestoneSkills = mutation({
     const milestone = await ctx.db.get(args.milestoneId);
     assertOwner(milestone, owner);
     await ctx.db.patch(milestone!._id, { skills: skillsValue(args.skills) });
+  },
+});
+
+/** Free notes on a phase; only the notes change, and empty notes clear them. */
+export const setPhaseNotes = mutation({
+  args: { phaseId: v.id("phases"), notes: v.string() },
+  handler: async (ctx, args) => {
+    const phase = await ownedPhase(ctx, await requireOwner(ctx), args.phaseId);
+    await ctx.db.patch(phase._id, { notes: notesValue(args.notes) });
+    return null;
   },
 });

@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
-import { optionalText } from "./lib/validate";
+import { notesValue, optionalText } from "./lib/validate";
 import { doneWhenValue, effortValues } from "./lib/taskRules";
 import { projectStatus } from "./schema";
 import { skillsValue } from "./constellation";
@@ -43,7 +43,7 @@ async function lastWorkedAt(ctx: Ctx, owner: string, projectId: Id<"projects">) 
   return lastSession?.endedAt ?? null;
 }
 
-const projectSummary = (project: Doc<"projects">) => ({ _id: project._id, title: project.title, purpose: project.purpose, outcome: project.outcome ?? "", status: project.status, ideaId: project.ideaId });
+const projectSummary = (project: Doc<"projects">) => ({ _id: project._id, title: project.title, purpose: project.purpose, outcome: project.outcome ?? "", notes: project.notes ?? "", status: project.status, ideaId: project.ideaId });
 
 export const list = query({
   args: { status: v.optional(projectStatus) },
@@ -115,7 +115,7 @@ export async function projectFor(ctx: Ctx, owner: string, projectId: Id<"project
       lastWorkedAt: await lastWorkedAt(ctx, owner, project._id),
       milestones: milestones.map(milestone => {
         const linked = tasks.filter(task => task.milestoneId === milestone._id);
-        return { _id: milestone._id, title: milestone.title, doneWhen: milestone.doneWhen ?? "", order: milestone.order, completedAt: milestone.completedAt, phaseId: milestone.phaseId ?? null, skills: milestone.skills ?? [], progress: progress(linked), tasks: linked.map(taskView) };
+        return { _id: milestone._id, title: milestone.title, doneWhen: milestone.doneWhen ?? "", notes: milestone.notes ?? "", order: milestone.order, completedAt: milestone.completedAt, phaseId: milestone.phaseId ?? null, skills: milestone.skills ?? [], progress: progress(linked), tasks: linked.map(taskView) };
       }),
       unassigned: tasks.filter(task => !task.milestoneId || !milestones.some(m => m._id === task.milestoneId)).map(taskView),
     };
@@ -358,5 +358,29 @@ export const createWithFirstStep = mutation({
     });
     await logEvent(ctx, owner, { _id: taskId, projectId }, "created");
     return { projectId, taskId };
+  },
+});
+
+// ---------- Notes ----------
+// Free notes on a project or a milestone: anything worth keeping, in your own words.
+// Only the notes change; empty notes clear them.
+
+export const setNotes = mutation({
+  args: { projectId: v.id("projects"), notes: v.string() },
+  handler: async (ctx, args) => {
+    const project = await ownedProject(ctx, await requireOwner(ctx), args.projectId);
+    await ctx.db.patch(project._id, { notes: notesValue(args.notes) });
+    return null;
+  },
+});
+
+export const setMilestoneNotes = mutation({
+  args: { milestoneId: v.id("milestones"), notes: v.string() },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const milestone = await ctx.db.get(args.milestoneId);
+    assertOwner(milestone, owner);
+    await ctx.db.patch(milestone._id, { notes: notesValue(args.notes) });
+    return null;
   },
 });

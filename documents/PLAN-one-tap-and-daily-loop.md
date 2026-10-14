@@ -68,7 +68,7 @@ The goal of this plan is that **a normal evening needs no data entry**:
   - the latest 3 history entries, with "Show all";
   - quiet links at the foot.
 
-  Tasks gained optional free **notes** (owner asked for a place to write about a task).
+  Tasks gained optional free **notes** (owner asked for a place to write about a task), and so did projects (a Notes card on the project page), milestones and phases (in their sheets).
 - **Also in this phase:** the dead all-lanes view and the old Up next/plan CSS are gone; the DoneForm and NextStepForm are no longer used.
 - **Checks:** 189 tests (10 new in `convex/oneTap.test.ts`), typecheck, lint and build. Checked in the browser on dev with a throwaway account: quick add, start, finish with the finish card, Undo, block with a reason, unblock, and in-place edits (done-when, size, energy, skills), at phone and desktop widths. No console errors.
 

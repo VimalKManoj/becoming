@@ -8,7 +8,7 @@ import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
 import { projectIsOpen, refreshMilestone, taskLinks } from "./lib/projects";
 import { fitFor, pinnedNote, rankFocuses } from "./lib/recommend";
 import { clearPinIf, dependencyValues, doneWhenValue, effortValues, nextStepValue, prerequisiteCleared, smallerStepValues } from "./lib/taskRules";
-import { httpUrl, tagList } from "./lib/validate";
+import { httpUrl, notesValue, tagList } from "./lib/validate";
 import { logEvent, snapshot } from "./lib/taskEvents";
 import { progressKinds } from "./lib/work";
 import { archiveTask, restoreTask } from "./lib/taskArchive";
@@ -242,8 +242,6 @@ export const edit = mutation({
     if (task.status === "Archived") throw new ConvexError(`"${task.title}" is archived. Restore it first.`);
     const nextStep = args.nextStep?.trim();
     if (nextStep !== undefined && nextStep.length > 2000) throw new ConvexError("Keep the next step under 2,000 characters.");
-    const notes = args.notes?.trim();
-    if (notes !== undefined && notes.length > 10000) throw new ConvexError("Keep the notes under 10,000 characters.");
     await ctx.db.patch(task._id, {
       ...(args.title !== undefined ? { title: nonempty(args.title) } : {}),
       ...(nextStep !== undefined ? { nextStep } : {}),
@@ -251,7 +249,7 @@ export const edit = mutation({
       ...(args.minutes !== undefined || args.energy !== undefined ? effortValues(args.minutes ?? task.minutes, args.energy ?? task.energy) : {}),
       ...(args.skills !== undefined ? { skills: skillValues(args.skills) } : {}),
       // Empty notes clear them.
-      ...(notes !== undefined ? { notes: notes || undefined } : {}),
+      ...(args.notes !== undefined ? { notes: notesValue(args.notes) } : {}),
     });
     return task._id;
   },

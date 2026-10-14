@@ -7,7 +7,7 @@ import { skillsValue } from "./constellation";
 import { refreshMilestone } from "./lib/projects";
 import { doneWhenValue, effortValues, hasPrerequisiteLoop, smallerStepValues } from "./lib/taskRules";
 import { isWeekKey } from "./lib/time";
-import { dateKeyValue, httpUrl, optionalText, tagList, timezoneValue } from "./lib/validate";
+import { dateKeyValue, httpUrl, notesValue, optionalText, tagList, timezoneValue } from "./lib/validate";
 import { artifactStatus, brainstorm, decision, lane, outcome, projectStatus, researchSource, swapReason, taskStatus, workingStatus } from "./schema";
 import { docCodeValue, linkValue } from "./constellation";
 import { plannedSessionsValue } from "./tasks";
@@ -47,8 +47,8 @@ export const exportAll = query({
     return {
       format: backupFormat, version: backupVersion,
       profile: profile ? { motive: profile.motive, timezone: profile.timezone, weeklyTarget: profile.weeklyTarget, laneFocus: profile.laneFocus, pinnedTaskId: profile.pinnedTaskId, onboardedAt: profile.onboardedAt, focusQuotes: profile.focusQuotes, focusMusic: profile.focusMusic, reminderOn: profile.reminderOn, reminderTime: profile.reminderTime, reminderDays: profile.reminderDays, reminderEmail: profile.reminderEmail } : null,
-      projects: projects.map(p => ({ id: p._id, title: p.title, purpose: p.purpose, status: p.status, outcome: p.outcome, ideaId: p.ideaId })),
-      milestones: milestones.map(m => ({ id: m._id, projectId: m.projectId, title: m.title, doneWhen: m.doneWhen, order: m.order, completedAt: m.completedAt, phaseId: m.phaseId, skills: m.skills })),
+      projects: projects.map(p => ({ id: p._id, title: p.title, purpose: p.purpose, status: p.status, outcome: p.outcome, ideaId: p.ideaId, notes: p.notes })),
+      milestones: milestones.map(m => ({ id: m._id, projectId: m.projectId, title: m.title, doneWhen: m.doneWhen, order: m.order, completedAt: m.completedAt, phaseId: m.phaseId, skills: m.skills, notes: m.notes })),
       ideas: ideas.map(i => ({ id: i._id, title: i.title, notes: i.notes, lane: i.lane, taskId: i.taskId, archivedAt: i.archivedAt, brainstorm: i.brainstorm })),
       tasks: tasks.map(t => ({ id: t._id, title: t.title, lane: t.lane, status: t.status, archivedFrom: t.archivedFrom, archivedWithProject: t.archivedWithProject, projectId: t.projectId, milestoneId: t.milestoneId, ideaId: t.ideaId, minutes: t.minutes, energy: t.energy, doneWhen: t.doneWhen, nextStep: t.nextStep, smallerStep: t.smallerStep, smallerDone: t.smallerDone, smallerMinutes: t.smallerMinutes, dependencies: t.dependencies, startedAt: t.startedAt, completedAt: t.completedAt, skills: t.skills, plannedSessions: t.plannedSessions, notes: t.notes })),
       sessions: sessions.map(s => ({ id: s._id, taskId: s.taskId, lane: s.lane, title: s.title, outcome: s.outcome, contribution: s.contribution, nextStep: s.nextStep, evidence: s.evidence, startedAt: s.startedAt, endedAt: s.endedAt, smaller: s.smaller, doneWhen: s.doneWhen, plannedMinutes: s.plannedMinutes, projectId: s.projectId, recommended: s.recommended, swapReason: s.swapReason, skills: s.skills, source: s.source })),
@@ -57,7 +57,7 @@ export const exportAll = query({
       reflections: reflections.map(r => ({ week: r.week, learning: r.learning, intention: r.intention })),
       weekPlans: plans.map(p => ({ week: p.week, intention: p.intention, taskIds: p.taskIds })),
       // The project constellation: phases, docs, and each idea's research, report and decision.
-      phases: phases.map(p => ({ id: p._id, projectId: p.projectId, order: p.order, name: p.name, goal: p.goal, nextStep: p.nextStep, doneWhen: p.doneWhen, skills: p.skills })),
+      phases: phases.map(p => ({ id: p._id, projectId: p.projectId, order: p.order, name: p.name, goal: p.goal, nextStep: p.nextStep, doneWhen: p.doneWhen, skills: p.skills, notes: p.notes })),
       projectDocs: docs.map(d => ({ projectId: d.projectId, code: d.code, title: d.title, summary: d.summary, sections: d.sections, link: d.link, phaseIds: d.phaseIds, nextEdit: d.nextEdit, doneWhen: d.doneWhen, writtenAt: d.writtenAt, updatedAt: d.updatedAt, source: d.source })),
       research: research.map(r => ({ ideaId: r.ideaId, title: r.title, summary: r.summary, sources: r.sources, source: r.source })),
       reports: reports.map(r => ({ ideaId: r.ideaId, title: r.title, summary: r.summary, findings: r.findings, decision: r.decision, source: r.source, writtenAt: r.writtenAt })),
@@ -72,8 +72,8 @@ const backup = v.object({
   profile: v.union(v.null(), v.object({ motive: v.string(), timezone: v.optional(v.string()), weeklyTarget: v.optional(v.number()), laneFocus: v.optional(lane), pinnedTaskId: v.optional(v.string()),
     onboardedAt: v.optional(v.number()), focusQuotes: v.optional(v.boolean()), focusMusic: v.optional(v.boolean()), reminderOn: v.optional(v.boolean()),
     reminderTime: v.optional(v.union(v.literal("19:30"), v.literal("20:30"), v.literal("21:30"))), reminderDays: v.optional(v.union(v.literal("weekdays"), v.literal("everyday"))), reminderEmail: v.optional(v.boolean()) })),
-  projects: v.array(v.object({ id: v.string(), title: v.string(), purpose: v.string(), status: projectStatus, outcome: v.optional(v.string()), ideaId: v.optional(v.string()) })),
-  milestones: v.array(v.object({ id: v.string(), projectId: v.string(), title: v.string(), doneWhen: v.optional(v.string()), order: v.number(), completedAt: v.optional(v.number()), phaseId: v.optional(v.string()), skills: v.optional(v.array(v.string())) })),
+  projects: v.array(v.object({ id: v.string(), title: v.string(), purpose: v.string(), status: projectStatus, outcome: v.optional(v.string()), ideaId: v.optional(v.string()), notes: v.optional(v.string()) })),
+  milestones: v.array(v.object({ id: v.string(), projectId: v.string(), title: v.string(), doneWhen: v.optional(v.string()), order: v.number(), completedAt: v.optional(v.number()), phaseId: v.optional(v.string()), skills: v.optional(v.array(v.string())), notes: v.optional(v.string()) })),
   ideas: v.array(v.object({ id: v.string(), title: v.string(), notes: v.string(), lane, taskId: v.optional(v.string()), archivedAt: v.optional(v.number()), brainstorm: v.optional(brainstorm) })),
   tasks: v.array(v.object({
     id: v.string(), title: v.string(), lane, status: taskStatus, archivedFrom: v.optional(workingStatus), archivedWithProject: v.optional(v.boolean()),
@@ -96,7 +96,7 @@ const backup = v.object({
   reflections: v.array(v.object({ week: v.string(), learning: v.string(), intention: v.string() })),
   weekPlans: v.optional(v.array(v.object({ week: v.string(), intention: v.string(), taskIds: v.array(v.string()) }))),
   // The constellation tables are optional, so backups made before them still restore.
-  phases: v.optional(v.array(v.object({ id: v.string(), projectId: v.string(), order: v.number(), name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()), skills: v.optional(v.array(v.string())) }))),
+  phases: v.optional(v.array(v.object({ id: v.string(), projectId: v.string(), order: v.number(), name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()), skills: v.optional(v.array(v.string())), notes: v.optional(v.string()) }))),
   projectDocs: v.optional(v.array(v.object({
     projectId: v.string(), code: v.string(), title: v.string(), summary: v.optional(v.string()), sections: v.optional(v.number()), link: v.optional(v.string()),
     phaseIds: v.array(v.string()), nextEdit: v.optional(v.string()), doneWhen: v.optional(v.string()), writtenAt: v.optional(v.number()), updatedAt: v.number(), source: v.string(),
@@ -241,7 +241,7 @@ export const importBackup = mutation({
     // invalid throws, and the transaction leaves the workspace empty.
     assertRestorable(data);
 
-    for (const p of data.projects) ids.projects.set(p.id, await ctx.db.insert("projects", { owner, title: nonempty(p.title), purpose: nonempty(p.purpose, 2000), status: p.status, outcome: optionalText(p.outcome, 2000, "a project outcome") }));
+    for (const p of data.projects) ids.projects.set(p.id, await ctx.db.insert("projects", { owner, title: nonempty(p.title), purpose: nonempty(p.purpose, 2000), status: p.status, outcome: optionalText(p.outcome, 2000, "a project outcome"), notes: p.notes ? notesValue(p.notes) : undefined }));
     // completedAt is checked against the linked tasks below: a backed-up date is kept only
     // if the milestone really is complete, and a missing one is filled in.
     for (const p of phases) {
@@ -249,9 +249,10 @@ export const importBackup = mutation({
         owner, projectId: need(ids.projects, p.projectId, "project"), order: p.order, name: nonempty(p.name, 120),
         goal: optionalText(p.goal, 1000, "a phase goal"), nextStep: optionalText(p.nextStep, 2000, "a phase's next step"), doneWhen: optionalText(p.doneWhen, 1000, "a phase's done-when"),
         ...(p.skills?.length ? { skills: skillsValue(p.skills) } : {}),
+        notes: p.notes ? notesValue(p.notes) : undefined,
       }));
     }
-    for (const m of data.milestones) ids.milestones.set(m.id, await ctx.db.insert("milestones", { owner, projectId: need(ids.projects, m.projectId, "project"), title: nonempty(m.title), doneWhen: optionalText(m.doneWhen, 1000, "a milestone outcome"), order: m.order, completedAt: m.completedAt, phaseId: optional(ids.phases, m.phaseId, "phase"), ...(m.skills?.length ? { skills: skillsValue(m.skills) } : {}) }));
+    for (const m of data.milestones) ids.milestones.set(m.id, await ctx.db.insert("milestones", { owner, projectId: need(ids.projects, m.projectId, "project"), title: nonempty(m.title), doneWhen: optionalText(m.doneWhen, 1000, "a milestone outcome"), order: m.order, completedAt: m.completedAt, phaseId: optional(ids.phases, m.phaseId, "phase"), ...(m.skills?.length ? { skills: skillsValue(m.skills) } : {}), notes: m.notes ? notesValue(m.notes) : undefined }));
     for (const i of data.ideas) ids.ideas.set(i.id, await ctx.db.insert("ideas", { owner, title: nonempty(i.title), notes: limited(i.notes, 10000, "idea notes"), lane: i.lane, archivedAt: i.archivedAt, brainstorm: i.brainstorm ? brainstormValues(i.brainstorm) : undefined }));
     for (const t of data.tasks) {
       ids.tasks.set(t.id, await ctx.db.insert("tasks", {

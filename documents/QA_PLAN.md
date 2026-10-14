@@ -253,6 +253,7 @@ Every task shows the same **status circle** (empty Ready, half In progress, ✓ 
   - quiet links: Edit all details, Open the project, See it on the map, Pin for tonight, Archive.
 
   Click any value to change it: text fields save on Enter (Ctrl+Enter in longer ones) and Escape cancels without closing the sheet; Time and Energy show their choices. **Notes** keep line breaks, and emptying them clears them. On a phone, each label sits above its value.
+- [ ] Notes elsewhere: the project page's side column starts with a **Notes** card, and the milestone and phase sheets have a **Notes** block under Done when. Click to write, Ctrl+Enter to save; it's there after a reload and in an exported backup.
 - [ ] Today → Focus session → **Show my focus**: **Start without the timer** and **Done already** move the task in one tap, with the same toasts.
 - [ ] Start a focus session on a task, then tap its circle in Work. **Expect:** "This task has a focus session running…".
 - [ ] Mark a project done, then tap a Ready circle on one of its tasks (from `?lane=Projects`). **Expect:** "This task's project is done or archived…".

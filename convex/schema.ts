@@ -99,6 +99,8 @@ export default defineSchema({
   projects: defineTable({
     owner: v.string(), title: v.string(), purpose: v.string(), status: projectStatus,
     outcome: v.optional(v.string()), ideaId: v.optional(v.id("ideas")),
+    // Anything worth keeping about it, in your own words (optional, edited where it's shown).
+    notes: v.optional(v.string()),
   }).index("by_owner", ["owner"]).index("by_owner_status", ["owner", "status"]),
   // Ordered steps inside a project. Progress is derived from linked tasks; completedAt is
   // recorded when every linked task is done, and cleared if one reopens.
@@ -109,6 +111,8 @@ export default defineSchema({
     skills: v.optional(v.array(v.string())),
     // The phase it belongs to (the constellation's phase rows); none = outside any phase.
     phaseId: v.optional(v.id("phases")),
+    // Anything worth keeping about it, in your own words (optional, edited where it's shown).
+    notes: v.optional(v.string()),
   }).index("by_project", ["projectId", "order"]).index("by_owner", ["owner"]).index("by_phase", ["phaseId", "order"]),
   // A project's plan, phase by phase: each groups milestones, which group tasks.
   phases: defineTable({
@@ -117,6 +121,8 @@ export default defineSchema({
     goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()),
     // Skills its work practises, inherited by finished tasks without their own or their milestone's.
     skills: v.optional(v.array(v.string())),
+    // Anything worth keeping about it, in your own words (optional, edited where it's shown).
+    notes: v.optional(v.string()),
   }).index("by_project", ["projectId", "order"]).index("by_owner", ["owner"]),
   // The documents a project's plan stands on (PRD, system design, schema…). The writing lives
   // in your repo; Becoming keeps what it is, where it is, and which phases it feeds.

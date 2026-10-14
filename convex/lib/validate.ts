@@ -40,3 +40,10 @@ export function timezoneValue(value: string, message = "Choose a valid timezone.
   if (!/^[A-Za-z][A-Za-z0-9_+\-]*(\/[A-Za-z0-9_+\-]+){0,3}$/.test(zone) || zone.length > 64) throw new ConvexError(message);
   return zone;
 }
+
+/** Free notes on a task, milestone, phase or project: trimmed, up to 10,000 characters; empty clears them. */
+export function notesValue(input: string) {
+  const notes = input.trim();
+  if (notes.length > 10000) throw new ConvexError("Keep the notes under 10,000 characters.");
+  return notes || undefined;
+}

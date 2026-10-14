@@ -238,3 +238,5 @@
 /* One tap (PLAN-one-tap-and-daily-loop, Phase 1): quick add at the foot of each milestone. On a phone the circle stays and the pill steps aside. */
 .pl .tasks>.tk-quick{margin:8px 0 2px}
 .pl .nx .tk-control{align-self:center}
+/* The project's free notes, edited in place (top of the side column). */
+.pl .pl-notes .tk-inline{margin:6px -10px 0;width:calc(100% + 20px);font:400 13.5px/1.5 var(--sans);color:var(--ink2,#E9DFD6)}

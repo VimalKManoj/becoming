@@ -13,6 +13,7 @@ import { ProjectList } from "@/components/project-list";
 import { authClient } from "@/lib/auth-client";
 import { Sheet, StatusChip, focusOnMount, type EditableTask, type Lane } from "@/components/task-forms";
 import { StatusControl } from "@/components/tasks/status-control";
+import { InlineField } from "@/components/tasks/inline-field";
 import { radioKeys } from "@/components/ritual/radio-keys";
 import { useRitual } from "@/components/ritual/ritual-context";
 import { readableError } from "@/lib/errors";
@@ -445,6 +446,7 @@ function MilestoneSheet({ projectTitle, milestone, state, index, count, canAdd, 
   const moveMilestone = useMutation(api.projects.moveMilestone);
   const removeMilestone = useMutation(api.projects.removeMilestone);
   const setMilestonePhase = useMutation(api.constellation.setMilestonePhase);
+  const setNotes = useMutation(api.projects.setMilestoneNotes);
   const { busy, save } = useSaver();
   const [mode, setMode] = useState<"view" | "edit" | "remove">("view");
 
@@ -471,6 +473,7 @@ function MilestoneSheet({ projectTitle, milestone, state, index, count, canAdd, 
       </div>
       {milestone.progress.total > 0 && <div className="r-bar" role="img" aria-label={`${milestone.progress.done} of ${plural(milestone.progress.total, "task")} done`}><span style={{ width: `${percentOf(milestone.progress)}%` }} /></div>}
       {milestone.doneWhen && <div className="r-dashed"><div className="r-eyebrow-sm">Done when</div><div className="r-body" style={{ marginTop: 4 }}>{milestone.doneWhen}</div></div>}
+      <NotesBlock value={milestone.notes} onSave={notes => save(() => setNotes({ milestoneId: milestone._id, notes }), notes.trim() ? "Notes saved." : "Notes cleared.")} />
       {phases === undefined ? <LinesSkeleton label="Loading the project's phases…" lines={1} small />
         : phases.length === 0 ? <p className="r-small">No phases yet. Add phases on the project page to group milestones into stages of the plan.</p>
           : <label className="r-field" htmlFor="milestone-phase">Phase
@@ -499,6 +502,13 @@ function MilestoneSheet({ projectTitle, milestone, state, index, count, canAdd, 
   </Sheet>;
 }
 
+/** Free notes on a milestone or phase, edited where they're shown. */
+function NotesBlock({ value, onSave }: { value: string; onSave: (notes: string) => Promise<boolean> }) {
+  return <div className="r-inset"><div className="r-eyebrow-sm">Notes</div>
+    <div className="r-body" style={{ marginTop: 4 }}><InlineField label="Notes" value={value} empty="Add notes: anything worth keeping about it" multiline maxLength={10000} className="tk-notes" onSave={onSave} /></div>
+  </div>;
+}
+
 // ---------- Phases ----------
 
 type PhaseValues = { name: string; goal: string; nextStep: string; doneWhen: string; skills: string[] };
@@ -515,6 +525,7 @@ function PhaseSheet({ projectTitle, phase, index, count, onClose, onRemoved }: {
   const updatePhase = useMutation(api.constellation.updatePhase);
   const movePhase = useMutation(api.constellation.movePhase);
   const removePhase = useMutation(api.constellation.removePhase);
+  const setNotes = useMutation(api.constellation.setPhaseNotes);
   const { busy, save } = useSaver();
   const [mode, setMode] = useState<"view" | "edit" | "remove">("view");
   const move = (direction: -1 | 1) => void save(() => movePhase({ phaseId: phase.id, direction }), `“${phase.name}” moved ${direction < 0 ? "earlier" : "later"}.`);
@@ -532,6 +543,7 @@ function PhaseSheet({ projectTitle, phase, index, count, onClose, onRemoved }: {
       {phase.goal && <div className="r-inset"><div className="r-eyebrow-sm">Goal</div><div className="r-body" style={{ marginTop: 4 }}>{phase.goal}</div></div>}
       {phase.nextStep && <div className="r-inset"><div className="r-eyebrow-sm">Next step</div><div className="r-body" style={{ marginTop: 4 }}>{phase.nextStep}</div></div>}
       {phase.doneWhen && <div className="r-dashed"><div className="r-eyebrow-sm">Done when</div><div className="r-body" style={{ marginTop: 4 }}>{phase.doneWhen}</div></div>}
+      <NotesBlock value={phase.notes} onSave={notes => save(() => setNotes({ phaseId: phase.id, notes }), notes.trim() ? "Notes saved." : "Notes cleared.")} />
       <div>
         <div className="r-eyebrow-sm">Milestones</div>
         {phase.milestones.length ? <ul className="w-phase-ms">{phase.milestones.map(item => <li key={item.id}>
