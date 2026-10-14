@@ -16,7 +16,7 @@ import { radioKeys } from "@/components/ritual/radio-keys";
 import { WeekDots, useWeek, type WeekSummary } from "@/components/ritual/week";
 import { Bone, Skeleton, TodaySkeleton } from "@/components/skeleton";
 import { Onboarding } from "@/components/today/onboarding";
-import { DoneForm } from "@/components/task-forms";
+import { useTaskMove } from "@/components/tasks/use-task-move";
 import { InboxCard } from "@/components/today/inbox-card";
 import { FocusOverlay, RecapOverlay, RewardOverlay, type Saved } from "@/components/today/session";
 
@@ -316,17 +316,11 @@ function ProjectChoice({ project, now, suggested, onChoose }: { project: Project
 }
 
 function FocusCard({ focus, chosen, busy, onStart }: { focus: Choice; chosen: boolean; busy: boolean; onStart: () => void }) {
-  const { showToast } = useRitual();
-  const setStatus = useMutation(api.tasks.setStatus);
-  const [finishing, setFinishing] = useState(false);
-  const [moving, setMoving] = useState(false);
-  // The timer is optional: a task can also just be started, or marked done, from here.
-  async function move(status: "In progress" | "Done", message: string, extra: { note?: string; skills?: string[] } = {}) {
-    setMoving(true);
-    try { await setStatus({ taskId: focus.taskId, status, ...extra }); showToast(message); setFinishing(false); }
-    catch (caught) { showToast(readableError(caught, "Could not update the task. Please try again."), "alert"); }
-    finally { setMoving(false); }
-  }
+  // The timer is optional: a task can also just be started, or marked done, from here, in one
+  // tap with an Undo; a finish shows its skills, milestone and what's next.
+  const moves = useTaskMove();
+  const moving = moves.busy === focus.taskId;
+  const task = { _id: focus.taskId, title: focus.taskTitle, status: focus.status };
   const context = focus.smaller ? `Smaller step of “${focus.taskTitle}”` : focus.linedUp ? "Lined up this week" : focus.milestoneTitle ?? (focus.status === "In progress" ? "Picking up" : "Ready");
   return <section key={focus.taskId} className="r-card ember t-focus" aria-labelledby="focus-title">
     <div className="r-row r-between" style={{ gap: 8 }}>
@@ -336,17 +330,13 @@ function FocusCard({ focus, chosen, busy, onStart }: { focus: Choice; chosen: bo
     <h2 id="focus-title" className="t-focus-title">{focus.title}</h2>
     <div className="r-row" style={{ gap: 6 }}><span className="r-fact mono">{focus.minutes} min</span><span className="r-fact">{energyNames[focus.energy - 1]} energy</span><span className="r-fact">{context}</span></div>
     {focus.nextStep && !focus.smaller && <div className="r-inset" style={{ marginTop: 14 }}><div className="r-eyebrow-sm">{focus.status === "In progress" ? "Pick up here" : "Next step"}</div><div className="r-body" style={{ marginTop: 4 }}>{focus.nextStep}</div></div>}
-    <div className="r-dashed" style={{ marginTop: 12 }}><div className="r-eyebrow-sm">Done when</div><div className="r-body" style={{ marginTop: 4 }}>{focus.doneWhen}</div></div>
+    <div className="r-dashed" style={{ marginTop: 12 }}><div className="r-eyebrow-sm">Done when</div><div className="r-body" style={{ marginTop: 4 }}>{focus.doneWhen || "Not set yet. Decide what finished looks like before you start, and add it to the task in Work."}</div></div>
     <div className="t-why"><span className="r-diamond" aria-hidden="true" /><span><b>Why this: </b>{chosen ? "You chose this one yourself." : focus.reason}</span></div>
-    {finishing
-      ? <div style={{ marginTop: 16 }}><DoneForm busy={moving} onSubmit={(note, skills) => void move("Done", `“${focus.taskTitle}” is done.`, { note, skills })} onCancel={() => setFinishing(false)} /></div>
-      : <>
-        <button type="button" className="r-btn lg block split" style={{ marginTop: 18 }} disabled={busy || moving} onClick={onStart}>{busy ? "Starting…" : "Start focus"}<span className="r-time">{focus.minutes}:00</span></button>
-        <div className="r-row t-focus-more">
-          {focus.status === "Ready" && !focus.smaller && <button type="button" className="r-ghost sm" disabled={busy || moving} onClick={() => void move("In progress", `Started “${focus.taskTitle}”. It's in progress in Work.`)}>Start without the timer</button>}
-          {!focus.smaller && <button type="button" className="r-ghost sm" disabled={busy || moving} onClick={() => setFinishing(true)}>Done already?</button>}
-        </div>
-      </>}
+    <button type="button" className="r-btn lg block split" style={{ marginTop: 18 }} disabled={busy || moving} onClick={onStart}>{busy ? "Starting…" : "Start focus"}<span className="r-time">{focus.minutes}:00</span></button>
+    <div className="r-row t-focus-more">
+      {focus.status === "Ready" && !focus.smaller && <button type="button" className="r-ghost sm" disabled={busy || moving} onClick={() => void moves.move(task, "In progress")}>Start without the timer</button>}
+      {!focus.smaller && <button type="button" className="r-ghost sm" disabled={busy || moving} onClick={() => void moves.move(task, "Done")}>Done already</button>}
+    </div>
   </section>;
 }
 

@@ -12,6 +12,7 @@ import { useModal } from "@/components/ritual/use-modal";
 // assignment. Saving an idea never adds work to Today.
 
 type Lane = "Projects" | "Showcases" | "Writing";
+const energies = [{ value: 1, label: "Low" }, { value: 2, label: "Steady" }, { value: 3, label: "High" }] as const;
 const lanes: Lane[] = ["Projects", "Showcases", "Writing"];
 const modes: { id: CaptureMode; label: string; placeholder: string; button: string; note: string }[] = [
   { id: "idea", label: "Idea", placeholder: "A title is enough", button: "Save to Ideas", note: "Saving an idea never adds work to Today." },
@@ -35,6 +36,7 @@ function CaptureCard({ mode, onMode, onClose, onProject, onToast }: { mode: Capt
   const [doneWhen, setDoneWhen] = useState("");
   const [lane, setLane] = useState<Lane | null>(null);
   const [minutes, setMinutes] = useState(30);
+  const [energy, setEnergy] = useState(2);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const area = useRef<HTMLTextAreaElement>(null);
@@ -59,8 +61,7 @@ function CaptureCard({ mode, onMode, onClose, onProject, onToast }: { mode: Capt
         onToast("Saved to Ideas. Nothing was added to Today.");
         onClose();
       } else if (mode === "task") {
-        if (!doneWhen.trim()) { setError("Say when it's done, so you know when to stop."); setBusy(false); return; }
-        await createTask({ title, lane: chosenLane, minutes, energy: 2, doneWhen: doneWhen.trim() });
+        await createTask({ title, lane: chosenLane, minutes, energy, doneWhen: doneWhen.trim() });
         onToast("Added to Work as Ready. Today can suggest it when it fits.");
         onClose();
       } else {
@@ -85,11 +86,14 @@ function CaptureCard({ mode, onMode, onClose, onProject, onToast }: { mode: Capt
       {mode !== "project" && <textarea ref={area} className="r-textarea r-cap-textarea" rows={3} placeholder={details.placeholder} value={text} onChange={event => setText(event.target.value)} maxLength={mode === "assignment" ? 10000 : 2000} aria-label={details.placeholder} />}
       {mode === "project" && <p className="r-lede">A name, why it matters, and one first step. About a minute.</p>}
       {mode === "task" && <>
-        <input className="r-input" placeholder="Done when…" value={doneWhen} onChange={event => setDoneWhen(event.target.value)} maxLength={1000} aria-label="Done when" />
+        <input className="r-input" placeholder="Done when… (optional)" value={doneWhen} onChange={event => setDoneWhen(event.target.value)} maxLength={1000} aria-label="Done when" />
         <div className="r-row" style={{ gap: 6 }}>
           {lanes.map(item => <button key={item} type="button" className={`r-chip round lane-${item}`} aria-pressed={item === chosenLane} onClick={() => setLane(item)}><span className="r-dot" />{item}</button>)}
           <span style={{ flex: 1 }} />
-          {[15, 30, 45, 60].map(value => <button key={value} type="button" className="r-chip mono" aria-pressed={value === minutes} onClick={() => setMinutes(value)}>{value}m</button>)}
+          {[15, 30, 45, 60, 90].map(value => <button key={value} type="button" className="r-chip mono" aria-pressed={value === minutes} onClick={() => setMinutes(value)}>{value}m</button>)}
+        </div>
+        <div className="r-row" style={{ gap: 6 }} role="group" aria-label="Energy it needs">
+          {energies.map(item => <button key={item.value} type="button" className="r-chip round" aria-pressed={item.value === energy} onClick={() => setEnergy(item.value)}>{item.label} energy</button>)}
         </div>
       </>}
       {error && <p role="alert" className="r-small" style={{ color: "var(--r-red-pale)" }}>{error}</p>}

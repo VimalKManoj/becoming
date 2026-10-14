@@ -276,11 +276,6 @@
 .cx .mcp{font:500 9px var(--mono);letter-spacing:.1em;color:var(--lilac-t);border:1px solid rgba(201,184,240,.35);border-radius:6px;padding:1px 5px;margin-left:4px}
 .cx .fwhen{display:block;font:400 11px var(--mono);color:var(--muted);margin-top:2px}
 /* Unblock: the next step, asked inline. */
-.cx .ubform{display:flex;flex-direction:column;gap:10px}
-.cx .ubin{width:100%;min-height:76px;padding:11px 13px;border-radius:14px;background:rgba(255,240,225,.05);border:1px solid var(--line4);font:400 13.5px/1.45 var(--sans);color:var(--ink);resize:vertical}
-.cx .ubin:focus{border-color:rgba(255,138,61,.55);outline:none}
-.cx .ubrow{display:flex;gap:8px}
-.cx .ubrow .btn{flex:1}
 
 
 /* Fill mode: the project's Visual page. The map and its panel are exactly one screen tall
@@ -310,3 +305,5 @@
 @keyframes cx-pulse{0%,100%{opacity:.6}50%{opacity:1}}
 @keyframes cx-spin{to{transform:rotate(360deg)}}
 @keyframes cx-enter{from{opacity:0;transform:scale(.985) translateY(6px)}to{opacity:1;transform:none}}
+
+.cx .prow .tk-control{margin:-6px 2px -6px -6px}

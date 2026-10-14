@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Bone } from "@/components/skeleton";
-import { useRitual } from "@/components/ritual/ritual-context";
-import { readableError } from "@/lib/errors";
+import { StatusControl } from "@/components/tasks/status-control";
 import {
   ago, brainstormEntries, capital, dayMonth, dayRange, dayTime, duration, groupLabel, hours, numberWord, plural, splitTitle,
   type CDoc, type Constellation, type GTask, type GenStep, type GenesisLayout, type Group, type TaskState,
@@ -21,7 +19,9 @@ type Tone = "ember" | "lilac" | "mint";
 export type FeedItem = { who: string; initial: string; ai: boolean; what: string; when: string };
 export type PanelModel = {
   key: string; tone: Tone; eyebrow: string; a: string; em: string; status: string; scls: string; meta: string;
-  primary?: { label: string; href?: string; onClick?: () => void; unblock?: Id<"tasks"> };
+  primary?: { label: string; href?: string; onClick?: () => void };
+  /** A task, moved with the same status circle as everywhere else (one tap, with Undo). */
+  move?: { _id: Id<"tasks">; title: string; status: string };
   stats?: { v: string | number; l: string }[];
   list?: { k: string; items: { k: string; v: string; pct?: number; href?: string }[] };
   chips?: { k: string; items: { t: string; tone: Tone; go: () => void }[] };
@@ -113,7 +113,8 @@ export function buildPanel(c: PanelContext): PanelModel {
       return {
         key: `t:${task.id}`, tone: "ember", eyebrow: `Task ${task.code}${group.num ? ` · Phase ${group.num}` : ""}`, a: task.title, em: "", status, scls,
         meta: task.cur === "done" && task.completedAt ? `Done ${dayMonth(task.completedAt)}` : `${task.minutes} min`,
-        primary: real === "done" ? undefined : real === "blocked" ? { label: "Unblock", unblock: task.id } : { label: "Start a focus session", href: `/today?task=${task.id}` },
+        primary: real === "done" || real === "blocked" ? undefined : { label: "Start a focus session", href: `/today?task=${task.id}` },
+        move: { _id: task.id, title: task.title, status: STATUS[real][0] },
         list: { k: "Details", items },
         chips: docChips(group),
         next: { k: task.cur === "blocked" ? "What's blocking it" : "Next step", v: task.cur === "done" ? "Done." : task.nextStep || "No next step written yet.", doneK: "Done when", done: task.doneWhen },
@@ -231,28 +232,7 @@ export function buildPanel(c: PanelContext): PanelModel {
 
 export function Panel({ model }: { model: PanelModel }) {
   const story = useQuery(api.constellation.taskStory, model.story ? { taskId: model.story.taskId } : "skip");
-  const setStatus = useMutation(api.tasks.setStatus);
-  const { showToast } = useRitual();
-  const [asking, setAsking] = useState(false);
-  const [busy, setBusy] = useState(false);
   const d = model;
-
-  const unblock = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const taskId = d.primary?.unblock;
-    const note = String(new FormData(event.currentTarget).get("note") ?? "").trim();
-    if (!taskId || !note) return;
-    setBusy(true);
-    try {
-      await setStatus({ taskId, status: "Ready", note });
-      showToast("Unblocked. It’s ready again.");
-      setAsking(false);
-    } catch (error) {
-      showToast(readableError(error), "alert");
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const timeline: FeedItem[] | null = d.story ? (story ?? []).slice(-8).map(e => {
     const w = who(e.source, d.story?.initial ?? "");
@@ -265,22 +245,13 @@ export function Panel({ model }: { model: PanelModel }) {
       <div className={`pc head ${d.tone}`}>
         <div className={`eyebrow ${d.tone}`}><span className={`dot ${d.tone}`} />{d.eyebrow}</div>
         <h2 className="ptitle">{d.a}{d.em && <> <em className={d.tone}>{d.em}</em></>}</h2>
-        <div className="prow"><span className={`status ${d.scls}`}>{d.status}</span><span className="small">{d.meta}</span></div>
+        <div className="prow">{d.move && <StatusControl task={d.move} />}<span className={`status ${d.scls}`}>{d.status}</span><span className="small">{d.meta}</span></div>
       </div>
 
-      {d.primary && !asking && <div className="prim">
+      {d.primary && <div className="prim">
         {d.primary.href ? <Link className="btn" href={d.primary.href}>{d.primary.label}</Link>
-          : d.primary.unblock ? <button type="button" className="btn" onClick={() => setAsking(true)}>{d.primary.label}</button>
-            : <button type="button" className="btn" onClick={d.primary.onClick}>{d.primary.label}</button>}
+          : <button type="button" className="btn" onClick={d.primary.onClick}>{d.primary.label}</button>}
       </div>}
-      {asking && <form className="dashed ubform" onSubmit={unblock}>
-        <label className="eyebrow ember" htmlFor="cx-unblock-note">What&apos;s the next step?</label>
-        <textarea id="cx-unblock-note" className="ubin" name="note" rows={2} required maxLength={2000} ref={el => el?.focus()} placeholder="So you know where to pick up." />
-        <div className="ubrow">
-          <button type="submit" className="btn" disabled={busy}>{busy ? "Unblocking…" : "Unblock"}</button>
-          <button type="button" className="ghost" onClick={() => setAsking(false)} disabled={busy}>Cancel</button>
-        </div>
-      </form>}
 
       {d.stats && <div className="stats">
         {d.stats.map(s => <div key={s.l} className="stc"><div className="stv">{s.v}</div><div className="stl">{s.l}</div></div>)}

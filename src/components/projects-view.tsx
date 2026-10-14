@@ -12,6 +12,7 @@ import { ConstellationView } from "@/components/constellation/constellation-view
 import { ProjectList } from "@/components/project-list";
 import { authClient } from "@/lib/auth-client";
 import { Sheet, StatusChip, focusOnMount, type EditableTask, type Lane } from "@/components/task-forms";
+import { StatusControl } from "@/components/tasks/status-control";
 import { radioKeys } from "@/components/ritual/radio-keys";
 import { useRitual } from "@/components/ritual/ritual-context";
 import { readableError } from "@/lib/errors";
@@ -119,7 +120,7 @@ type AreaProps = {
   onVisual: (visual: boolean) => void;
   onOpen:(projectId: Id<"projects"> | null) => void;
   onBack: () => void;
-  onOpenTask: (taskId: Id<"tasks">, step?: "unblock") => void;
+  onOpenTask: (taskId: Id<"tasks">) => void;
   onNewTask: (defaults: Partial<EditableTask>) => void;
 };
 
@@ -228,7 +229,6 @@ function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTas
   const addMilestone = useMutation(api.projects.addMilestone);
   const addPhase = useMutation(api.constellation.addPhase);
   const addDoc = useMutation(api.constellation.addDoc);
-  const setTaskStatus = useMutation(api.tasks.setStatus);
   const setMilestonePhase = useMutation(api.constellation.setMilestonePhase);
   const setMilestoneSkills = useMutation(api.constellation.setMilestoneSkills);
   const inbox = useQuery(api.inbox.list);
@@ -246,7 +246,7 @@ function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTas
   const active = project.status === "Active";
   const lane = project.lane;
   const changeStatus = (status: ProjectStatus, text: string) => void save(() => setStatus({ projectId, status }), text);
-  const newTask = (milestoneId?: Id<"milestones">) => onNewTask({ projectId, milestoneId, lane: lane ?? "Projects" });
+  const newTask = (milestoneId?: Id<"milestones">, title?: string) => onNewTask({ projectId, milestoneId, lane: lane ?? "Projects", ...(title ? { title } : {}) });
 
   async function edit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -329,9 +329,8 @@ function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTas
       : map === null ? <p className="r-dashed r-body">This project’s plan couldn’t be loaded.</p>
         : <ProjectList map={map} active={active} statusWord={statusWord} busy={busy} initial={initial} inboxCount={inbox?.length ?? 0}
           onOpenTask={onOpenTask}
-          onStart={task => void save(() => setTaskStatus({ taskId: task.id, status: "In progress" }), `Started “${task.title}”.`)}
           onMakeActive={() => changeStatus("Active", "Project is active again.")}
-          onAddTask={milestoneId => newTask(milestoneId)}
+          onAddTask={(milestoneId, title) => newTask(milestoneId, title)}
           onAddMilestone={phaseId => setSheet({ kind: "add-milestone", phaseId })}
           onAddPhase={() => setSheet({ kind: "add-phase" })}
           onEditPhase={id => setSheet({ kind: "phase", id })}
@@ -425,12 +424,15 @@ function DeleteProjectSheet({ projectId, active, onClose, onArchive, onDeleted }
 }
 
 /** A compact task line: title, minutes and where it sits, and its status in words. */
+/** A task in a list: the status circle moves it, the rest opens it. */
 export function TaskRow({ task, where, onOpen }: { task: Pick<DetailTask, "_id" | "title" | "status" | "minutes" | "lane" | "nextStep">; where?: string; onOpen: () => void }) {
-  return <button type="button" id={`task-${task._id}`} className={`w-row lane-${task.lane}`} onClick={onOpen}>
-    <span className="r-dot" aria-hidden="true" />
-    <span className="w-row-text"><span className="w-row-title">{task.title}</span><span className="w-row-meta">{task.minutes} min · {task.lane}{where ? ` · ${where}` : ""}</span></span>
-    <StatusChip status={task.status} />
-  </button>;
+  return <span className="w-row-wrap">
+    <StatusControl task={task} compact />
+    <button type="button" id={`task-${task._id}`} className={`w-row lane-${task.lane}`} onClick={onOpen}>
+      <span className="w-row-text"><span className="w-row-title">{task.title}</span><span className="w-row-meta">{task.minutes} min · {task.lane}{where ? ` · ${where}` : ""}</span></span>
+      <StatusChip status={task.status} />
+    </button>
+  </span>;
 }
 
 function MilestoneSheet({ projectTitle, milestone, state, index, count, canAdd, phases, phaseId, onClose, onRemoved, onOpenTask, onNewTask }: {

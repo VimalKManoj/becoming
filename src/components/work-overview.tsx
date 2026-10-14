@@ -9,12 +9,14 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { calendarDays, plural } from "@/components/constellation/model";
 import { planSummary, words } from "@/components/project-list";
 import type { EditableTask, Lane } from "@/components/task-forms";
+import { StatusControl } from "@/components/tasks/status-control";
+import { QuickAdd } from "@/components/tasks/quick-add";
 
 // Work ("What you're building"): the owner's Work artboard (documents/design/work.dc.html).
 // Each active project is one row (where it stands in its plan, a hexagon per phase, what's
 // up next), ideas still in genesis sit beside them, and below are only the tasks that belong
-// to no project: a project's tasks live on its own page. Starting focus is always explicit:
-// the play button on a loose task, or a task's own sheet.
+// to no project: a project's tasks live on its own page. Every task moves with the same
+// status circle (one tap, with Undo); the play button always means a focus session.
 
 type Project = FunctionReturnType<typeof api.projects.list>[number];
 type Idea = FunctionReturnType<typeof api.genesis.inProgress>[number];
@@ -33,9 +35,7 @@ function stateLabel(p: Project, now: number) {
 
 export type WorkOverviewProps = {
   now: number;
-  busy: boolean;
-  onOpenTask: (taskId: Id<"tasks">, step?: "unblock") => void;
-  onStartTask: (task: { id: Id<"tasks">; title: string }) => void;
+  onOpenTask: (taskId: Id<"tasks">) => void;
   onOpenProject: (projectId: Id<"projects">) => void;
   onNewTask: (defaults?: Partial<EditableTask>) => void;
   onQuickTask: () => void;
@@ -111,7 +111,7 @@ export function WorkOverview(props: WorkOverviewProps) {
             <div className="lhead"><span className="ldot" style={{ background: l.colour }} aria-hidden="true" /><span className="lname">{l.name}</span><span className="ldesc">{l.desc}</span><span className="lcount">{loose ? `${tasks.length} open` : ""}</span></div>
             {tasks.map(t => <LooseTask key={t._id} task={t} onOpen={() => props.onOpenTask(t._id)} />)}
             {loose && tasks.length === 0 && <div className="empty">Nothing loose here. {l.lane === "Projects" ? "Building work lives inside its project." : "Add one when something small comes up."}</div>}
-            <button type="button" className="ladd" onClick={() => props.onNewTask({ lane: l.lane })}>+ Add to {l.name}</button>
+            <QuickAdd lane={l.lane} placeholder={`Add to ${l.name}…`} onMore={title => props.onNewTask({ lane: l.lane, title })} />
           </section>;
         })}
       </div>
@@ -119,7 +119,7 @@ export function WorkOverview(props: WorkOverviewProps) {
       <nav className="morelinks" aria-label="More of your work">
         <button type="button" onClick={props.onDone}>Done tasks</button>
         <button type="button" onClick={props.onArchived}>Archived</button>
-        <button type="button" onClick={props.onAllProjects}>Done and archived projects</button>
+        <button type="button" onClick={props.onAllProjects}>All projects, done and archived too</button>
         <button type="button" onClick={() => props.onNewTask()}>Add a task with every detail</button>
       </nav>
     </section>
@@ -127,7 +127,7 @@ export function WorkOverview(props: WorkOverviewProps) {
 }
 
 /** One active project: where it stands in its plan, and what's up next. */
-function ProjectRow({ project: p, now, busy, onOpenTask, onStartTask, onOpenProject, onNewTask }: { project: Project } & WorkOverviewProps) {
+function ProjectRow({ project: p, now, onOpenTask, onOpenProject, onNewTask }: { project: Project } & WorkOverviewProps) {
   const map = useQuery(api.constellation.get, { projectId: p._id });
   const isPaused = paused(p, now);
   const plan = map ? planSummary(map) : null;
@@ -151,7 +151,7 @@ function ProjectRow({ project: p, now, busy, onOpenTask, onStartTask, onOpenProj
   const pct = plan ? plan.projectPct : p.progress.total ? Math.round((p.progress.done / p.progress.total) * 100) : 0;
   const next = plan?.upNext[0] ?? null;
   const note = next && plan ? plan.noteOf(next) : null;
-  const act = next ? (next.state === "doing" ? { label: isPaused ? "Pick up" : "Continue", run: () => onOpenTask(next.id) } : { label: "Start", run: () => onStartTask({ id: next.id, title: next.title }) }) : null;
+  const nextStatus = next?.state === "doing" ? "In progress" : next?.state === "blocked" ? "Blocked" : "Ready";
 
   return <article className={`prj${isPaused ? "" : " active"}`}>
     {/* The whole row opens the project; its own action button sits above this. */}
@@ -178,7 +178,10 @@ function ProjectRow({ project: p, now, busy, onOpenTask, onStartTask, onOpenProj
       <div className="nt">{next ? next.title : plan ? "Nothing ready yet" : p.nextTask?.title ?? " "}</div>
       <div className="nm">{next ? `${next.code} · ${next.minutes} min${note ? ` · ${note.text}` : ""}` : plan ? "Add a task with a clear done-when." : " "}</div>
       <div className="nrow">
-        {act ? <button type="button" className={isPaused ? "soft" : "btn"} disabled={busy} onClick={act.run}>{act.label}</button>
+        {next ? <span className="nact">
+          <StatusControl task={{ _id: next.id, title: next.title, status: nextStatus }} />
+          <button type="button" className="soft" onClick={() => onOpenTask(next.id)}>{next.state === "doing" ? (isPaused ? "Pick up" : "Continue") : "Open"}</button>
+        </span>
           : plan && <button type="button" className="soft" onClick={() => onNewTask({ projectId: p._id, lane: p.lane ?? "Projects" })}>+ Add a task</button>}
       </div>
     </div>
@@ -224,11 +227,12 @@ function IdeaRow({ idea: i }: { idea: Idea }) {
   </article>;
 }
 
-/** A task outside any project. The card opens it; the play button starts a focus session on it. */
+/** A task outside any project. The circle moves it, the card opens it, and the play button starts a focus session on it. */
 function LooseTask({ task: t, onOpen }: { task: Loose; onOpen: () => void }) {
   const st = t.status === "In progress" ? "p" : t.status === "Blocked" ? "b" : "r";
   const meta = [`${t.minutes} min`, t.plannedSessions ? `${t.sessions} of ${t.plannedSessions} sessions` : null, t.status === "Blocked" && t.nextStep ? t.nextStep : null].filter(Boolean).join(" · ");
   return <div className="task">
+    <StatusControl task={t} compact />
     <button type="button" className="topen" onClick={onOpen} aria-haspopup="dialog">
       <span className="tt">{t.title}</span>
       <span className="tm"><span>{meta}</span><span className={`pill ${st}`}>{words[st]}</span></span>

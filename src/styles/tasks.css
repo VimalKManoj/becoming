@@ -1,0 +1,59 @@
+/* One tap (PLAN-one-tap-and-daily-loop, Phase 1): the status circle and its menu, quick
+   add, and the finish details in the toast. Shared by every screen that shows a task. */
+
+.tk-control{display:inline-flex;align-items:center;gap:2px;flex:none}
+.tk-circle{position:relative;width:30px;height:30px;padding:0;border:0;border-radius:50%;background:none;box-shadow:none;cursor:pointer;display:grid;place-items:center;flex:none}
+.tk-circle:hover{filter:none}
+.tk-circle>span{width:20px;height:20px;border-radius:50%;box-sizing:border-box;border:2px solid rgba(255,235,215,.38);transition:transform .15s,border-color .15s,background .15s}
+.tk-circle:hover>span{transform:scale(1.1);border-color:var(--r-ember-soft)}
+.tk-circle:focus-visible{outline:2px solid var(--r-ember-soft);outline-offset:1px}
+.tk-circle.doing>span{border-color:var(--r-ember);background:conic-gradient(var(--r-ember) 0 50%,transparent 50% 100%)}
+.tk-circle.done>span{border-color:var(--r-mint);background:var(--r-mint) center/12px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='%2310231C' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.tk-circle.blocked>span{border-color:var(--r-red);background:linear-gradient(135deg,transparent 44%,var(--r-red) 44% 56%,transparent 56%)}
+.tk-circle.archived>span{border-style:dashed;border-color:rgba(255,235,215,.3)}
+.tk-circle.busy>span{animation:tk-pulse .8s ease-in-out infinite alternate}
+@keyframes tk-pulse{from{opacity:.4}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.tk-circle>span{transition:none}.tk-circle.busy>span{animation:none;opacity:.6}}
+
+.tk-more{width:26px;height:30px;padding:0;border:0;border-radius:8px;background:none;box-shadow:none;cursor:pointer;color:var(--r-muted);font:600 15px/1 var(--r-sans);opacity:.55}
+.tk-more:hover,.tk-more[aria-expanded=true],.tk-more:focus-visible{opacity:1;color:var(--r-ink);background:rgba(255,240,225,.07);filter:none}
+@media(hover:hover){.tk-control:not(:hover):not(:focus-within) .tk-more[aria-expanded=false]{opacity:.3}}
+
+.tk-menu{position:fixed;z-index:70;width:220px;padding:6px;border-radius:14px;background:rgba(36,27,23,.98);border:1px solid var(--r-line-4);box-shadow:0 18px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;animation:r-fade .12s both}
+.tk-menu-item{display:flex;align-items:center;justify-content:flex-start;width:100%;height:36px;padding:0 12px;border:0;border-radius:9px;background:none;box-shadow:none;text-align:left;cursor:pointer;font:500 13.5px var(--r-sans);color:var(--r-ink-2);text-decoration:none}
+.tk-menu-item:hover,.tk-menu-item:focus-visible{background:rgba(255,240,225,.08);color:var(--r-ink);filter:none;text-decoration:none;outline:none}
+.tk-menu-item.red{color:var(--r-red-text)}
+.tk-block{display:flex;flex-direction:column;gap:8px;padding:6px}
+.tk-block .r-input{height:40px;font-size:13.5px}
+.tk-menu-link{border:0;background:none;box-shadow:none;cursor:pointer;color:var(--r-muted);font:500 13px var(--r-sans)}
+
+/* Quick add: a quiet line that becomes an input. */
+.tk-quick{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 6px 0 10px;border-radius:12px;border:1px dashed rgba(255,235,215,.16);background:rgba(255,240,225,.02)}
+.tk-quick:focus-within{border-style:solid;border-color:rgba(255,170,110,.45);background:rgba(255,240,225,.04)}
+.tk-quick-plus{color:var(--r-ember-soft);font:600 16px var(--r-sans)}
+.tk-quick-input{flex:1;min-width:0;height:38px;border:0;background:none;color:var(--r-ink);font:400 14px var(--r-sans);outline:none}
+.tk-quick-input::placeholder{color:var(--r-placeholder)}
+.tk-quick-add,.tk-quick-more{flex:none;height:30px;padding:0 10px;border:0;border-radius:99px;background:none;box-shadow:none;cursor:pointer;font:600 12.5px var(--r-sans);color:var(--r-ember-pale)}
+.tk-quick-add{background:rgba(255,138,61,.16)}
+.tk-quick-more{color:var(--r-muted);font-weight:500}
+.tk-quick-add:hover,.tk-quick-more:hover{filter:none;color:var(--r-ink)}
+
+/* A finish, in the toast: skills grown, the milestone's bar, a phase complete. */
+.tk-finish{display:flex;flex-direction:column;gap:8px;padding-left:18px}
+.tk-finish-skills{display:flex;flex-wrap:wrap;gap:6px}
+.tk-skill{height:22px;padding:0 8px;border-radius:7px;display:inline-flex;align-items:center;font:500 11.5px var(--r-sans);color:var(--r-mint-text);background:rgba(134,227,195,.08);border:1px solid rgba(134,227,195,.25)}
+.tk-finish-ms{display:grid;grid-template-columns:minmax(0,auto) 1fr auto;align-items:center;gap:10px}
+.tk-finish-name{font:500 12.5px var(--r-sans);color:var(--r-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.tk-bar{height:5px;border-radius:99px;background:rgba(255,235,215,.1);overflow:hidden;min-width:60px}
+.tk-bar>span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--r-ember),var(--r-ember-soft));transition:width .5s}
+.tk-finish-count{font:500 11px var(--r-mono);color:var(--r-muted)}
+.tk-finish-phase{font:600 12.5px var(--r-sans);color:var(--r-ember-pale)}
+.tk-finish-next{font:400 12px var(--r-sans);color:var(--r-muted)}
+
+/* The task sheet: fields edited in place. */
+.tk-inline{width:100%;min-height:36px;padding:6px 10px;margin:0 -10px;border:1px solid transparent;border-radius:10px;background:none;box-shadow:none;text-align:left;cursor:text;font:inherit;color:inherit;display:block}
+.tk-inline:hover{background:rgba(255,240,225,.04);border-color:var(--r-line-3);filter:none}
+.tk-inline.empty{color:var(--r-placeholder)}
+.tk-inline-edit{display:flex;flex-direction:column;gap:8px}
+.tk-inline-edit .r-input,.tk-inline-edit .r-textarea{font:inherit}
+.tk-inline-acts{display:flex;gap:8px;align-items:center}

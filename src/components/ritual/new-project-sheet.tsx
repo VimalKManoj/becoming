@@ -13,6 +13,7 @@ import { useModal } from "@/components/ritual/use-modal";
 // milestones can come later. Nothing is saved until the second step.
 
 type Lane = "Projects" | "Showcases" | "Writing";
+const energies = [{ value: 1, label: "Low" }, { value: 2, label: "Steady" }, { value: 3, label: "High" }] as const;
 const lanes: Lane[] = ["Projects", "Showcases", "Writing"];
 
 export function NewProjectSheet() {
@@ -30,6 +31,7 @@ function NewProject({ onClose, onToast }: { onClose: () => void; onToast: (text:
   const [lane, setLane] = useState<Lane>("Projects");
   const [step, setStep] = useState("");
   const [minutes, setMinutes] = useState(30);
+  const [energy, setEnergy] = useState(2);
   const [doneWhen, setDoneWhen] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -45,10 +47,10 @@ function NewProject({ onClose, onToast }: { onClose: () => void; onToast: (text:
   // Opening the project shows its page in Work, where you choose what to do; nothing starts a
   // focus session on its own.
   async function save(openIt: boolean) {
-    if (!step.trim() || !doneWhen.trim()) { setError("Name the first step and say when it's done."); return; }
+    if (!step.trim()) { setError("Name the first step."); return; }
     setBusy(true); setError("");
     try {
-      const { projectId } = await create({ title: name.trim(), purpose: why.trim(), step: { title: step.trim(), lane, minutes, energy: 2, doneWhen: doneWhen.trim() } });
+      const { projectId } = await create({ title: name.trim(), purpose: why.trim(), step: { title: step.trim(), lane, minutes, energy, doneWhen: doneWhen.trim() } });
       onClose();
       if (openIt) { onToast("Project created. Its first step is up next."); router.push(`/work?view=projects&project=${projectId}`); }
       else { onToast("Saved to Work."); router.push("/work"); }
@@ -85,9 +87,12 @@ function NewProject({ onClose, onToast }: { onClose: () => void; onToast: (text:
         <h1 id="np-title" style={{ font: "400 clamp(36px,6.5cqi,50px)/1 var(--r-serif)" }}>Make it small enough to <em style={{ color: "var(--r-ember-text)" }}>start.</em></h1>
         <label className="r-field">What&apos;s the first thing to do?<input className="r-input" placeholder="Two-axis waterfall with one bundled font" value={step} onChange={event => setStep(event.target.value)} maxLength={160} autoFocus /></label>
         <div><div className="r-label" style={{ marginBottom: 8 }}>Estimate</div><div className="r-row" style={{ gap: 6 }}>
-          {[15, 20, 30, 45].map(value => <button key={value} type="button" className="r-chip mono h40" aria-pressed={value === minutes} onClick={() => setMinutes(value)}>{value} min</button>)}
+          {[15, 30, 45, 60, 90].map(value => <button key={value} type="button" className="r-chip mono h40" aria-pressed={value === minutes} onClick={() => setMinutes(value)}>{value} min</button>)}
         </div></div>
-        <label className="r-field">Done when<input className="r-input" style={{ fontSize: 14 }} placeholder="Weight and width scrub smoothly at 60fps." value={doneWhen} onChange={event => setDoneWhen(event.target.value)} maxLength={1000} /></label>
+        <div><div className="r-label" style={{ marginBottom: 8 }}>Energy it needs</div><div className="r-row" style={{ gap: 6 }}>
+          {energies.map(item => <button key={item.value} type="button" className="r-chip round h40" aria-pressed={item.value === energy} onClick={() => setEnergy(item.value)}>{item.label}</button>)}
+        </div></div>
+        <label className="r-field"><span>Done when <span className="r-small">· optional</span></span><input className="r-input" style={{ fontSize: 14 }} placeholder="Weight and width scrub smoothly at 60fps." value={doneWhen} onChange={event => setDoneWhen(event.target.value)} maxLength={1000} /></label>
         {alert}
         <div className="r-stack" style={{ gap: 8, marginTop: 6 }}>
           <button type="submit" className="r-btn" disabled={busy}>{busy ? "Creating…" : "Create and open the project"}</button>

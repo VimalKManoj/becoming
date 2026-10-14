@@ -173,7 +173,7 @@
 .pl .pill.p{color:var(--ember-p);border-color:rgba(255,138,61,.45);background:rgba(255,138,61,.1)}
 .pl .pill.r{color:var(--text);border-color:var(--line4)}
 .pl .pill.b{color:var(--red-t);border-color:rgba(255,107,91,.45);background:rgba(255,107,91,.08)}
-.pl .act{flex:none;width:104px;display:flex;justify-content:flex-end}
+.pl .act{flex:none;width:64px;display:flex;justify-content:flex-end}
 .pl .add{border:0;background:none;min-height:44px;padding:0 4px;color:var(--ember-t) !important;font:500 13px var(--sans) !important;cursor:pointer;text-align:left;align-self:flex-start}
 .pl .add:hover{color:var(--ember-p) !important}
 .pl .empty{padding:18px;margin-top:12px;border-radius:16px;border:1px dashed var(--line4);font:400 13px var(--sans);color:var(--muted)}
@@ -219,7 +219,7 @@
 @keyframes pl-pop{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%)}}
 .pl .phead:focus-visible,.pl .topen:focus-visible,.pl .nxopen:focus-visible,.pl .mhead:focus-visible,.pl .doc:focus-visible,.pl .chip:focus-visible{outline:2px solid #FFC08F;outline-offset:2px}
 @media (max-width: 1100px){.pl .wrap{grid-template-columns:minmax(0,1fr)}.pl .now{grid-template-columns:minmax(0,1fr)}}
-@media (max-width: 899px){.pl .title{font-size:32px}.pl .pbody{padding:0 12px 14px}.pl .pinfo{grid-template-columns:minmax(0,1fr)}.pl .mhead{grid-template-columns:auto minmax(0,1fr) auto}.pl .mprog{display:none}.pl .steps{flex-direction:column}.pl .stp::before{display:none}.pl .task{grid-template-columns:20px minmax(0,1fr) auto}.pl .act{display:none}}
+@media (max-width: 899px){.pl .title{font-size:32px}.pl .pbody{padding:0 12px 14px}.pl .pinfo{grid-template-columns:minmax(0,1fr)}.pl .mhead{grid-template-columns:auto minmax(0,1fr) auto}.pl .mprog{display:none}.pl .steps{flex-direction:column}.pl .stp::before{display:none}.pl .task{grid-template-columns:20px minmax(0,1fr) auto}.pl .act{width:auto}.pl .task .pill{display:none}}
 @keyframes pl-pulse{0%,100%{opacity:.6}50%{opacity:1}}
 @keyframes pl-rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.pl *,.pl *::before,.pl *::after{animation:none !important;transition:none !important}}
@@ -234,3 +234,7 @@
 .w-vbody{position:relative;min-width:0}
 .w-vseg{position:absolute;top:0;right:0;z-index:1}
 .w-vbody .cx .trow{padding-right:190px}
+
+/* One tap (PLAN-one-tap-and-daily-loop, Phase 1): quick add at the foot of each milestone. On a phone the circle stays and the pill steps aside. */
+.pl .tasks>.tk-quick{margin:8px 0 2px}
+.pl .nx .tk-control{align-self:center}

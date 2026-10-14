@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { bloomSkillList } from "../../convex/lib/bloom";
 // Relative, so the unit tests can load this file without the "@/" alias.
 import { LinesSkeleton } from "./skeleton";
 import { useModal } from "./ritual/use-modal";
@@ -214,7 +213,7 @@ export function TaskForm({ title, task, defaults, busy, headingId, onSubmit, onC
           </label>)}</div>
         </fieldset>
       </div>
-      <label className="r-field">Done when<textarea className="r-textarea w-textarea" name="doneWhen" required maxLength={1000} rows={3} defaultValue={values.doneWhen} placeholder="What you'll see when it's finished, e.g. “The recap saves offline.”" /></label>
+      <label className="r-field"><span>Done when <span className="r-small">· optional</span></span><textarea className="r-textarea w-textarea" name="doneWhen" maxLength={1000} rows={3} defaultValue={values.doneWhen} placeholder="What you'll see when it's finished, e.g. “The recap saves offline.”" /></label>
       <div className="w-pair">
         {/* The links are submitted from state through these hidden fields, so a list that is
             still loading (or a disabled select, which forms never submit) can't drop them. */}
@@ -255,20 +254,6 @@ export function TaskForm({ title, task, defaults, busy, headingId, onSubmit, onC
   </form>;
 }
 
-/** Unblocking and reopening both ask for the step that moves the task forward again. */
-export function NextStepForm({ kind, busy, onSubmit, onCancel }: { kind: "unblock" | "reopen"; busy: boolean; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onCancel: () => void }) {
-  return <form className="w-form" onSubmit={onSubmit} aria-busy={busy}>
-    <fieldset className="w-fields" disabled={busy}>
-      <legend className="sr-only">{kind === "unblock" ? "Unblock this task" : "Reopen this task"}</legend>
-      <label className="r-field">{kind === "unblock" ? "What's the next step now that it's unblocked?" : "What's the next step?"}<textarea ref={focusOnMount} className="r-textarea w-textarea" name="nextStep" required maxLength={2000} rows={3} placeholder="The very next thing to do." /></label>
-      <div className="r-row" style={{ gap: 8 }}>
-        <button type="submit" className="r-btn sm">{busy ? "Saving…" : kind === "unblock" ? "Mark as ready" : "Reopen task"}</button>
-        <button type="button" className="r-ghost sm" onClick={onCancel}>Cancel</button>
-      </div>
-    </fieldset>
-  </form>;
-}
-
 type PrerequisiteOption = { _id: Id<"tasks">; title: string; status: string };
 
 // "Waiting on" other tasks. Today only offers a task once everything it waits on is Done.
@@ -287,32 +272,12 @@ function PrerequisiteChecklist({ options, taskId, selected }: { options: Prerequ
   </fieldset>;
 }
 
-/** Marking a task done, anywhere: an optional "what changed" and the skills it practised. */
-export function DoneForm({ busy, onSubmit, onCancel }: { busy: boolean; onSubmit: (note: string, skills: string[]) => void; onCancel: () => void }) {
-  const [skills, setSkills] = useState<string[]>([]);
-  const toggle = (name: string) => setSkills(current => current.includes(name) ? current.filter(item => item !== name) : current.length >= 5 ? current : [...current, name]);
-  return <form className="w-form" aria-busy={busy} onSubmit={event => { event.preventDefault(); onSubmit(String(new FormData(event.currentTarget).get("note") || ""), skills); }}>
-    <fieldset className="w-fields" disabled={busy}>
-      <legend className="sr-only">Mark this task done</legend>
-      <label className="r-field">What changed? <span className="r-small">· optional, kept in its history</span><textarea ref={focusOnMount} className="r-textarea w-textarea" name="note" maxLength={4000} rows={2} placeholder="Shipped the retry path; the toast copy is final." /></label>
-      <div role="group" aria-label="Skills it practised">
-        <div className="r-label" style={{ marginBottom: 8 }}>Skills <span className="r-small">· optional, they grow your Mind Bloom</span></div>
-        <div className="r-row" style={{ gap: 6 }}>{bloomSkillList.map(skill => <button key={skill.name} type="button" className="r-chip round h34" aria-pressed={skills.includes(skill.name)} onClick={() => toggle(skill.name)}>{skill.name}</button>)}</div>
-      </div>
-      <div className="r-row" style={{ gap: 8 }}>
-        <button type="submit" className="r-btn sm mint">{busy ? "Saving…" : "Mark done"}</button>
-        <button type="button" className="r-ghost sm" onClick={onCancel}>Cancel</button>
-      </div>
-    </fieldset>
-  </form>;
-}
-
-/** Blocking a task: what's in the way becomes its next step. */
+/** Blocking a task: what's in the way (optional) becomes its next step. */
 export function BlockForm({ busy, onSubmit, onCancel }: { busy: boolean; onSubmit: (reason: string) => void; onCancel: () => void }) {
   return <form className="w-form" aria-busy={busy} onSubmit={event => { event.preventDefault(); onSubmit(String(new FormData(event.currentTarget).get("reason") || "")); }}>
     <fieldset className="w-fields" disabled={busy}>
       <legend className="sr-only">Mark this task blocked</legend>
-      <label className="r-field">What&apos;s blocking it, and how could it be unblocked?<textarea ref={focusOnMount} className="r-textarea w-textarea" name="reason" required maxLength={2000} rows={2} placeholder="Waiting on the API key from the client. Ask on Monday." /></label>
+      <label className="r-field"><span>What&apos;s blocking it, and how could it be unblocked? <span className="r-small">· optional</span></span><textarea ref={focusOnMount} className="r-textarea w-textarea" name="reason" maxLength={2000} rows={2} placeholder="Waiting on the API key from the client. Ask on Monday." /></label>
       <div className="r-row" style={{ gap: 8 }}>
         <button type="submit" className="r-btn red">{busy ? "Saving…" : "Mark blocked"}</button>
         <button type="button" className="r-ghost sm" onClick={onCancel}>Cancel</button>

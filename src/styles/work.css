@@ -51,7 +51,6 @@
 .w-mono-head{font:500 12px var(--r-mono);color:var(--r-text)}
 .w-ms-bar{margin:10px 0 18px}
 .w-none{font:400 13.5px/1.5 var(--r-sans);color:var(--r-text)}
-.w-timeline{list-style:none;margin:0;padding:0}
 .w-ms{display:flex;gap:12px;width:100%;min-height:0;padding:0;border:0;border-radius:12px;background:none;box-shadow:none;cursor:pointer;text-align:left;color:var(--r-ink);font:inherit}
 .w-ms:hover{filter:none;color:var(--r-ink)}.w-ms:hover .w-ms-name{color:var(--r-ember-pale)}
 .w-ms:active{transform:none}
@@ -61,7 +60,6 @@
 .w-ms.done .w-mark{background:var(--r-mint);border:2px solid var(--r-mint)}
 .w-ms.done .w-line{background:var(--r-mint)}
 .w-ms.current .w-mark{background:#1A1210;border:2px solid var(--r-ember)}
-.w-timeline li:last-child .w-line{background:transparent}
 .w-ms-text{display:flex;flex-direction:column;padding-bottom:14px;min-width:0}
 .w-ms-name{font:500 14px var(--r-sans);color:var(--r-ink);overflow-wrap:anywhere;transition:color .2s}
 .w-ms.next .w-ms-name,.w-ms.later .w-ms-name{color:var(--r-muted)}
@@ -69,16 +67,6 @@
 .w-next{flex:1 1 300px;min-width:0;padding:22px;border-radius:26px;background:radial-gradient(120% 80% at 100% 0%,rgba(255,138,61,.26),transparent 60%),linear-gradient(160deg,rgba(255,240,225,.08),rgba(255,240,225,.02));border:1px solid rgba(255,170,110,.22)}
 .w-next-title{font:400 28px/1.06 var(--r-serif);margin:10px 0 12px;overflow-wrap:anywhere}
 .w-next-meta{font:400 13.5px/1.45 var(--r-sans);color:var(--r-text)}
-.w-upnext{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column}
-.w-upnext li{display:flex;align-items:center;gap:12px;padding:12px 0}
-.w-upnext li+li{border-top:1px solid rgba(255,235,215,.09)}
-.w-upnext-open{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding:0;border:0;background:none;box-shadow:none;text-align:left;color:var(--r-ink);cursor:pointer;font:inherit}
-.w-upnext-open:hover{filter:none}.w-upnext-open:hover .w-upnext-title{color:var(--r-ember-pale)}
-.w-upnext-open:active{transform:none}
-.w-upnext-title{font:400 20px/1.15 var(--r-serif);overflow-wrap:anywhere;transition:color .2s}
-.w-upnext-state{flex:none;font:500 12px var(--r-sans);color:var(--r-ember-soft)}
-.w-plan{margin-top:18px;height:54px;font:600 15px var(--r-sans);box-shadow:0 10px 30px rgba(255,122,47,.3)}
-.w-tasks-card{border-radius:26px}
 .w-rows{list-style:none;margin:10px 0 0;padding:0}
 .w-rows li+li .w-row{border-top:1px solid var(--r-line)}
 .w-row{display:flex;align-items:center;gap:10px;width:100%;min-height:0;padding:11px 2px;border:0;border-radius:0;background:none;box-shadow:none;cursor:pointer;text-align:left;color:var(--r-ink);font:inherit}
@@ -133,11 +121,7 @@
 
 /* One-tap Start / Done on a lane card (sits beside the card button, not inside it). */
 .w-task-wrap{position:relative}
-.w-task-wrap .w-task{padding-right:52px}
-.w-quick{position:absolute;top:10px;right:10px;width:32px;height:32px;min-height:0;padding:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;font:600 12px var(--r-sans);background:rgba(255,240,225,.06);border:1px solid var(--r-line-3);color:var(--r-ember-pale);box-shadow:none;transition:background .3s ease,border-color .3s ease,transform .3s cubic-bezier(.22,1,.36,1)}
-.w-quick:hover{background:rgba(255,138,61,.16);border-color:rgba(255,138,61,.5);transform:scale(1.06);filter:none;color:var(--r-ember-pale)}
-.w-quick.done{color:var(--r-mint)}
-.w-quick.done:hover{background:rgba(134,227,195,.16);border-color:rgba(134,227,195,.5);color:var(--r-mint)}
+.w-task-wrap .w-task{padding-right:70px}
 
 /* Projects header (the constellation design): Work's Tasks | Projects tabs, + New project,
    then the title beside the List | Visual switch. */
@@ -230,3 +214,13 @@
 .w-tet{margin-top:2px;font:400 13px/1.4 var(--r-sans);color:var(--r-ink-2)}
 .w-tew{font:400 11px var(--r-mono);color:var(--r-muted)}
 .w-mcp{font:500 9px var(--r-mono);letter-spacing:.1em;color:var(--r-lilac-text);border:1px solid rgba(201,184,240,.35);border-radius:6px;padding:1px 5px;margin-left:6px}
+
+/* The status circle on a task card (PLAN-one-tap-and-daily-loop, Phase 1), and the sheet's size and energy controls. */
+.w-task-wrap>.tk-control{position:absolute;top:8px;right:8px}
+.w-size{display:inline-flex;flex-wrap:wrap;gap:4px}
+.w-size .r-chip.h34{height:28px;padding:0 9px;font-size:11.5px}
+.w-energy-cycle{cursor:pointer;border:0;box-shadow:none}
+.w-energy-cycle:hover{filter:none;color:var(--r-ink)}
+.w-row-wrap{display:flex;align-items:center;gap:4px}
+.w-rows li+li .w-row-wrap{border-top:1px solid var(--r-line)}
+.w-rows li+li .w-row-wrap .w-row{border-top:0}

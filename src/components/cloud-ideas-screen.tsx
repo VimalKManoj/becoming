@@ -28,7 +28,7 @@ type Step = "brain" | "edit" | "activate" | "added";
 
 const lanes: Lane[] = ["Projects", "Showcases", "Writing"];
 const filters: StageFilter[] = ["all", "Captured", "Brainstorming", "Active"];
-const estimates = [15, 20, 30, 45];
+const estimates = [15, 30, 45, 60, 90];
 const energyNames = ["Low", "Steady", "High"];
 const statusClass: Record<Stage, string> = { Captured: "s-captured", Brainstorming: "s-brainstorming", Active: "s-active", Archived: "s-archived" };
 

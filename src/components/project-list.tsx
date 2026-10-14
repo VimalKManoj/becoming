@@ -4,6 +4,9 @@ import { useState } from "react";
 import type { Id } from "../../convex/_generated/dataModel";
 import { ago, dayMonth, dayRange, plural, type CMilestone, type CTask, type Constellation } from "@/components/constellation/model";
 import { activityLine, who } from "@/components/constellation/panel";
+import { StatusControl } from "@/components/tasks/status-control";
+import { QuickAdd } from "@/components/tasks/quick-add";
+import { useTaskMove } from "@/components/tasks/use-task-move";
 
 // A project's List view: the owner's design (the canvas's List artboard), on the same records
 // as the Visual map (convex/constellation.ts). Phase → milestone → task, with where you are,
@@ -103,10 +106,9 @@ export type ProjectListProps = {
   initial: string;
   /** Proposals waiting in the Inbox, shown on the Activity card. */
   inboxCount: number;
-  onOpenTask: (taskId: Id<"tasks">, step?: "unblock") => void;
-  onStart: (task: { id: Id<"tasks">; title: string }) => void;
+  onOpenTask: (taskId: Id<"tasks">) => void;
   onMakeActive: () => void;
-  onAddTask: (milestoneId?: Id<"milestones">) => void;
+  onAddTask: (milestoneId?: Id<"milestones">, title?: string) => void;
   onAddMilestone: (phaseId?: Id<"phases">) => void;
   onAddPhase: () => void;
   onEditPhase: (phaseId: Id<"phases">) => void;
@@ -127,9 +129,9 @@ export function ProjectList(props: ProjectListProps) {
   const openPhases = openP ?? (here ? { [here.key]: true } : groups.length === 1 ? { [groups[0].key]: true } : {});
   const openMs = openM ?? (currentMs ? { [currentMs.key]: true } : hereMs ? { [hereMs.key]: true } : {});
 
-  const actOf = (t: CTask) => t.state === "doing" ? { label: "Continue", run: () => props.onOpenTask(t.id) }
-    : t.state === "ready" ? { label: "Start", run: () => props.onStart({ id: t.id, title: t.title }) }
-      : t.state === "blocked" ? { label: "Unblock", run: () => props.onOpenTask(t.id, "unblock") } : null;
+  const moves = useTaskMove();
+  // Every row moves with the same status circle (PLAN-one-tap-and-daily-loop, Phase 1).
+  const asTask = (t: CTask) => ({ _id: t.id, title: t.title, status: words[stOf[t.state]] });
 
   // ---- filters and the doc focus ----
   const counts = { all: all.length, open: openWork.length, b: blocked.length, d: projectDone };
@@ -205,13 +207,13 @@ export function ProjectList(props: ProjectListProps) {
           <div><button type="button" className="btn" disabled={busy} onClick={props.onMakeActive}>Make active</button></div>
         </div> : upNext.length ? <div className="next" style={{ marginTop: 6 }}>
           {upNext.map((t, i) => {
-            const note = noteOf(t), act = actOf(t);
+            const note = noteOf(t);
             return <div key={t.id} className={`nx${i === 0 ? " first" : ""}`}>
               <button type="button" className="nxopen" onClick={() => props.onOpenTask(t.id)} aria-haspopup="dialog">
                 <span className="nxt">{t.title}</span>
                 <span className="nxm"><b>{words[stOf[t.state]]}</b> · {t.code} · {t.minutes} min{note ? ` · ${note.text}` : ""}</span>
               </button>
-              {act && <button type="button" className={i === 0 ? "btn" : "soft"} disabled={busy} onClick={act.run}>{act.label}</button>}
+              <StatusControl task={asTask(t)} />
             </div>;
           })}
         </div> : <div className="next" style={{ marginTop: 10 }}>
@@ -221,7 +223,7 @@ export function ProjectList(props: ProjectListProps) {
         </div>}
         {active && blocked.length > 0 && <div className="blocked">
           <div className="tx"><b>{blocked.length} blocked:</b> {blocked[0].title}{blocked[0].nextStep ? ` is waiting on ${blocked[0].nextStep.replace(/^waiting on /i, "").replace(/\.$/, "")}.` : "."}</div>
-          <button type="button" className="soft red" onClick={() => props.onOpenTask(blocked[0].id, "unblock")}>Unblock</button>
+          <button type="button" className="soft red" disabled={moves.busy === blocked[0].id} onClick={() => void moves.move(asTask(blocked[0]), "Ready")}>Unblock</button>
         </div>}
       </div>
     </section>
@@ -302,7 +304,7 @@ export function ProjectList(props: ProjectListProps) {
                         </button>
                         {mOpen && <div className="tasks">
                           {tasks.map(t => {
-                            const st = stOf[t.state], note = noteOf(t), act = actOf(t);
+                            const st = stOf[t.state], note = noteOf(t);
                             return <div key={t.id} className={`task ${st}`}>
                               <button type="button" className="topen" onClick={() => props.onOpenTask(t.id)} aria-haspopup="dialog">
                                 <span className={`tg ${st}`} aria-hidden="true" />
@@ -312,13 +314,13 @@ export function ProjectList(props: ProjectListProps) {
                                 </span>
                               </button>
                               <span className={`pill ${st}`}>{words[st]}</span>
-                              <span className="act">{act && <button type="button" className="soft" disabled={busy} onClick={act.run}>{act.label}</button>}</span>
+                              <span className="act"><StatusControl task={asTask(t)} /></span>
                             </div>;
                           })}
                           {tasks.length === 0 && <div className="tm" style={{ padding: "10px 4px" }}>No tasks yet.</div>}
-                          {active && <div className="pl-msfoot">
-                            <button type="button" className="add" onClick={() => props.onAddTask(m.id ?? undefined)}>+ Add task</button>
-                            {m.id && <button type="button" className="add" onClick={() => props.onEditMilestone(m.id!)}>Edit milestone</button>}
+                          {active && <QuickAdd projectId={map.project.id} milestoneId={m.id ?? undefined} placeholder={`Add a task to ${m.code === "·" ? "this project" : m.code}…`} onMore={title => props.onAddTask(m.id ?? undefined, title)} />}
+                          {active && m.id && <div className="pl-msfoot">
+                            <button type="button" className="add" onClick={() => props.onEditMilestone(m.id!)}>Edit milestone</button>
                           </div>}
                         </div>}
                       </div>;

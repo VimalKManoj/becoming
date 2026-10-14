@@ -126,3 +126,9 @@
 .wo .prj > :not(.rowlink){position:relative;z-index:1;pointer-events:none}
 .wo .prj .nrow button,.wo .prj .nrow a{pointer-events:auto}
 .wo .prj:hover .pname{color:var(--ember-p)}
+/* One tap (PLAN-one-tap-and-daily-loop, Phase 1): the status circle beside Open on a project
+   row, and on each loose task; quick add replaces "+ Add to". */
+.wo .nact{display:inline-flex;align-items:center;gap:8px}
+.wo .prj .nrow .tk-control,.wo .prj .nrow .tk-control button{pointer-events:auto}
+.wo .task>.tk-control{margin:7px -4px 0 -6px}
+.wo .lane>.tk-quick{margin-top:2px}
