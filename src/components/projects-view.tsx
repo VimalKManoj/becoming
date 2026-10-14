@@ -160,7 +160,7 @@ function ProjectsList({ status, onStatus, visual, onVisual, notFound, onOpen, on
           <button type="button" className="w-tab" onClick={onBack}>Tasks</button>
           <button type="button" className="w-tab cur" aria-current="page">Projects</button>
         </nav>
-        <button type="button" className="r-ghost sm ember w-head-btn" onClick={openNewProject}>+ New project</button>
+        <button type="button" className="r-ghost sm ember w-head-btn" onClick={() => openNewProject()}>+ New project</button>
       </div>
       <div className="w-trow">
         <h1 className="r-title">Every <em>project.</em></h1>
@@ -292,7 +292,7 @@ function ProjectPage({ projectId, visual, onVisual, onBack, onOpenTask, onNewTas
       </button>
       <span className="eyebrow" style={{ marginLeft: 4 }}>Projects · {project.title}</span>
     </div>
-    <div className="hright"><button type="button" className="ghost" onClick={openNewProject}>+ New project</button></div>
+    <div className="hright"><button type="button" className="ghost" onClick={() => openNewProject()}>+ New project</button></div>
   </div>;
   const viewSeg = <div className="seg" role="group" aria-label="Projects view">
     <button type="button" className={visual ? undefined : "on"} aria-pressed={!visual} onClick={() => { if (visual) onVisual(false); }}>List</button>

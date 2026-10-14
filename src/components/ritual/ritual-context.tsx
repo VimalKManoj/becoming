@@ -1,9 +1,10 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 
-// App-wide pieces of the Ritual design that any screen can call on: the capture sheet,
-// the new-project sheet and the toast. The shell renders them once.
+// App-wide pieces of the Ritual design that any screen can call on: the capture sheet, the
+// way to the New project page (Work → New project) and the toast. The shell renders them once.
 
 export type CaptureMode = "idea" | "task" | "project" | "assignment";
 /** A button on a toast, such as Undo. Running it closes the toast unless it returns false. */
@@ -23,9 +24,8 @@ type RitualContextValue = {
   capture: CaptureMode | null;
   openCapture: (mode?: CaptureMode) => void;
   closeCapture: () => void;
-  newProject: boolean;
-  openNewProject: () => void;
-  closeNewProject: () => void;
+  /** Opens the New project page; with an idea, it starts from that idea. */
+  openNewProject: (ideaId?: string) => void;
   toast: Toast | null;
   showToast: (text: string, tone?: "status" | "alert", options?: ToastOptions) => void;
   closeToast: () => void;
@@ -35,7 +35,7 @@ const RitualContext = createContext<RitualContextValue | null>(null);
 
 export function RitualProvider({ children }: { children: ReactNode }) {
   const [capture, setCapture] = useState<CaptureMode | null>(null);
-  const [newProject, setNewProject] = useState(false);
+  const router = useRouter();
   const [toast, setToast] = useState<Toast | null>(null);
   const counter = useRef(0);
 
@@ -47,11 +47,9 @@ export function RitualProvider({ children }: { children: ReactNode }) {
 
   const value: RitualContextValue = {
     capture,
-    openCapture: (mode = "idea") => { setNewProject(false); setCapture(mode); },
+    openCapture: (mode = "idea") => setCapture(mode),
     closeCapture: () => setCapture(null),
-    newProject,
-    openNewProject: () => { setCapture(null); setNewProject(true); },
-    closeNewProject: () => setNewProject(false),
+    openNewProject: (ideaId?: string) => { setCapture(null); router.push(`/work?new=project${ideaId ? `&idea=${ideaId}` : ""}`); },
     toast,
     showToast,
     closeToast,

@@ -269,4 +269,11 @@ See [PLAN-project-constellation.md](PLAN-project-constellation.md) and, for the 
 - `tasks.noteOn` adds a note to a move afterwards; a blocker also becomes the next step.
 - `tasks.remove` deletes an archived task with its events, sessions and evidence, and unlinks it from prerequisites, ideas, week plans, the pin and the Inbox.
 - `createWithFirstStep` and `ideas.activate` now log "created".
+
+**New project page (15 October 2026).**
+- `newProject.create({ title, purpose, ideaId?, lane?, docs, phases })` makes a whole project in one transaction: docs (planned, not yet written, each feeding the phases whose `docCodes` name it); phases with goal, done-when and notes; their milestones (phase set, with done-when and notes); and tasks (30–90 min, steady, empty done-when, the given lane).
+- It's limited to 40 phases, 40 docs, 120 milestones and 200 tasks.
+- Starting from an idea links `projects.ideaId` and sets the idea's `taskId` to the first task (so it's active). An idea already active or archived is refused.
+- `newProject.ideas` lists ideas a project can start from.
+- No new tables.
 - No new tables.

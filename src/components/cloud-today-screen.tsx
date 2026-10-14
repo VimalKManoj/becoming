@@ -183,7 +183,7 @@ function Today() {
       {projects?.length === 0 && <p className="r-lede" style={{ margin: "0 2px 4px" }}>No projects yet. Start one below: a name, why it matters and one first step.</p>}
       {(projects ?? []).map(project => <ProjectChoice key={project._id} project={project} now={now} suggested={project._id === suggestedProject?._id && Boolean(overview.choices[0]?.projectId)}
         onChoose={() => router.push(`/work?view=projects&project=${project._id}`)} />)}
-      <button type="button" className="t-new" onClick={openNewProject}>
+      <button type="button" className="t-new" onClick={() => openNewProject()}>
         <span className="t-plus" aria-hidden="true">+</span>
         <span><span style={{ display: "block", font: "500 15px var(--r-sans)" }}>Start a new project</span><span className="r-small" style={{ display: "block", marginTop: 3 }}>A name, why it matters, one first step. About a minute.</span></span>
       </button>
@@ -221,7 +221,7 @@ function Today() {
         {intent === "build" && (projects?.length ?? 0) > 0 && <div className="r-row r-rise" style={{ gap: 6, animationDuration: ".5s" }}>
           <span className="r-small" style={{ fontWeight: 500, marginRight: 4 }}>Working on</span>
           {projects!.map(project => <button key={project._id} type="button" className="r-chip round h34" style={{ ...laneColour(project.lane ?? "Projects"), fontSize: 12.5 }} aria-pressed={knownProject === project._id} onClick={() => { setProjectId(projectId === project._id ? null : project._id); setChosenId(null); }}><span className="r-dot" style={{ width: 6, height: 6 }} />{project.title}</button>)}
-          <button type="button" className="r-chip round h34" style={{ background: "transparent", color: "var(--r-ember-pale)", border: "1px dashed rgba(255,170,110,.45)", fontSize: 12.5 }} onClick={openNewProject}>+ New project</button>
+          <button type="button" className="r-chip round h34" style={{ background: "transparent", color: "var(--r-ember-pale)", border: "1px dashed rgba(255,170,110,.45)", fontSize: 12.5 }} onClick={() => openNewProject()}>+ New project</button>
         </div>}
         {intent === "publish"
           ? ready ? <PublishCard title={ready.title} onStart={() => router.push(`/journey?tab=proof&publish=${ready._id}`)} /> : <NothingCard title="Nothing is ready to share yet." text="Evidence from your recaps arrives in Proof as drafts. Mark one ready to share, then publish it here." onBack={() => setScreen("open")} />

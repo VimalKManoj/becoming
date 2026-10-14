@@ -7,7 +7,6 @@ import { useConvexAuth, useConvexConnectionState } from "convex/react";
 import { authClient } from "@/lib/auth-client";
 import { CaptureSheet } from "@/components/ritual/capture-sheet";
 import { Embers } from "@/components/ritual/embers";
-import { NewProjectSheet } from "@/components/ritual/new-project-sheet";
 import { RitualProvider, RitualToast } from "@/components/ritual/ritual-context";
 import { Skeleton, Bone } from "@/components/skeleton";
 import { Avatar, PillNav, Rail } from "@/components/workspace-nav";
@@ -32,7 +31,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
         </main>
         <PillNav section={section} signedIn={isAuthenticated} />
       </div>
-      {isAuthenticated && <><CaptureSheet /><NewProjectSheet /></>}
+      {isAuthenticated && <CaptureSheet />}
       <RitualToast />
     </div>
   </RitualProvider>;

@@ -24,7 +24,7 @@ const modes: { id: CaptureMode; label: string; placeholder: string; button: stri
 export function CaptureSheet() {
   const { capture, closeCapture, openCapture, openNewProject, showToast } = useRitual();
   if (!capture) return null;
-  return <CaptureCard mode={capture} onMode={openCapture} onClose={closeCapture} onProject={openNewProject} onToast={showToast} />;
+  return <CaptureCard mode={capture} onMode={openCapture} onClose={closeCapture} onProject={() => openNewProject()} onToast={showToast} />;
 }
 
 function CaptureCard({ mode, onMode, onClose, onProject, onToast }: { mode: CaptureMode; onMode: (mode: CaptureMode) => void; onClose: () => void; onProject: () => void; onToast: (text: string, tone?: "status" | "alert") => void }) {

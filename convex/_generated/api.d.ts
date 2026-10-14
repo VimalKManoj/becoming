@@ -37,6 +37,7 @@ import type * as lib_validate from "../lib/validate.js";
 import type * as lib_webpush from "../lib/webpush.js";
 import type * as lib_work from "../lib/work.js";
 import type * as mcp from "../mcp.js";
+import type * as newProject from "../newProject.js";
 import type * as projects from "../projects.js";
 import type * as proof from "../proof.js";
 import type * as push from "../push.js";
@@ -81,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   "lib/webpush": typeof lib_webpush;
   "lib/work": typeof lib_work;
   mcp: typeof mcp;
+  newProject: typeof newProject;
   projects: typeof projects;
   proof: typeof proof;
   push: typeof push;

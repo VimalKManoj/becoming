@@ -140,10 +140,20 @@ Use a fake address such as `qa-a@example.test`. Email isn't verified, so it does
   - **Expect:** it's in Work's Showcases lane.
 - [x] **Paste assignment:** paste a few lines → save.
   - **Expect:** you land on that idea's brainstorm (`/ideas?idea=…`) with the text under notes.
-- [x] **Project** (or "+ New project" anywhere): step 1 of 2 asks for the name "QA project", why it matters and the lane → **Next: the first step →**. Step 2 of 2 asks for the first step, estimate and done-when; "‹ QA project" goes back with your text kept.
-  - **Expect:** neither step needs scrolling on a laptop screen. **Save to Work for later** puts it in Work with that first step as its next task.
-- [ ] Make another and press **Create and open the project** (changed 10 October). **Expect:** its project page in Work, with the first step under Up next. No check-in.
-  - **Expect:** Today opens the check-in for that project.
+- [ ] **New project page** (changed 15 October; the owner's Setup design). The capture sheet's Project tab, "+ New project" anywhere and Today's "Start a new project" open **Work → New project** (`/work?new=project`). **Expect:** four steps across the top, the step's card on the left, a live preview on the right (name, docs, plan, first evening).
+  1. **Name it:** name and why are both needed to continue. "It starts from" offers Scratch, An idea (when you have open ideas; pick one and it fills in an empty name and why) or A plan file (the note explains asking Claude Code to sync PLAN.md). The kind (Software, Film, Writing, Physical product) sets the starting docs, phases and first tasks; changing it after reaching the plan asks first.
+  2. **Docs:** toggle the starting docs; add another by name (it gets a short code).
+  3. **Plan:**
+     - rename phases, remove them, **+ Add phase**;
+     - **click a milestone chip** to open its editor (name, done when, tasks with minutes, notes); **+ milestone** adds one and puts the cursor in its name;
+     - **+ Details** on a phase: what it does, done when, the docs that feed it (from step 2), notes;
+     - "↺ Start over from the … plan" asks first.
+  4. **First evening:** the first milestone's tasks (the same ones as in its editor).
+  - **Create project** makes everything at once. **Expect:** "… is taking form." with the first evening, then **Start it now** (the first task goes In progress and the project opens) or **Open the project**. On the project page:
+    - the phases have the goals, done-whens and notes you gave;
+    - the milestones sit in their phases with their tasks and notes;
+    - the docs show as planned and feed the phases chosen.
+  - On a phone the preview moves below the card and the step names shorten to numbers.
 
 ### B5. Work
 

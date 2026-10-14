@@ -12,6 +12,7 @@ import { ProjectCardBones, ProjectsArea, useSaver } from "@/components/projects-
 import { Sheet, StatusChip, TaskForm, lanes, taskValues, workQuery, workRoute, type EditableTask, type Lane, type TaskView, type WorkRoute } from "@/components/task-forms";
 import { useRitual } from "@/components/ritual/ritual-context";
 import { WorkOverview } from "@/components/work-overview";
+import { NewProjectFlow } from "@/components/new-project/new-project-flow";
 import { dayMonth } from "@/components/constellation/model";
 import { EVENT_NOTE } from "@/components/constellation/panel";
 import { plural } from "@/lib/format";
@@ -88,10 +89,14 @@ function WorkScreen() {
 
   const openTask = (id: Id<"tasks">) => setSheet({ kind: "task", id });
   const closeTask = (id: Id<"tasks">) => { setSheet(null); focusById(`task-${id}`); };
-  const toLanes = () => go({ mode: "tasks", view: "active", project: null, adding: false, visual: false, lane: null });
+  const toLanes = () => go({ mode: "tasks", view: "active", project: null, adding: false, visual: false, lane: null, creating: false, idea: null });
   // ?new=task (Today's "add a task" link) opens the full task form.
   const newTask = route.adding ? { defaults: undefined } : sheet?.kind === "new" ? sheet : null;
   const closeNew = () => { if (route.adding) go({ adding: false }, "replace"); setSheet(null); };
+
+  // The New project page (?new=project) replaces the rest of Work until it's done or left.
+  if (route.creating) return <NewProjectFlow ideaId={route.idea} onCancel={() => window.history.length > 1 ? window.history.back() : toLanes()}
+    onOpenProject={project => go({ mode: "projects", project, visual: false, creating: false, idea: null }, "replace")} />;
 
   return <>
     {route.mode === "projects"
@@ -100,7 +105,7 @@ function WorkScreen() {
         // Work itself: projects as rows, and only the tasks that belong to no project.
         ? (now === null ? <WorkSkeleton /> : <WorkOverview now={now} onOpenTask={openTask}
           onOpenProject={project => go({ mode: "projects", project, visual: false })}
-          onNewTask={defaults => setSheet({ kind: "new", defaults })} onQuickTask={() => openCapture("task")} onNewProject={openNewProject}
+          onNewTask={defaults => setSheet({ kind: "new", defaults })} onQuickTask={() => openCapture("task")} onNewProject={() => openNewProject()}
           onDone={() => go({ view: "done" })} onArchived={() => go({ view: "archived" })} onAllProjects={() => go({ mode: "projects", project: null, visual: false })} />)
       : route.view === "active"
         ? <OneLane lane={route.lane ?? "Projects"} onOpenTask={openTask} onAllLanes={toLanes} onNewTask={defaults => setSheet({ kind: "new", defaults })} />

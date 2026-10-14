@@ -41,14 +41,15 @@ export const focusOnMount = (node: HTMLElement | null) => node?.focus();
 
 // ---------- Work's address ----------
 // Today links into Work with ?new=task, ?view=blocked|done|archived|projects,
-// ?project=<id> and ?lane=Showcases|Writing (one lane's open tasks, to choose from).
+// ?project=<id>, ?lane=Showcases|Writing (one lane's open tasks, to choose from) and
+// ?new=project (the New project page, optionally ?idea=<id> to start from an idea).
 // In projects, ?visual=1 shows the constellation instead of the list.
 // The screen reads them on arrival and writes its view back, so a refresh or a shared
 // link opens the same place.
 
 export const taskViews = ["active", "blocked", "done", "archived"] as const;
 export type TaskView = typeof taskViews[number];
-export type WorkRoute = { mode: "tasks" | "projects"; view: TaskView; project: string | null; adding: boolean; visual: boolean; lane: Lane | null };
+export type WorkRoute = { mode: "tasks" | "projects"; view: TaskView; project: string | null; adding: boolean; visual: boolean; lane: Lane | null; creating: boolean; idea: string | null };
 
 export function workRoute(params: { get: (name: string) => string | null }): WorkRoute {
   const view = params.get("view");
@@ -64,6 +65,8 @@ export function workRoute(params: { get: (name: string) => string | null }): Wor
     adding: mode === "tasks" && params.get("new") === "task",
     visual: mode === "projects" && params.get("visual") === "1",
     lane: mode === "tasks" && taskView === "active" ? lanes.find(item => item.toLowerCase() === wantedLane) ?? null : null,
+    creating: mode === "tasks" && params.get("new") === "project",
+    idea: mode === "tasks" && params.get("new") === "project" ? params.get("idea")?.trim() || null : null,
   };
 }
 
@@ -79,6 +82,7 @@ export function workQuery(route: WorkRoute) {
     if (route.view !== "active") query.set("view", route.view);
     else if (route.lane) query.set("lane", route.lane);
     if (route.adding) query.set("new", "task");
+    else if (route.creating) { query.set("new", "project"); if (route.idea) query.set("idea", route.idea); }
   }
   return query.toString();
 }
