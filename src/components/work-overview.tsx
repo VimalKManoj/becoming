@@ -232,7 +232,7 @@ function LooseTask({ task: t, onOpen }: { task: Loose; onOpen: () => void }) {
   const st = t.status === "In progress" ? "p" : t.status === "Blocked" ? "b" : "r";
   const meta = [`${t.minutes} min`, t.plannedSessions ? `${t.sessions} of ${t.plannedSessions} sessions` : null, t.status === "Blocked" && t.nextStep ? t.nextStep : null].filter(Boolean).join(" · ");
   return <div className="task">
-    <StatusControl task={t} compact />
+    <StatusControl task={t} />
     <button type="button" className="topen" onClick={onOpen} aria-haspopup="dialog">
       <span className="tt">{t.title}</span>
       <span className="tm"><span>{meta}</span><span className={`pill ${st}`}>{words[st]}</span></span>

@@ -121,7 +121,7 @@
 
 /* One-tap Start / Done on a lane card (sits beside the card button, not inside it). */
 .w-task-wrap{position:relative}
-.w-task-wrap .w-task{padding-right:70px}
+.w-task-wrap .w-task{padding-right:52px}
 
 /* Projects header (the constellation design): Work's Tasks | Projects tabs, + New project,
    then the title beside the List | Visual switch. */

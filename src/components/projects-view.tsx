@@ -427,7 +427,7 @@ function DeleteProjectSheet({ projectId, active, onClose, onArchive, onDeleted }
 /** A task in a list: the status circle moves it, the rest opens it. */
 export function TaskRow({ task, where, onOpen }: { task: Pick<DetailTask, "_id" | "title" | "status" | "minutes" | "lane" | "nextStep">; where?: string; onOpen: () => void }) {
   return <span className="w-row-wrap">
-    <StatusControl task={task} compact />
+    <StatusControl task={task} />
     <button type="button" id={`task-${task._id}`} className={`w-row lane-${task.lane}`} onClick={onOpen}>
       <span className="w-row-text"><span className="w-row-title">{task.title}</span><span className="w-row-meta">{task.minutes} min · {task.lane}{where ? ` · ${where}` : ""}</span></span>
       <StatusChip status={task.status} />

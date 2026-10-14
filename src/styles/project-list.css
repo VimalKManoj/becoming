@@ -173,7 +173,7 @@
 .pl .pill.p{color:var(--ember-p);border-color:rgba(255,138,61,.45);background:rgba(255,138,61,.1)}
 .pl .pill.r{color:var(--text);border-color:var(--line4)}
 .pl .pill.b{color:var(--red-t);border-color:rgba(255,107,91,.45);background:rgba(255,107,91,.08)}
-.pl .act{flex:none;width:64px;display:flex;justify-content:flex-end}
+.pl .act{flex:none;width:40px;display:flex;justify-content:flex-end}
 .pl .add{border:0;background:none;min-height:44px;padding:0 4px;color:var(--ember-t) !important;font:500 13px var(--sans) !important;cursor:pointer;text-align:left;align-self:flex-start}
 .pl .add:hover{color:var(--ember-p) !important}
 .pl .empty{padding:18px;margin-top:12px;border-radius:16px;border:1px dashed var(--line4);font:400 13px var(--sans);color:var(--muted)}

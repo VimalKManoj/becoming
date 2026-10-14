@@ -35,8 +35,8 @@ type Options = FunctionReturnType<typeof api.projects.options> | undefined;
 
 const laneTitles: Record<Lane, ReactNode> = { Projects: <>Bigger work, <em>in steps.</em></>, Showcases: <>Small, finished <em>pieces.</em></>, Writing: <>Notes and <em>posts.</em></> };
 const listCopy: Record<Exclude<TaskView, "active">, { label: string; title: string; em: string; hint: string; empty: string }> = {
-  blocked: { label: "Blocked", title: "What’s in the ", em: "way.", hint: "Kept out of Today until you unblock them. Tap a circle to unblock.", empty: "Nothing is blocked. A blocked task waits here with what’s in the way." },
-  done: { label: "Done", title: "Finished ", em: "work.", hint: "Everything you’ve finished, wherever it happened. Tap a circle to reopen one.", empty: "Nothing finished yet. Finished tasks arrive here." },
+  blocked: { label: "Blocked", title: "What’s in the ", em: "way.", hint: "Kept out of Today until you unblock them. Click a circle to change its status.", empty: "Nothing is blocked. A blocked task waits here with what’s in the way." },
+  done: { label: "Done", title: "Finished ", em: "work.", hint: "Everything you’ve finished, wherever it happened. Click a circle to reopen one.", empty: "Nothing finished yet. Finished tasks arrive here." },
   archived: { label: "Archived", title: "Set ", em: "aside.", hint: "Hidden from every list but kept with its history. Restore one whenever you like.", empty: "Nothing archived. Archiving hides a task without deleting its history." },
 };
 
@@ -133,7 +133,7 @@ function OneLane({ lane, onOpenTask, onAllLanes, onNewTask }: { lane: Lane; onOp
   return <div className="r-wide r-rise-6 w-work">
     <button type="button" className="r-back" onClick={onAllLanes}>‹ All work</button>
     <div className="r-head">
-      <div><div className={`r-eyebrow lane-${lane}`}>{lane}</div><h1 className="r-title">{laneTitles[lane]}</h1><p className="r-lede" style={{ marginTop: 6 }}>Pick what you’ll work on. Tap a circle to start or finish; open a task for the rest.</p></div>
+      <div><div className={`r-eyebrow lane-${lane}`}>{lane}</div><h1 className="r-title">{laneTitles[lane]}</h1><p className="r-lede" style={{ marginTop: 6 }}>Pick what you’ll work on. Click a task’s circle to change its status; open a task for the rest.</p></div>
     </div>
     <QuickAdd lane={lane} placeholder={`Add to ${lane}…`} onMore={title => onNewTask({ lane, title })} />
     {loading ? <WorkBodySkeleton /> : <>
@@ -318,7 +318,7 @@ function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tas
           {open && <Link href={startHref(task)} className="r-ghost sm">Start a focus session</Link>}
           {!archived && <button type="button" className="r-ghost sm" onClick={onEdit}>Edit</button>}
         </div>
-        <p className="r-small">More in the ⋯ beside the status: back to Ready, pin for tonight, archive{archived ? ", delete" : ""}.</p>
+        <p className="r-small">The circle beside the status changes it, and holds pin for tonight and archive{archived ? ", restore and delete" : ""}.</p>
         {task.projectId && <Link className="r-link" style={{ alignSelf: "flex-end" }} href={`/work?view=projects&project=${task.projectId}&visual=1`}>See it on the map ›</Link>}
       </>}
   </Sheet>;

@@ -40,7 +40,7 @@ The goal of this plan is that **a normal evening needs no data entry**:
    - Plans means phases, milestones, docs and `import_plan`.
    - The other levels are *ask first* (today's behaviour) and *apply everything*.
 2. **"Done when" on new tasks.** Optional at creation. Today asks for it the first time it suggests the task. Otherwise it stays required, as now.
-3. **The status circle.** A tap cycles Ready → In progress → Done. Blocked, Back to Ready, Archive, Pin, Focus and Delete live in its menu (the ⋯ button, right-click, or a long press on a phone).
+3. **The status circle.** A tap cycles Ready → In progress → Done. Blocked, Back to Ready, Archive, Pin, Focus and Delete live in its menu (the ⋯ button, right-click, or a long press on a phone). **Changed 14 October (owner):** a tap that changed the status straight away was confusing for a first-time user. Clicking the circle now opens a status menu instead: each status with what it means (Ready "Not started yet", In progress "You're working on it", Blocked… "Something's in the way", Done "Finished"), the current one ticked, then focus, pin and archive. The ⋯ button is gone. Finishing takes two taps, still with no forms and with Undo.
 4. **Undo.** A 6-second toast, plus "Undo" on the task's latest timeline entry until something else changes it.
 5. **Deleting tasks.** Only from Archived. That's where mistakes go first.
 6. **Swap reasons.** Remove them, from the schema use, Journey's stats and the docs, since nothing asks for them. The alternative is one tap on "Choose".
@@ -57,7 +57,7 @@ The goal of this plan is that **a normal evening needs no data entry**:
   - the one-lane view and Blocked/Done/Archived;
   - the project's Up next and its milestone rows;
   - the milestone sheet, the task sheet and the Visual panel.
-- **Menu.** ⋯ opens it on every screen; right-clicking the circle opens it too.
+- **Menu.** Clicking the circle opens the status menu (see decision 3, changed 14 October). It never covers the circle, and scrolls when the screen is short. Hovering the circle says "Ready · click to change status".
 - **Toasts.** One with actions stays 6.5–8 s and pauses while pointed at or focused.
 - **Unblocking without a note** restores the next step from before the block, instead of keeping the blocker.
 - **Same choices everywhere.** Capture and the new-project sheet gained energy, and every estimate picker is 15/30/45/60/90. Done-when is optional in quick capture and a new project's first step too.

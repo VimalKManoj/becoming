@@ -63,7 +63,7 @@ Sizes follow the prototype and scale with the content column through container q
 | `r-embers`, `r-spark` (`ritual/embers.tsx`) | Behind every workspace screen and onboarding: a light breathing glow and embers drifting up, as on the sign-in screen; hidden with reduced motion |
 
 One tap (`src/components/tasks/`, `tasks.css`, `tk-` classes):
-- `StatusControl` is the status circle (empty, half, ✓, slash, dashed) and its ⋯ menu, the same on every screen.
+- `StatusControl` is the status circle (empty, half, ✓, slash, dashed). Clicking it opens its status menu: each status with what it means, the current one ticked, then focus, pin and archive. It's the same on every screen.
 - `useTaskMove` runs every move, with an Undo toast and the finish card.
 - `QuickAdd` makes a task from a title, then Enter.
 - `InlineField` edits a value in place.
