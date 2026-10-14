@@ -235,14 +235,20 @@ Use a fake address such as `qa-a@example.test`. Email isn't verified, so it does
   - Your week: the summary → **Save my week**.
   - **Expect:** a toast and Today. The lined-up steps now rank first ("Lined up this week") and the prompt card can show your intention.
 
-### B5a. Moving tasks without the timer (added 9 October)
+### B5a. One tap: moving tasks (changed 14 October, PLAN-one-tap-and-daily-loop Phase 1)
 
-- [ ] In Work, press **▶** on a Ready card. **Expect:** "Started …" and the card says In progress, with no timer.
-- [ ] Press **✓** on an In progress card. **Expect:** the task sheet opens on "What changed? · optional" with skill chips. Add a note and two skills, then **Mark done**. **Expect:** it moves to Done; the Mind Bloom (Journey) grows for those skills.
-- [ ] Open a task: **Blocked…** needs a reason, which shows as "Blocked by". **Unblock** asks for the next step.
-- [ ] On an In progress task, use **Move back to Ready**. **Expect:** Ready again.
-- [ ] Today → Build → **Show my focus**: under **Start focus** there are **Start without the timer** (Ready tasks) and **Done already?**. Both work without the focus screen.
-- [ ] Start a focus session on a task, then try to mark it done in Work. **Expect:** "This task has a focus session running…".
+Every task shows the same **status circle** (empty Ready, half In progress, ✓ Done, slash Blocked, dashed Archived): on the Work overview (each project's up next and each loose task), the one-lane view, Blocked/Done/Archived, the project's Up next and its milestone rows (on a phone too), the milestone sheet, the task sheet and the Visual panel. **▶** always means a focus session.
+
+- [ ] Tap a Ready circle. **Expect:** half-filled, toast "Started …" with **Undo**. Tap again. **Expect:** ✓ and a finish toast with the skills it grew (its own, else its milestone's or phase's), the milestone's bar "N of M", **Start "next task"** when one is Ready, **Undo** and **Add what changed**.
+- [ ] Press **Undo** on a finish. **Expect:** back to In progress, the milestone bar back, a pin restored if it had one. Move the task again, then try Undo on the older toast (if still open). **Expect:** "changed since; move it yourself".
+- [ ] Finish the last task of a milestone. **Expect:** the toast says the milestone is complete and offers the next milestone's first task.
+- [ ] **⋯** (or right-click the circle): Start / Mark done / Back to Ready / **Blocked…** (an optional reason) / Start a focus session / Pin for tonight / Archive. On an archived task: Restore / **Delete for good…** (asks to confirm).
+- [ ] Block without a reason, then unblock. **Expect:** the next step is what it was before the block. Block with a reason. **Expect:** the reason shows as "Blocked by"; the toast offers **Say why** when none was given.
+- [ ] **Quick add**: type a title in a lane, a milestone ("Add a task to A…") or a one-lane view and press Enter. **Expect:** it's added (30 min, steady, no done-when), the field stays focused for the next one, and Undo removes it. **More…** opens the full form with the title.
+- [ ] Task sheet: click the title, **Done when** or the next step to edit in place (Enter, or Ctrl+Enter in longer fields; Escape cancels without closing the sheet); tap a size chip; tap the energy to cycle it; **Add skills**.
+- [ ] Today → Focus session → **Show my focus**: **Start without the timer** and **Done already** move the task in one tap, with the same toasts.
+- [ ] Start a focus session on a task, then tap its circle in Work. **Expect:** "This task has a focus session running…".
+- [ ] Mark a project done, then tap a Ready circle on one of its tasks (from `?lane=Projects`). **Expect:** "This task's project is done or archived…".
 
 ### B8a. Assistants and the Inbox (added 9 October)
 

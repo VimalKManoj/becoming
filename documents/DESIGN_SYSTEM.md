@@ -59,8 +59,14 @@ Sizes follow the prototype and scale with the content column through container q
 | `r-field`, `r-input`, `r-textarea`, `r-hint` | Forms |
 | `r-bar`, `r-week` / `r-wdot` | Progress bars and week dots |
 | `r-overlay` (`focus`, `recap`, `reward`, `sheet`, `setup`), `r-close` | Full-screen moments |
-| `r-cap*`, `r-toast` | Quick capture sheet and the toast (3.4s). Work's sheets (`Sheet` in task-forms.tsx) use the same parts and render through a portal into `.r-app`, because the animated page (`r-rise`) would otherwise pin a fixed sheet inside itself |
+| `r-cap*`, `r-toast` | Quick capture sheet and the toast (3.4s; 6.5–8s with actions, paused while pointed at or focused). A toast can carry `actions` (Undo, Start the next task), a `note` field (Add what changed, Say why) and a `body` (a finish's skills and milestone bar). Work's sheets (`Sheet` in task-forms.tsx) use the same parts and render through a portal into `.r-app`, because the animated page (`r-rise`) would otherwise pin a fixed sheet inside itself |
 | `r-embers`, `r-spark` (`ritual/embers.tsx`) | Behind every workspace screen and onboarding: a light breathing glow and embers drifting up, as on the sign-in screen; hidden with reduced motion |
+
+One tap (`src/components/tasks/`, `tasks.css`, `tk-` classes):
+- `StatusControl` is the status circle (empty, half, ✓, slash, dashed) and its ⋯ menu, the same on every screen.
+- `useTaskMove` runs every move, with an Undo toast and the finish card.
+- `QuickAdd` makes a task from a title, then Enter.
+- `InlineField` edits a value in place.
 
 Shared React parts: `src/components/ritual/` (`ritual-context.tsx` for capture, new project and the toast; `capture-sheet.tsx`; `new-project-sheet.tsx`; `week.tsx` with `useWeek` and `WeekDots`), `src/components/visuals.tsx` (`MindBloom`: eight fixed skills, each petal full at 12 sessions, `mode` all / mini / reward) and `src/lib/ritual.ts` (date line, greeting, week line, session line, "last worked").
 

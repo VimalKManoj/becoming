@@ -8,6 +8,8 @@ Proposed 9 October 2026.
 - focus runs as a **floating chip** by default;
 - assistant status changes **apply at once with an Undo**.
 
+**14 October:** Phases 3–5 below (focus decoupled, In progress on Today, assistant status tools) are replaced by [PLAN-one-tap-and-daily-loop.md](PLAN-one-tap-and-daily-loop.md), which carries over the decisions above. Phase 6 (project insights) stays here.
+
 **Phase 1 is built; Phase 2 (rethought, below) is built 12 October:** `tasks.setStatus`, the `taskEvents` history, Start / Done / Blocked anywhere in Work and on Today's focus card, and skills on finished tasks in the bloom. Phases 2–6 are next.
 
 ## Why

@@ -22,7 +22,7 @@ Convex stores documents in tables. Each document has `_id` and `_creationTime`. 
 | apiTokens | owner, name, hash (SHA-256), prefix; optional lastUsedAt | by_hash: the MCP endpoint finds the owner; by_owner: Settings → Assistants |
 | inbox | owner, source (token name), proposal (session / task / idea / milestone / nextStep) | by_owner: the Inbox on Today; nothing counts until approved |
 | pushSubscriptions | owner, endpoint, p256dh, auth | by_owner: a person's devices; by_endpoint: one row per browser |
-| taskEvents | owner, taskId, kind, at, source; optional projectId, note | by_task (taskId, at): a task's timeline; by_owner_at: the activity feed and deletion |
+| taskEvents | owner, taskId, kind, at, source; optional projectId, note, before (the task's status, next step, dates, skills and pin just before the move, for Undo) | by_task (taskId, at): a task's timeline; by_owner_at: the activity feed and deletion |
 
 Indexes in Convex are not declared uniqueness constraints. Application code uses an indexed read and insert in one mutation when uniqueness is required. The current recap mutation derives its `(owner, key)` retry identity from an owned active-session ID.
 
@@ -257,3 +257,16 @@ See [PLAN-project-constellation.md](PLAN-project-constellation.md) and, for the 
 
 
 **Journey tracks work, not focus (12 October 2026).** `phases.skills` and `milestones.skills` (optional, the bloom's eight skills) are inherited by finished tasks without their own (`lib/work.ts` `effectiveSkills`); backups carry them. `taskEvents` now also feeds Journey: `rhythm.overview` returns `work` (tasks started, finished or logged, with lane and whether backfilled, meaning recorded more than a day after `at`) and `joinedAt` (the profile's creation, where weeks start); `journey.activity` returns weighted items (session 1, start 1, finish 2); `journey.feed` merges events, sessions and milestone/phase completions newest first; `journey.untagged` groups finished tasks with no skills by phase or milestone. No new tables.
+
+**One tap (14 October 2026, PLAN-one-tap-and-daily-loop Phase 1).**
+- Every move (`tasks.setStatus`, `archive`, `restore`, and the old `unblock`/`reopen`, which now call `setStatus`) writes `taskEvents.before`.
+- `tasks.undo({ eventId })` restores that snapshot and deletes the event, but only while it is the task's latest event. Undoing `created` deletes a task with no sessions.
+- Notes are optional on every move. Unblocking without one restores the next step from before the block.
+- `setStatus` returns `{ eventId, finish }`. `finish` comes from `lib/finish.ts`: effective skills, the milestone's done/total and whether it or its phase just completed, and the next open task in the milestone or phase.
+- Moving to In progress is refused when the task's project isn't Active.
+- `tasks.quickAdd` creates a task from a title (30 min, steady, empty done-when; `doneWhen` may now be empty everywhere).
+- `tasks.edit` patches single fields.
+- `tasks.noteOn` adds a note to a move afterwards; a blocker also becomes the next step.
+- `tasks.remove` deletes an archived task with its events, sessions and evidence, and unlinks it from prerequisites, ideas, week plans, the pin and the Inbox.
+- `createWithFirstStep` and `ideas.activate` now log "created".
+- No new tables.
