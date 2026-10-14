@@ -81,6 +81,10 @@
 .w-sheet::-webkit-scrollbar{display:none}
 @media(max-width:899px){.w-sheet{max-height:92dvh}}
 .w-sheet-eyebrow{min-width:0;overflow-wrap:anywhere}
+/* The sheet's top line: the eyebrow on one line (shortened when long), the close button always beside it. */
+.w-sheet-head{flex-wrap:nowrap}
+.w-sheet-head .r-close{flex:none}
+.w-sheet-head .w-sheet-eyebrow{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .w-sheet-title{font:400 clamp(34px,6cqi,46px)/1.02 var(--r-serif);overflow-wrap:anywhere;text-wrap:pretty}
 .w-sheet-title.sm{font:400 28px/1.08 var(--r-serif)}
 .w-sheet-title em{color:var(--r-ember-text);font-style:italic}

@@ -108,6 +108,7 @@ async function taskCards(ctx: QueryCtx, owner: string, page: Doc<"tasks">[]) {
     completedAt: task.completedAt ?? null,
     skills: task.skills ?? [],
     plannedSessions: task.plannedSessions ?? null,
+    notes: task.notes ?? "",
   }));
 }
 
@@ -232,7 +233,7 @@ export const quickAdd = mutation({
 export const edit = mutation({
   args: {
     taskId: v.id("tasks"), title: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()),
-    minutes: v.optional(v.number()), energy: v.optional(v.number()), skills: v.optional(v.array(v.string())),
+    minutes: v.optional(v.number()), energy: v.optional(v.number()), skills: v.optional(v.array(v.string())), notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
@@ -241,12 +242,16 @@ export const edit = mutation({
     if (task.status === "Archived") throw new ConvexError(`"${task.title}" is archived. Restore it first.`);
     const nextStep = args.nextStep?.trim();
     if (nextStep !== undefined && nextStep.length > 2000) throw new ConvexError("Keep the next step under 2,000 characters.");
+    const notes = args.notes?.trim();
+    if (notes !== undefined && notes.length > 10000) throw new ConvexError("Keep the notes under 10,000 characters.");
     await ctx.db.patch(task._id, {
       ...(args.title !== undefined ? { title: nonempty(args.title) } : {}),
       ...(nextStep !== undefined ? { nextStep } : {}),
       ...(args.doneWhen !== undefined ? { doneWhen: doneWhenValue(args.doneWhen) } : {}),
       ...(args.minutes !== undefined || args.energy !== undefined ? effortValues(args.minutes ?? task.minutes, args.energy ?? task.energy) : {}),
       ...(args.skills !== undefined ? { skills: skillValues(args.skills) } : {}),
+      // Empty notes clear them.
+      ...(notes !== undefined ? { notes: notes || undefined } : {}),
     });
     return task._id;
   },

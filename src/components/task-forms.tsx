@@ -138,7 +138,7 @@ type SheetProps = {
 /** Work's sheets, in the capture sheet's style. Escape and the backdrop close them. */
 export function Sheet({ labelledBy, eyebrow, onClose, variant = "card", children }: SheetProps) {
   const dialog = useModal<HTMLDivElement>(onClose);
-  const head = <div className="r-row r-between" style={{ gap: 12 }}>
+  const head = <div className="r-row r-between w-sheet-head" style={{ gap: 12 }}>
     <span className="r-eyebrow ember w-sheet-eyebrow">{eyebrow}</span>
     {/* Focus moves into the sheet as it opens; a form's first field, mounting later, takes it from here. */}
     <button type="button" ref={focusOnMount} className="r-close" aria-label="Close" onClick={onClose}>×</button>
@@ -270,18 +270,4 @@ function PrerequisiteChecklist({ options, taskId, selected }: { options: Prerequ
     </div>}
     <p className="r-small" style={{ marginTop: 8 }}>Today won’t suggest this task until those tasks are done (or archived).</p>
   </fieldset>;
-}
-
-/** Blocking a task: what's in the way (optional) becomes its next step. */
-export function BlockForm({ busy, onSubmit, onCancel }: { busy: boolean; onSubmit: (reason: string) => void; onCancel: () => void }) {
-  return <form className="w-form" aria-busy={busy} onSubmit={event => { event.preventDefault(); onSubmit(String(new FormData(event.currentTarget).get("reason") || "")); }}>
-    <fieldset className="w-fields" disabled={busy}>
-      <legend className="sr-only">Mark this task blocked</legend>
-      <label className="r-field"><span>What&apos;s blocking it, and how could it be unblocked? <span className="r-small">· optional</span></span><textarea ref={focusOnMount} className="r-textarea w-textarea" name="reason" maxLength={2000} rows={2} placeholder="Waiting on the API key from the client. Ask on Monday." /></label>
-      <div className="r-row" style={{ gap: 8 }}>
-        <button type="submit" className="r-btn red">{busy ? "Saving…" : "Mark blocked"}</button>
-        <button type="button" className="r-ghost sm" onClick={onCancel}>Cancel</button>
-      </div>
-    </fieldset>
-  </form>;
 }

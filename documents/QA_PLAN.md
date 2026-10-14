@@ -245,7 +245,14 @@ Every task shows the same **status circle** (empty Ready, half In progress, ✓ 
 - [ ] In the menu, **Blocked…** asks for an optional reason. On an archived task the menu has Restore and **Delete for good…** (asks to confirm). Escape closes it; arrow keys move through it. Near the bottom of the screen it opens upwards, never over the circle.
 - [ ] Block without a reason, then unblock. **Expect:** the next step is what it was before the block. Block with a reason. **Expect:** the reason shows as "Blocked by"; the toast offers **Say why** when none was given.
 - [ ] **Quick add**: type a title in a lane, a milestone ("Add a task to A…") or a one-lane view and press Enter. **Expect:** it's added (30 min, steady, no done-when), the field stays focused for the next one, and Undo removes it. **More…** opens the full form with the title.
-- [ ] Task sheet: click the title, **Done when** or the next step to edit in place (Enter, or Ctrl+Enter in longer fields; Escape cancels without closing the sheet); tap a size chip; tap the energy to cycle it; **Add skills**.
+- [ ] Task sheet (changed 14 October). **Expect:**
+  - one short breadcrumb line with × beside it, then the title;
+  - one action row: the **status button** ("○ Ready ▾", which opens the status menu), the next step (Start / Mark done / Unblock / Restore) and **▶ Focus**;
+  - then a list: Done when, Next step, **Notes**, Time, Energy, Skills (and Built from, Waiting on, Smaller step, Sessions when they apply);
+  - **History** with the latest 3 and "Show all";
+  - quiet links: Edit all details, Open the project, See it on the map, Pin for tonight, Archive.
+
+  Click any value to change it: text fields save on Enter (Ctrl+Enter in longer ones) and Escape cancels without closing the sheet; Time and Energy show their choices. **Notes** keep line breaks, and emptying them clears them. On a phone, each label sits above its value.
 - [ ] Today → Focus session → **Show my focus**: **Start without the timer** and **Done already** move the task in one tap, with the same toasts.
 - [ ] Start a focus session on a task, then tap its circle in Work. **Expect:** "This task has a focus session running…".
 - [ ] Mark a project done, then tap a Ready circle on one of its tasks (from `?lane=Projects`). **Expect:** "This task's project is done or archived…".

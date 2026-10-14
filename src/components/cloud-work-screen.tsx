@@ -9,7 +9,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { api } from "../../convex/_generated/api";
 import { Bone, LinesSkeleton, Skeleton } from "@/components/skeleton";
 import { ProjectCardBones, ProjectsArea, useSaver } from "@/components/projects-view";
-import { BlockForm, Sheet, StatusChip, TaskForm, energyWords, lanes, taskValues, workQuery, workRoute, type EditableTask, type Lane, type TaskView, type WorkRoute } from "@/components/task-forms";
+import { Sheet, StatusChip, TaskForm, lanes, taskValues, workQuery, workRoute, type EditableTask, type Lane, type TaskView, type WorkRoute } from "@/components/task-forms";
 import { useRitual } from "@/components/ritual/ritual-context";
 import { WorkOverview } from "@/components/work-overview";
 import { dayMonth } from "@/components/constellation/model";
@@ -18,7 +18,7 @@ import { plural } from "@/lib/format";
 import { readableError } from "@/lib/errors";
 import { StatusControl } from "@/components/tasks/status-control";
 import { QuickAdd } from "@/components/tasks/quick-add";
-import { InlineField } from "@/components/tasks/inline-field";
+import { ChoiceField, InlineField } from "@/components/tasks/inline-field";
 import { useTaskMove, type MoveTarget } from "@/components/tasks/use-task-move";
 import { bloomSkillList } from "../../convex/lib/bloom";
 import { useNow } from "@/lib/use-rhythm";
@@ -201,28 +201,33 @@ function placeInPlan(map: NonNullable<Constellation>, taskId: Id<"tasks">) {
   return t ? { code: t.code, phaseId: null, phase: null, milestone: null, sessions: t.sessions, planned: t.plannedSessions } : null;
 }
 
+/** The one obvious next step for each status, as the sheet's main button. Everything else is in the status menu. */
 const primaryMove: Record<string, { label: string; to: MoveTarget | "restore"; className: string }> = {
   "Ready": { label: "Start", to: "In progress", className: "r-btn sm" },
   "In progress": { label: "Mark done", to: "Done", className: "r-btn sm mint" },
   "Blocked": { label: "Unblock", to: "Ready", className: "r-btn sm" },
-  "Done": { label: "Reopen", to: "In progress", className: "r-ghost sm" },
   "Archived": { label: "Restore", to: "restore", className: "r-btn sm" },
 };
+const minuteChoices = [15, 30, 45, 60, 90].map(value => ({ value, label: `${value} min` }));
+const energyChoices = [{ value: 1, label: "Low" }, { value: 2, label: "Steady" }, { value: 3, label: "High" }];
+const energyName = ["", "Low", "Steady", "High"];
 
 /**
- * Everything about one task. Every move is one tap with an Undo in the toast (no forms); the
- * title, done-when, next step, size, energy and skills are edited where they're shown. The
- * full form (project, milestone, prerequisites, smaller step) is behind Edit.
+ * One task, as a clean properties sheet. At the top: the title (click to edit), then one row
+ * to act on it: the status button (which opens the status menu), the obvious next step and
+ * Focus. Below, a list of details, each edited where it's shown. Then its recent history and,
+ * at the foot, quiet links for the rest. Every move has an Undo in the toast.
  */
 function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tasks">; onClose: () => void; onEdit: () => void; onOpenProject: (id: Id<"projects">) => void }) {
   const task = useQuery(api.tasks.get, { taskId });
   const options = useQuery(api.projects.options);
   const profile = useQuery(api.settings.getProfile);
   const editTask = useMutation(api.tasks.edit);
+  const pin = useMutation(api.tasks.pin);
   const moves = useTaskMove();
   const { showToast } = useRitual();
-  const [blocking, setBlocking] = useState(false);
   const [skilling, setSkilling] = useState(false);
+  const [allHistory, setAllHistory] = useState(false);
   // Where it sits in its project's plan (code, phase, milestone, sessions) and its story.
   const map = useQuery(api.constellation.get, task?.projectId ? { projectId: task.projectId } : "skip");
   const story = useQuery(api.constellation.taskStory, { taskId });
@@ -238,12 +243,17 @@ function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tas
   const stepLabel = task.status === "Blocked" ? "Blocked by" : task.status === "In progress" ? "Pick up here" : "Next step";
   const place = map ? placeInPlan(map, taskId) : null;
   const builtFrom = map && place?.phaseId ? map.docs.filter(d => d.phaseIds.includes(String(place.phaseId))).map(d => d.code) : [];
-  const crumb = place && <span className="w-tcrumb">Task {place.code}
-    {(place.phase || place.milestone) && <span> · {place.phase ?? ""}{place.phase && place.milestone ? " › " : ""}{place.milestone ?? ""}</span>}</span>;
+  const project = options?.find(item => item._id === task.projectId);
+  const milestone = project?.milestones.find(item => item._id === task.milestoneId);
+  // One short line: the task's code, then its project and milestone (or its lane when it has none).
+  const eyebrow = <span>{place ? `${place.code} · ` : ""}{project ? `${project.title}${milestone ? ` › ${milestone.title}` : ""}` : task.lane}</span>;
   const primary = primaryMove[task.status];
+  const busy = moves.busy === taskId;
+  const history = story ?? [];
+  const shownHistory = allHistory ? [...history].reverse() : [...history].reverse().slice(0, 3);
 
   /** Saves one edited field; the toast confirms, and a refusal says why. */
-  async function saveField(fields: { title?: string; nextStep?: string; doneWhen?: string; minutes?: number; energy?: number; skills?: string[] }, message: string) {
+  async function saveField(fields: { title?: string; nextStep?: string; doneWhen?: string; minutes?: number; energy?: number; skills?: string[]; notes?: string }, message: string) {
     try { await editTask({ taskId, ...fields }); showToast(message); return true; }
     catch (error) { showToast(readableError(error, "Could not save that."), "alert"); return false; }
   }
@@ -253,74 +263,71 @@ function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tas
     if (!has && task.skills.length >= 5) { showToast("Up to 5 skills on a task.", "alert"); return; }
     void saveField({ skills: has ? task.skills.filter(skill => skill.toLowerCase() !== name.toLowerCase()) : [...task.skills, name] }, has ? `Removed ${name}.` : `Added ${name}.`);
   };
+  const togglePin = async () => {
+    try { await pin({ taskId: pinned ? undefined : taskId }); showToast(pinned ? "Unpinned." : "Pinned for tonight. Today offers it first when it fits."); }
+    catch (error) { showToast(readableError(error, "Could not change the pin."), "alert"); }
+  };
 
-  return <Sheet labelledBy="task-sheet-title" eyebrow={crumb || <span className={`r-row lane-${task.lane}`} style={{ gap: 8 }}><span className="r-dot" aria-hidden="true" />{task.lane}</span>} onClose={onClose}>
-    <div>
-      <h2 id="task-sheet-title" className="w-sheet-title sm">
-        {archived ? task.title : <InlineField label="Title" value={task.title} empty="Name the task" maxLength={160} required onSave={title => saveField({ title }, "Title saved.")} />}
-      </h2>
-      {where && <button type="button" className="r-link" style={{ marginTop: 8 }} onClick={() => onOpenProject(where.projectId)}>{where.text} →</button>}
-    </div>
-    <div className="r-row" style={{ gap: 6, alignItems: "center" }}>
-      <StatusControl task={task} onDeleted={onClose} />
-      <StatusChip status={task.status} archivedFrom={task.archivedFrom} />
+  return <Sheet labelledBy="task-sheet-title" eyebrow={eyebrow} onClose={onClose}>
+    <h2 id="task-sheet-title" className="w-sheet-title sm tk-sheet-title">
+      {archived ? task.title : <InlineField label="Title" value={task.title} empty="Name the task" maxLength={160} required onSave={title => saveField({ title }, "Title saved.")} />}
+    </h2>
+
+    <div className="tk-sheet-actions" role="group" aria-label={`Act on ${task.title}`}>
+      <StatusControl task={task} variant="pill" onDeleted={onClose} />
+      {primary && <button type="button" className={`${primary.className} tk-act`} disabled={busy} onClick={runPrimary}>{primary.label}</button>}
+      {open && <Link href={startHref(task)} className="r-ghost sm tk-act">▶ Focus</Link>}
       {pinned && <span className="r-badge">Pinned for tonight</span>}
-      {archived ? <span className="r-fact mono">{task.minutes} min</span>
-        : <span className="w-size" role="group" aria-label="Minutes it takes">{[15, 30, 45, 60, 90].map(m => <button key={m} type="button" className="r-chip mono h34" aria-pressed={task.minutes === m} onClick={() => void saveField({ minutes: m }, `${m} minutes.`)}>{m}</button>)}
-          {![15, 30, 45, 60, 90].includes(task.minutes) && <span className="r-fact mono">{task.minutes} min</span>}</span>}
-      {archived ? <span className="r-fact">{energyWords[task.energy]}</span>
-        : <button type="button" className="r-fact w-energy-cycle" aria-label={`${energyWords[task.energy] ?? "Energy"}. Change`} onClick={() => void saveField({ energy: task.energy % 3 + 1 }, `${energyWords[task.energy % 3 + 1]}.`)}>{energyWords[task.energy] ?? `Energy ${task.energy}/3`}</button>}
     </div>
-    <div className="r-dashed"><div className="r-eyebrow-sm">Done when</div>
-      <div className="r-body" style={{ marginTop: 4 }}>{archived ? task.doneWhen || "Not set." : <InlineField label="Done when" value={task.doneWhen} empty="Say what you’ll see when it’s finished" multiline maxLength={1000} onSave={doneWhen => saveField({ doneWhen }, "Done-when saved.")} />}</div>
-    </div>
-    <div className={`r-inset${task.status === "Blocked" ? " w-blocked" : ""}`}><div className="r-eyebrow-sm">{stepLabel}</div>
-      <div className="r-body" style={{ marginTop: 4 }}>{archived ? task.nextStep || "None." : <InlineField label={stepLabel} value={task.nextStep} empty={task.status === "Blocked" ? "Say what’s in the way" : "Write the very next thing to do"} multiline maxLength={2000} onSave={nextStep => saveField({ nextStep }, "Next step saved.")} />}</div>
-    </div>
-    {waiting.length > 0 && <div className="r-inset">
-      <div className="r-eyebrow-sm">Waiting on</div>
-      <ul className="w-waiting">{waiting.map((title, index) => <li key={`${title}-${index}`}>{title}</li>)}</ul>
-      <p className="r-small" style={{ marginTop: 6 }}>Today offers this task once {waiting.length === 1 ? "that is" : "those are"} done.</p>
-    </div>}
-    {task.smallerStep && <div className="r-inset"><div className="r-eyebrow-sm">Smaller step · {task.smallerMinutes} min</div><div className="r-body" style={{ marginTop: 4 }}>{task.smallerStep}</div><p className="r-small" style={{ marginTop: 4 }}>Done when: {task.smallerDone}</p></div>}
-    {place && (place.planned || place.sessions > 0) && <div>
-      <div className="r-eyebrow-sm">Sessions · {place.planned ? `${place.sessions} of ${place.planned}` : place.sessions}</div>
-      {place.planned && <div className="w-evs" role="img" aria-label={`${place.sessions} of ${place.planned} sessions`}>
-        {Array.from({ length: Math.min(place.planned, 40) }, (_, k) => <span key={k} className={`w-ev${k < place.sessions ? " on" : ""}`} />)}
-      </div>}
-    </div>}
-    <div>
-      <div className="r-row r-between" style={{ gap: 8 }}>
-        <div className="r-eyebrow-sm">{builtFrom.length ? "Built from" : "Skills"}</div>
-        {!archived && <button type="button" className="r-underline r-small" onClick={() => setSkilling(on => !on)}>{skilling ? "Done" : task.skills.length ? "Change skills" : "Add skills"}</button>}
-      </div>
-      <div className="w-chips">
-        {builtFrom.map(code => <span key={code} className="w-dchip">{code}</span>)}
-        {skilling ? bloomSkillList.map(skill => <button key={skill.name} type="button" className="r-chip round h34" aria-pressed={task.skills.some(s => s.toLowerCase() === skill.name.toLowerCase())} onClick={() => toggleSkill(skill.name)}>{skill.name}</button>)
-          : task.skills.length ? task.skills.map(skill => <span key={skill} className="w-skill">{skill}</span>)
-            : !builtFrom.length && <span className="r-small">None yet. Its milestone’s or phase’s skills count for it.</span>}
-      </div>
-    </div>
-    {story && story.length > 0 && <div>
-      <div className="r-eyebrow-sm">Timeline</div>
-      <ol className="w-tl">{story.slice(-6).map((e, i) => <li key={`${e.at}-${i}`} className={`w-te${e.source !== "app" ? " ai" : ""}${e.kind === "blocked" ? " blk" : ""}`}>
+
+    <dl className="tk-props">
+      <dt>Done when</dt>
+      <dd>{archived ? task.doneWhen || "Not set" : <InlineField label="Done when" value={task.doneWhen} empty="Add what finished looks like" multiline maxLength={1000} onSave={doneWhen => saveField({ doneWhen }, "Done-when saved.")} />}</dd>
+      <dt className={task.status === "Blocked" ? "red" : undefined}>{stepLabel}</dt>
+      <dd>{archived ? task.nextStep || "None" : <InlineField label={stepLabel} value={task.nextStep} empty={task.status === "Blocked" ? "Add what’s in the way" : "Add the very next thing to do"} multiline maxLength={2000} onSave={nextStep => saveField({ nextStep }, "Next step saved.")} />}</dd>
+      <dt>Notes</dt>
+      <dd>{archived ? <span className="tk-notes">{task.notes || "None"}</span> : <InlineField label="Notes" value={task.notes} empty="Add notes: anything worth keeping about it" multiline maxLength={10000} className="tk-notes" onSave={notes => saveField({ notes }, notes ? "Notes saved." : "Notes cleared.")} />}</dd>
+      <dt>Time</dt>
+      <dd>{archived ? `${task.minutes} min` : <ChoiceField label="Time it takes" value={task.minutes} options={minuteChoices} display={`${task.minutes} min`} onSave={minutes => saveField({ minutes }, `${minutes} minutes.`)} />}</dd>
+      <dt>Energy</dt>
+      <dd>{archived ? energyName[task.energy] : <ChoiceField label="Energy it needs" value={task.energy} options={energyChoices} display={energyName[task.energy] ?? "Steady"} onSave={energy => saveField({ energy }, `${energyName[energy]} energy.`)} />}</dd>
+      <dt>Skills</dt>
+      <dd>
+        {skilling
+          ? <div className="tk-choices">{bloomSkillList.map(skill => <button key={skill.name} type="button" className="r-chip round h34" aria-pressed={task.skills.some(s => s.toLowerCase() === skill.name.toLowerCase())} onClick={() => toggleSkill(skill.name)}>{skill.name}</button>)}
+            <button type="button" className="tk-menu-link" onClick={() => setSkilling(false)}>Done</button></div>
+          : <button type="button" className={`tk-inline${task.skills.length ? "" : " empty"}`} disabled={archived} aria-label={`Skills: ${task.skills.join(", ") || "none"}. Change`} onClick={() => setSkilling(true)}>
+            {task.skills.length ? <span className="w-chips" style={{ marginTop: 0 }}>{task.skills.map(skill => <span key={skill} className="w-skill">{skill}</span>)}</span> : "Add skills (its milestone’s count until then)"}
+          </button>}
+      </dd>
+      {builtFrom.length > 0 && <><dt>Built from</dt><dd><span className="w-chips" style={{ marginTop: 6 }}>{builtFrom.map(code => <span key={code} className="w-dchip">{code}</span>)}</span></dd></>}
+      {waiting.length > 0 && <><dt>Waiting on</dt><dd className="tk-plain">{waiting.join(", ")}<span className="r-small"> · Today offers it once {waiting.length === 1 ? "that is" : "those are"} done</span></dd></>}
+      {task.smallerStep && <><dt>Smaller step</dt><dd className="tk-plain">{task.smallerStep} <span className="r-small">· {task.smallerMinutes} min · done when {task.smallerDone}</span></dd></>}
+      {place && (place.planned || place.sessions > 0) && <><dt>Sessions</dt><dd className="tk-plain">
+        {place.planned ? `${place.sessions} of ${place.planned}` : place.sessions}
+        {place.planned && <span className="w-evs" role="img" aria-label={`${place.sessions} of ${place.planned} sessions`} style={{ marginTop: 6 }}>
+          {Array.from({ length: Math.min(place.planned, 40) }, (_, k) => <span key={k} className={`w-ev${k < place.sessions ? " on" : ""}`} />)}
+        </span>}
+      </dd></>}
+    </dl>
+
+    {history.length > 0 && <section className="tk-history" aria-label="History">
+      <div className="r-row r-between"><div className="r-eyebrow-sm">History</div>
+        {history.length > 3 && <button type="button" className="tk-menu-link" onClick={() => setAllHistory(on => !on)}>{allHistory ? "Show less" : `Show all ${history.length}`}</button>}</div>
+      <ol className="w-tl">{shownHistory.map((e, i) => <li key={`${e.at}-${i}`} className={`w-te${e.source !== "app" ? " ai" : ""}${e.kind === "blocked" ? " blk" : ""}`}>
         <div className="w-tek">{e.kind.toUpperCase()}{e.source !== "app" && <span className="w-mcp">MCP</span>}</div>
         <div className="w-tet">{e.note ?? EVENT_NOTE[e.kind] ?? e.kind}</div>
         <div className="w-tew">{dayMonth(e.at)}{e.source !== "app" ? ` · ${e.source}` : ""}</div>
       </li>)}</ol>
-    </div>}
-    {blocking ? <BlockForm busy={moves.busy === taskId} onSubmit={reason => void moves.move(task, "Blocked", { note: reason }).then(result => { if (result) setBlocking(false); })} onCancel={() => setBlocking(false)} />
-      : <>
-        <div className="r-row" style={{ gap: 8 }} role="group" aria-label={`Status of ${task.title}`}>
-          {primary && <button type="button" className={primary.className} disabled={moves.busy === taskId} onClick={runPrimary}>{primary.label}</button>}
-          {task.status === "Ready" && <button type="button" className="r-ghost sm" disabled={moves.busy === taskId} onClick={() => void moves.move(task, "Done")}>Mark done</button>}
-          {open && <button type="button" className="r-ghost sm" disabled={moves.busy === taskId} onClick={() => setBlocking(true)}>Blocked…</button>}
-          {open && <Link href={startHref(task)} className="r-ghost sm">Start a focus session</Link>}
-          {!archived && <button type="button" className="r-ghost sm" onClick={onEdit}>Edit</button>}
-        </div>
-        <p className="r-small">The circle beside the status changes it, and holds pin for tonight and archive{archived ? ", restore and delete" : ""}.</p>
-        {task.projectId && <Link className="r-link" style={{ alignSelf: "flex-end" }} href={`/work?view=projects&project=${task.projectId}&visual=1`}>See it on the map ›</Link>}
-      </>}
+    </section>}
+
+    <nav className="tk-sheet-foot" aria-label="More for this task">
+      {!archived && <button type="button" className="tk-foot-link" onClick={onEdit}>Edit all details</button>}
+      {where && <button type="button" className="tk-foot-link" onClick={() => onOpenProject(where.projectId)}>Open the project</button>}
+      {task.projectId && <Link className="tk-foot-link" href={`/work?view=projects&project=${task.projectId}&visual=1`}>See it on the map</Link>}
+      {open && <button type="button" className="tk-foot-link" onClick={() => void togglePin()}>{pinned ? "Unpin" : "Pin for tonight"}</button>}
+      {!archived && <button type="button" className="tk-foot-link" disabled={busy} onClick={() => void moves.archive(task)}>Archive</button>}
+    </nav>
   </Sheet>;
 }
 

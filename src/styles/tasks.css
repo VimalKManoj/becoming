@@ -66,3 +66,35 @@
 .tk-inline-edit{display:flex;flex-direction:column;gap:8px}
 .tk-inline-edit .r-input,.tk-inline-edit .r-textarea{font:inherit}
 .tk-inline-acts{display:flex;gap:8px;align-items:center}
+
+/* The task sheet as a clean properties sheet: title, one action row, a details list, recent
+   history and quiet links at the foot. */
+.tk-sheet-title .tk-inline{font:inherit;padding:2px 10px;min-height:0}
+.tk-sheet-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tk-sheet-actions .tk-act{height:38px;padding:0 16px;font-size:13.5px}
+.tk-pill{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px 0 11px;border-radius:99px;border:1px solid var(--r-line-4);background:rgba(255,240,225,.04);box-shadow:none;cursor:pointer;font:500 13.5px var(--r-sans);color:var(--r-ink)}
+.tk-pill:hover,.tk-pill[aria-expanded=true]{background:rgba(255,240,225,.09);border-color:rgba(255,235,215,.24);filter:none}
+.tk-pill:focus-visible{outline:2px solid var(--r-ember-soft);outline-offset:2px}
+.tk-pill.busy{opacity:.6;cursor:wait}
+.tk-caret{font-size:10px;color:var(--r-muted);margin-left:2px}
+.tk-glyph.archived{border-style:dashed;border-color:rgba(255,235,215,.3)}
+
+.tk-props{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:start;gap:4px 14px;margin:4px 0 0;padding:14px 0 4px;border-top:1px solid var(--r-line-3)}
+.tk-props dt{padding-top:9px;font:500 10.5px var(--r-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--r-muted)}
+.tk-props dt.red{color:var(--r-red-text)}
+.tk-props dd{margin:0;min-width:0;font:400 14px/1.45 var(--r-sans);color:var(--r-ink-2)}
+.tk-props dd .tk-inline{margin:0 -10px;width:calc(100% + 20px);padding:7px 10px}
+.tk-props dd.tk-plain{padding-top:7px}
+.tk-props .tk-inline-edit{padding:4px 0}
+.tk-choices{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0}
+@media(max-width:520px){.tk-props{grid-template-columns:minmax(0,1fr);gap:0}.tk-props dt{padding-top:12px}}
+
+.tk-history{display:flex;flex-direction:column;gap:2px;padding-top:12px;border-top:1px solid var(--r-line-3)}
+.tk-history .w-tl{margin-top:8px}
+
+.tk-sheet-foot{display:flex;flex-wrap:wrap;gap:4px 18px;padding-top:12px;border-top:1px solid var(--r-line-3)}
+.tk-foot-link{padding:4px 0;border:0;background:none;box-shadow:none;cursor:pointer;font:500 13px var(--r-sans);color:var(--r-muted);text-decoration:none}
+.tk-foot-link:hover{color:var(--r-ink);filter:none;text-decoration:none}
+.tk-foot-link:disabled{opacity:.6;cursor:wait}
+/* Free notes keep their line breaks. */
+.tk-notes{white-space:pre-wrap;overflow-wrap:anywhere}

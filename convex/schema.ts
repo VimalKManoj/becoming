@@ -157,6 +157,8 @@ export default defineSchema({
     startedAt: v.optional(v.number()), completedAt: v.optional(v.number()), skills: v.optional(v.array(v.string())),
     // How many sessions the task is expected to take ("6 of 10"); the count comes from sessions.
     plannedSessions: v.optional(v.number()),
+    // Anything worth keeping about the task, in your own words (optional, edited in its sheet).
+    notes: v.optional(v.string()),
   }).index("by_owner", ["owner"]).index("by_owner_status", ["owner", "status"]).index("by_project", ["projectId"]).index("by_milestone", ["milestoneId"]),
   activeSessions: defineTable({
     owner: v.string(), taskId: v.id("tasks"), startedAt: v.number(),

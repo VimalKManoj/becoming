@@ -61,6 +61,14 @@ The goal of this plan is that **a normal evening needs no data entry**:
 - **Toasts.** One with actions stays 6.5–8 s and pauses while pointed at or focused.
 - **Unblocking without a note** restores the next step from before the block, instead of keeping the blocker.
 - **Same choices everywhere.** Capture and the new-project sheet gained energy, and every estimate picker is 15/30/45/60/90. Done-when is optional in quick capture and a new project's first step too.
+- **The task sheet, redesigned (14 October, owner: "cleaner and easier"):**
+  - one breadcrumb line with ×, then the title;
+  - one action row: a status button that opens the menu, the next step, and ▶ Focus;
+  - a properties list (Done when, Next step, **Notes**, Time, Energy, Skills, then Built from, Waiting on, Smaller step and Sessions when they apply), each edited where it's shown;
+  - the latest 3 history entries, with "Show all";
+  - quiet links at the foot.
+
+  Tasks gained optional free **notes** (owner asked for a place to write about a task).
 - **Also in this phase:** the dead all-lanes view and the old Up next/plan CSS are gone; the DoneForm and NextStepForm are no longer used.
 - **Checks:** 189 tests (10 new in `convex/oneTap.test.ts`), typecheck, lint and build. Checked in the browser on dev with a throwaway account: quick add, start, finish with the finish card, Undo, block with a reason, unblock, and in-place edits (done-when, size, energy, skills), at phone and desktop widths. No console errors.
 

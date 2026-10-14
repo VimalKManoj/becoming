@@ -52,3 +52,30 @@ export function InlineField({ label, value, empty, multiline = false, maxLength,
     </div>
   </form>;
 }
+
+type ChoiceProps<T extends string | number> = {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  /** How the current value reads when it isn't being changed, e.g. "45 min". */
+  display: string;
+  onSave: (value: T) => Promise<boolean>;
+};
+
+/** A value picked from a few choices, shown as plain text until clicked (time, energy). */
+export function ChoiceField<T extends string | number>({ label, value, options, display, onSave }: ChoiceProps<T>) {
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function pick(next: T) {
+    if (next === value) { setEditing(false); return; }
+    setBusy(true);
+    try { if (await onSave(next)) setEditing(false); } finally { setBusy(false); }
+  }
+
+  if (!editing) return <button type="button" className="tk-inline" aria-label={`${label}: ${display}. Change`} onClick={() => setEditing(true)}>{display}</button>;
+  return <div className="tk-choices" role="group" aria-label={label} onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); setEditing(false); } }}>
+    {options.map(option => <button key={String(option.value)} type="button" className="r-chip round h34" aria-pressed={option.value === value} disabled={busy} autoFocus={option.value === value} onClick={() => void pick(option.value)}>{option.label}</button>)}
+    <button type="button" className="tk-menu-link" disabled={busy} onClick={() => setEditing(false)}>Cancel</button>
+  </div>;
+}

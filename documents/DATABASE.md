@@ -265,7 +265,7 @@ See [PLAN-project-constellation.md](PLAN-project-constellation.md) and, for the 
 - `setStatus` returns `{ eventId, finish }`. `finish` comes from `lib/finish.ts`: effective skills, the milestone's done/total and whether it or its phase just completed, and the next open task in the milestone or phase.
 - Moving to In progress is refused when the task's project isn't Active.
 - `tasks.quickAdd` creates a task from a title (30 min, steady, empty done-when; `doneWhen` may now be empty everywhere).
-- `tasks.edit` patches single fields.
+- `tasks.edit` patches single fields, including the new optional `tasks.notes` (free notes, up to 10,000 characters; empty clears). Backups carry notes, and a backed-up task with an empty done-when now restores.
 - `tasks.noteOn` adds a note to a move afterwards; a blocker also becomes the next step.
 - `tasks.remove` deletes an archived task with its events, sessions and evidence, and unlinks it from prerequisites, ideas, week plans, the pin and the Inbox.
 - `createWithFirstStep` and `ideas.activate` now log "created".

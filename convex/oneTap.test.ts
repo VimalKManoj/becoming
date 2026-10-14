@@ -139,6 +139,20 @@ describe("one tap: quick add, edits in place and deleting", () => {
     expect(await t.run(ctx => ctx.db.get(taskId))).toMatchObject({ status: "Ready", nextStep: "Wire the slider" });
   });
 
+  it("keeps free notes on a task, clears them when emptied, and backs them up", async () => {
+    const { t, asA, asB } = setup();
+    const taskId = await asA.mutation(api.tasks.quickAdd, { title: "Sketch the specimen" });
+    await asA.mutation(api.tasks.edit, { taskId: taskId.taskId, notes: "  Try Recursive first.\nThen Inter.  " });
+    expect(await asA.query(api.tasks.get, { taskId: taskId.taskId })).toMatchObject({ notes: "Try Recursive first.\nThen Inter.", doneWhen: "" });
+    await expect(asA.mutation(api.tasks.edit, { taskId: taskId.taskId, notes: "x".repeat(10001) })).rejects.toThrow("10,000");
+    // A backup with notes and an empty done-when restores into another account.
+    const backup = await asA.query(api.data.exportAll, {});
+    await asB.mutation(api.data.importBackup, { backup });
+    expect((await asB.query(api.data.exportAll, {})).tasks[0]).toMatchObject({ notes: "Try Recursive first.\nThen Inter.", doneWhen: "" });
+    await asA.mutation(api.tasks.edit, { taskId: taskId.taskId, notes: "" });
+    expect((await t.run(ctx => ctx.db.get(taskId.taskId)))!.notes).toBeUndefined();
+  });
+
   it("adds a note to a move afterwards; a blocker becomes the next step", async () => {
     const { t, asA } = setup();
     const taskId = await asA.mutation(api.tasks.create, task);

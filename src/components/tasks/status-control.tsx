@@ -25,24 +25,31 @@ const choices: { status: MoveTarget; label: string; hint: string }[] = [
 
 type Props = {
   task: MovableTask;
+  /** "pill" shows the status in words with a caret (the task sheet); the circle is for rows. */
+  variant?: "circle" | "pill";
   /** Called after the task was deleted, so a sheet showing it can close. */
   onDeleted?: () => void;
 };
 
-export function StatusControl({ task, onDeleted }: Props) {
+export function StatusControl({ task, variant = "circle", onDeleted }: Props) {
   const moves = useTaskMove();
   const [menu, setMenu] = useState(false);
   const anchor = useRef<HTMLSpanElement>(null);
   const busy = moves.busy === task._id;
 
   return <span ref={anchor} className="tk-control">
-    <button type="button" className={`tk-circle ${statusClass[task.status] ?? "ready"}${busy ? " busy" : ""}`} disabled={busy}
-      aria-haspopup="menu" aria-expanded={menu} aria-label={`Status: ${task.status}. Change the status of “${task.title}”`}
-      title={`${task.status} · click to change status`}
-      onClick={event => { event.stopPropagation(); setMenu(open => !open); }}
-      onContextMenu={event => { event.preventDefault(); event.stopPropagation(); setMenu(true); }}>
-      <span aria-hidden="true" />
-    </button>
+    {variant === "pill"
+      ? <button type="button" className={`tk-pill${busy ? " busy" : ""}`} disabled={busy} aria-haspopup="menu" aria-expanded={menu}
+        aria-label={`Status: ${task.status}. Change the status of “${task.title}”`} onClick={event => { event.stopPropagation(); setMenu(open => !open); }}>
+        <span className={`tk-glyph ${statusClass[task.status] ?? "ready"}`} aria-hidden="true" />{task.status}<span className="tk-caret" aria-hidden="true">▾</span>
+      </button>
+      : <button type="button" className={`tk-circle ${statusClass[task.status] ?? "ready"}${busy ? " busy" : ""}`} disabled={busy}
+        aria-haspopup="menu" aria-expanded={menu} aria-label={`Status: ${task.status}. Change the status of “${task.title}”`}
+        title={`${task.status} · click to change status`}
+        onClick={event => { event.stopPropagation(); setMenu(open => !open); }}
+        onContextMenu={event => { event.preventDefault(); event.stopPropagation(); setMenu(true); }}>
+        <span aria-hidden="true" />
+      </button>}
     {menu && <StatusMenu task={task} anchor={anchor} moves={moves} onClose={() => setMenu(false)} onDeleted={onDeleted} />}
   </span>;
 }

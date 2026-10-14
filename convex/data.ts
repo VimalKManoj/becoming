@@ -5,7 +5,7 @@ import { brainstormValues } from "./lib/ideaRules";
 import { nonempty, requireOwner } from "./lib/ownership";
 import { skillsValue } from "./constellation";
 import { refreshMilestone } from "./lib/projects";
-import { effortValues, hasPrerequisiteLoop, smallerStepValues } from "./lib/taskRules";
+import { doneWhenValue, effortValues, hasPrerequisiteLoop, smallerStepValues } from "./lib/taskRules";
 import { isWeekKey } from "./lib/time";
 import { dateKeyValue, httpUrl, optionalText, tagList, timezoneValue } from "./lib/validate";
 import { artifactStatus, brainstorm, decision, lane, outcome, projectStatus, researchSource, swapReason, taskStatus, workingStatus } from "./schema";
@@ -50,7 +50,7 @@ export const exportAll = query({
       projects: projects.map(p => ({ id: p._id, title: p.title, purpose: p.purpose, status: p.status, outcome: p.outcome, ideaId: p.ideaId })),
       milestones: milestones.map(m => ({ id: m._id, projectId: m.projectId, title: m.title, doneWhen: m.doneWhen, order: m.order, completedAt: m.completedAt, phaseId: m.phaseId, skills: m.skills })),
       ideas: ideas.map(i => ({ id: i._id, title: i.title, notes: i.notes, lane: i.lane, taskId: i.taskId, archivedAt: i.archivedAt, brainstorm: i.brainstorm })),
-      tasks: tasks.map(t => ({ id: t._id, title: t.title, lane: t.lane, status: t.status, archivedFrom: t.archivedFrom, archivedWithProject: t.archivedWithProject, projectId: t.projectId, milestoneId: t.milestoneId, ideaId: t.ideaId, minutes: t.minutes, energy: t.energy, doneWhen: t.doneWhen, nextStep: t.nextStep, smallerStep: t.smallerStep, smallerDone: t.smallerDone, smallerMinutes: t.smallerMinutes, dependencies: t.dependencies, startedAt: t.startedAt, completedAt: t.completedAt, skills: t.skills, plannedSessions: t.plannedSessions })),
+      tasks: tasks.map(t => ({ id: t._id, title: t.title, lane: t.lane, status: t.status, archivedFrom: t.archivedFrom, archivedWithProject: t.archivedWithProject, projectId: t.projectId, milestoneId: t.milestoneId, ideaId: t.ideaId, minutes: t.minutes, energy: t.energy, doneWhen: t.doneWhen, nextStep: t.nextStep, smallerStep: t.smallerStep, smallerDone: t.smallerDone, smallerMinutes: t.smallerMinutes, dependencies: t.dependencies, startedAt: t.startedAt, completedAt: t.completedAt, skills: t.skills, plannedSessions: t.plannedSessions, notes: t.notes })),
       sessions: sessions.map(s => ({ id: s._id, taskId: s.taskId, lane: s.lane, title: s.title, outcome: s.outcome, contribution: s.contribution, nextStep: s.nextStep, evidence: s.evidence, startedAt: s.startedAt, endedAt: s.endedAt, smaller: s.smaller, doneWhen: s.doneWhen, plannedMinutes: s.plannedMinutes, projectId: s.projectId, recommended: s.recommended, swapReason: s.swapReason, skills: s.skills, source: s.source })),
       artifacts: artifacts.map(a => ({ id: a._id, sessionId: a.sessionId, title: a.title, url: a.url, status: a.status, portfolioCandidate: a.portfolioCandidate, notes: a.notes, skills: a.skills, publishedUrl: a.publishedUrl, publishedOn: a.publishedOn, candidateSince: a.candidateSince })),
       weeklyCommitments: commitments.map(c => ({ week: c.week, target: c.target, paused: c.paused })),
@@ -80,7 +80,7 @@ const backup = v.object({
     projectId: v.optional(v.string()), milestoneId: v.optional(v.string()), ideaId: v.optional(v.string()),
     minutes: v.number(), energy: v.number(), doneWhen: v.string(), nextStep: v.string(),
     smallerStep: v.optional(v.string()), smallerDone: v.optional(v.string()), smallerMinutes: v.optional(v.number()), dependencies: v.array(v.string()),
-    startedAt: v.optional(v.number()), completedAt: v.optional(v.number()), skills: v.optional(v.array(v.string())), plannedSessions: v.optional(v.number()),
+    startedAt: v.optional(v.number()), completedAt: v.optional(v.number()), skills: v.optional(v.array(v.string())), plannedSessions: v.optional(v.number()), notes: v.optional(v.string()),
   })),
   sessions: v.array(v.object({
     id: v.string(), taskId: v.string(), lane, title: v.string(), outcome, contribution: v.string(), nextStep: v.string(), evidence: v.string(),
@@ -258,10 +258,11 @@ export const importBackup = mutation({
         owner, title: nonempty(t.title), lane: t.lane, status: t.status, archivedFrom: t.archivedFrom,
         ...(t.archivedWithProject && t.status === "Archived" ? { archivedWithProject: true } : {}),
         projectId: optional(ids.projects, t.projectId, "project"), milestoneId: optional(ids.milestones, t.milestoneId, "milestone"), ideaId: optional(ids.ideas, t.ideaId, "idea"),
-        ...effortValues(t.minutes, t.energy), doneWhen: nonempty(t.doneWhen, 1000), nextStep: limited(t.nextStep, 2000, "a next step"),
+        ...effortValues(t.minutes, t.energy), doneWhen: doneWhenValue(t.doneWhen), nextStep: limited(t.nextStep, 2000, "a next step"),
         ...smallerStepValues(t), dependencies: [],
         startedAt: t.startedAt, completedAt: t.completedAt, ...(t.skills?.length ? { skills: tagList(t.skills, 5) } : {}),
         plannedSessions: plannedSessionsValue(t.plannedSessions),
+        ...(t.notes?.trim() ? { notes: limited(t.notes, 10000, "task notes") } : {}),
       }));
     }
     // Second pass: links that point between restored records of the same kind.
