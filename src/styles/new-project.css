@@ -4,12 +4,14 @@
    editor (name, done when, tasks, notes) and each phase has optional details. */
 
 .np{--ink:#F4EDE6;--ink2:#E9DFD6;--text:#C9BDB2;--muted:#A99D93;--ember:#FF8A3D;--ember-t:#FF9A52;--ember-s:#FFB27A;--ember-p:#FFC08F;--mint:#86E3C3;--mint-t:#A6EDD4;--lilac:#C9B8F0;--lilac-t:#D9CCF6;--line:rgba(255,235,215,.08);--line3:rgba(255,235,215,.12);--line4:rgba(255,235,215,.14);--serif:var(--r-serif);--sans:var(--r-sans);--mono:var(--r-mono);
-  display:flex;flex-direction:column;gap:22px;width:100%;max-width:1320px;margin:0 auto;color:var(--ink);font-family:var(--sans)}
+  display:flex;flex-direction:column;gap:18px;width:100%;max-width:1320px;margin:0 auto;color:var(--ink);font-family:var(--sans)}
 :where(.np) button{display:inline-flex;align-items:center;justify-content:center;min-height:0;width:auto;margin:0;padding:0;gap:0;border:0;border-radius:0;box-shadow:none;background:transparent;transition:none;filter:none;font:inherit;color:inherit;text-decoration:none}
 :where(.np) button:hover{filter:none}
 :where(.np) button:active{transform:none}
 :where(.np) input,:where(.np) textarea,:where(.np) select{width:100%;min-width:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;font:inherit;color:inherit}
 .np em{font-style:normal;color:var(--ember-t)}
+/* Less room around this page, so a whole step fits a laptop screen without scrolling. */
+@media (min-width: 900px){.r-scroll:has(> .np){padding-top:28px;padding-bottom:24px}}
 
 .np .top{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
 .np .back{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line3);color:var(--text);font:500 13px var(--sans);cursor:pointer}
@@ -33,18 +35,20 @@
 
 /* body */
 .np .body{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
-.np .card{display:flex;flex-direction:column;height:min(680px,calc(100dvh - 200px));min-height:480px;border-radius:28px;background:linear-gradient(160deg,rgba(255,240,225,.05),rgba(255,240,225,.015));border:1px solid var(--line);overflow:hidden}
-.np .scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:40px 48px 24px}
-.np .scroll::-webkit-scrollbar{display:none}
+/* One scroll only, the page's: the card grows with its step (a short step needs no scrolling),
+   its footer stays pinned to the bottom of the screen on a long one, and the preview stays in
+   view beside it. */
+.np .card{display:flex;flex-direction:column;border-radius:28px;background:linear-gradient(160deg,rgba(255,240,225,.05),rgba(255,240,225,.015));border:1px solid var(--line)}
+.np .scroll{padding:32px 40px 16px}
 .np .in{max-width:620px;animation:np-enter .45s cubic-bezier(.22,1,.36,1) both}
-.np .q{margin:0;font:400 40px/1.08 var(--serif);letter-spacing:-.015em}
-.np .lede{margin:12px 0 0;font:400 15px/1.55 var(--sans);color:var(--text)}
-.np .group{margin-top:28px}
+.np .q{margin:0;font:400 36px/1.08 var(--serif);letter-spacing:-.015em}
+.np .lede{margin:10px 0 0;font:400 15px/1.55 var(--sans);color:var(--text)}
+.np .group{margin-top:20px}
 .np .lbl{display:block;font:500 13px var(--sans);color:var(--text);margin-bottom:10px}
-.np .inp{width:100%;height:52px;padding:0 16px;border-radius:14px;border:1px solid var(--line4);background:rgba(0,0,0,.25);color:var(--ink);font:400 15px var(--sans);outline:none;transition:border-color .25s,box-shadow .25s}
+.np .inp{width:100%;height:48px;padding:0 16px;border-radius:14px;border:1px solid var(--line4);background:rgba(0,0,0,.25);color:var(--ink);font:400 15px var(--sans);outline:none;transition:border-color .25s,box-shadow .25s}
 .np textarea.inp{height:auto;min-height:84px;padding:12px 16px;line-height:1.5;resize:vertical}
 .np select.inp{appearance:none;cursor:pointer}
-.np .inp.big{height:64px;font:400 26px var(--serif)}
+.np .inp.big{height:56px;font:400 24px var(--serif)}
 .np .inp:focus{border-color:rgba(255,138,61,.6);box-shadow:0 0 0 4px rgba(255,138,61,.12)}
 .np .inp::placeholder{color:var(--r-placeholder)}
 .np .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -54,7 +58,7 @@
 .np .chip.lilac.on{background:rgba(201,184,240,.14);color:var(--lilac-t);border-color:rgba(201,184,240,.5)}
 .np .chip.sm{min-height:34px;padding:0 11px;border-radius:10px;font-size:13px}
 .np .chip .cd{font:500 10.5px var(--mono);opacity:.8}
-.np .note{display:flex;align-items:center;gap:10px;margin-top:12px;font:400 13px/1.5 var(--sans);color:var(--muted)}
+.np .note{display:flex;align-items:center;gap:10px;margin-top:10px;font:400 13px/1.5 var(--sans);color:var(--muted)}
 .np .note i{flex:none;width:10px;height:10px;border-radius:2px;transform:rotate(45deg);background:#C9B8F0}
 .np .err{margin-top:12px;font:400 13px var(--sans);color:var(--r-red-pale)}
 .np .adddoc{display:flex;gap:8px;margin-top:14px;max-width:420px}
@@ -108,7 +112,7 @@
 .np .min:hover{border-color:rgba(255,170,110,.4)}
 
 /* footer */
-.np .foot{flex:none;display:flex;align-items:center;gap:12px;padding:16px 28px;border-top:1px solid var(--line)}
+.np .foot{position:sticky;bottom:0;z-index:2;flex:none;display:flex;align-items:center;gap:12px;padding:14px 28px;border-top:1px solid var(--line);border-radius:0 0 28px 28px;background:rgba(24,18,15,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .np .foot .sp{flex:1}
 .np .textbtn{min-height:44px;padding:0 8px;color:var(--muted);font:500 14px var(--sans);cursor:pointer}
 .np .textbtn:hover{color:var(--ink)}
@@ -117,8 +121,8 @@
 .np .btn:disabled{opacity:.6;cursor:wait}
 .np .ghost{height:48px;padding:0 20px;border-radius:99px;background:rgba(255,240,225,.06);border:1px solid var(--line4);color:var(--ink);font:500 14px var(--sans);cursor:pointer}
 
-/* done */
-.np .done{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;min-height:100%;padding:20px;animation:np-enter .6s both}
+/* created (not .done: a finished step's button is .st.done) */
+.np .created{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;min-height:440px;padding:20px;animation:np-enter .6s both}
 .np .bloom{position:relative;width:110px;height:110px;margin-bottom:22px}
 .np .bloom .core{position:absolute;inset:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE1C4,#FF9F58 30%,#F06A2A 62%,#7A2E0E 100%);box-shadow:0 0 50px rgba(255,138,61,.55);animation:np-breathe 6s ease-in-out infinite}
 .np .bloom .ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(255,192,143,.4);animation:np-ripple 2.6s ease-out infinite}
@@ -129,7 +133,7 @@
 .np .dbtns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px}
 
 /* preview */
-.np .pv{height:min(680px,calc(100dvh - 200px));min-height:480px;border-radius:28px;padding:24px;background:rgba(8,6,5,.3);border:1px solid rgba(255,235,215,.06);display:flex;flex-direction:column;gap:22px;overflow:hidden}
+.np .pv{position:sticky;top:0;max-height:calc(100dvh - 96px);overflow-y:auto;scrollbar-width:none;border-radius:28px;padding:24px;background:rgba(8,6,5,.3);border:1px solid rgba(255,235,215,.06);display:flex;flex-direction:column;gap:22px;overflow:hidden}
 .np .pvhead{display:flex;align-items:center;gap:12px}
 .np .porb{flex:none;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE1C4,#FF9F58 30%,#F06A2A 62%,#7A2E0E 100%);box-shadow:0 0 22px rgba(255,138,61,.45);animation:np-breathe 6s ease-in-out infinite}
 .np .porb.off{background:transparent;border:1px dashed rgba(255,235,215,.25);box-shadow:none;animation:none}
@@ -152,8 +156,8 @@
 
 .np .chip:focus-visible,.np .st:focus-visible,.np .xb:focus-visible,.np .min:focus-visible,.np .msadd:focus-visible,.np .ms button:focus-visible,.np .dtog:focus-visible,.np .back:focus-visible{outline:2px solid #FFC08F;outline-offset:3px}
 @media (prefers-reduced-motion: reduce){.np *,.np *::before,.np *::after{animation:none !important;transition:none !important}}
-@media (max-width: 1100px){.np .body{grid-template-columns:minmax(0,1fr)}.np .pv{height:auto;min-height:0}}
-@media (max-width: 899px){.np .scroll{padding:26px 20px}.np .q{font-size:30px}.np .st .lb span{display:none}.np .card{height:auto;min-height:0;overflow:visible}.np .scroll{overflow:visible}.np .foot{padding:14px 16px}}
+@media (max-width: 1100px){.np .body{grid-template-columns:minmax(0,1fr)}.np .pv{position:static;max-height:none}}
+@media (max-width: 899px){.np .scroll{padding:24px 20px 12px}.np .q{font-size:30px}.np .st .lb span{display:none}.np .foot{position:static;padding:14px 16px}}
 @keyframes np-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes np-pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes np-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}

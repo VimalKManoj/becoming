@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -38,6 +38,8 @@ function fresh(kind: Kind): { docs: Doc[]; phases: Phase[] } {
   };
 }
 
+/** The page scrolls as one (the shell's main area); a new step starts at its top. */
+const toTop = () => document.getElementById("main")?.scrollTo({ top: 0 });
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 const X = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg>;
 
@@ -47,7 +49,6 @@ export function NewProjectFlow({ ideaId, onCancel, onOpenProject }: Props) {
   const ideas = useQuery(api.newProject.ideas);
   const create = useMutation(api.newProject.create);
   const moves = useTaskMove();
-  const scroller = useRef<HTMLDivElement>(null);
 
   const [step, setStep] = useState(0);
   const [maxStep, setMaxStep] = useState(0);
@@ -81,7 +82,7 @@ export function NewProjectFlow({ ideaId, onCancel, onOpenProject }: Props) {
     setError("");
     setStep(next);
     setMaxStep(m => Math.max(m, next));
-    scroller.current?.scrollTo({ top: 0 });
+    toTop();
   }
   function next() {
     if (step === 0 && (!name.trim() || !purpose.trim())) { setError("Give it a name and say why, in one line."); return; }
@@ -132,7 +133,7 @@ export function NewProjectFlow({ ideaId, onCancel, onOpenProject }: Props) {
         })),
       });
       setCreated(result);
-      scroller.current?.scrollTo({ top: 0 });
+      toTop();
     } catch (caught) {
       setError(readableError(caught, "Could not create the project. Please try again."));
     } finally {
@@ -160,7 +161,7 @@ export function NewProjectFlow({ ideaId, onCancel, onOpenProject }: Props) {
 
   let content: ReactNode;
   if (created) {
-    content = <div className="done">
+    content = <div className="created">
       <div className="bloom" aria-hidden="true"><span className="ring" /><span className="ring r2" /><span className="core" /></div>
       <div className="eyebrow mint">Project created</div>
       <h1 className="q" style={{ marginTop: 10 }}>{name.trim()} is <em>taking form.</em></h1>
@@ -298,7 +299,7 @@ export function NewProjectFlow({ ideaId, onCancel, onOpenProject }: Props) {
 
     <div className="body">
       <section className="card" aria-live="polite">
-        <div className="scroll" ref={scroller}>
+        <div className="scroll">
           {content}
           {error && <p className="err" role="alert">{error}</p>}
         </div>
