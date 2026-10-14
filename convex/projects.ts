@@ -3,10 +3,12 @@ import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/s
 import type { Doc, Id } from "./_generated/dataModel";
 import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
 import { optionalText } from "./lib/validate";
-import { effortValues } from "./lib/taskRules";
+import { doneWhenValue, effortValues } from "./lib/taskRules";
 import { projectStatus } from "./schema";
 import { skillsValue } from "./constellation";
 import { archiveTask, restoreTask } from "./lib/taskArchive";
+import { mentions } from "./lib/mentions";
+import { logEvent } from "./lib/taskEvents";
 
 // Projects group larger work into ordered milestones and tasks. Progress is always
 // derived from task records (counts, not just a percentage), and only Active projects
@@ -307,13 +309,6 @@ export const remove = mutation({
   },
 });
 
-// Whether a proposal field holds one of the given ids, at any depth.
-function mentions(value: unknown, ids: Set<string>): boolean {
-  if (typeof value === "string") return ids.has(value);
-  if (Array.isArray(value)) return value.some(item => mentions(item, ids));
-  if (value && typeof value === "object") return Object.values(value).some(item => mentions(item, ids));
-  return false;
-}
 
 // Everything a case-study draft needs, in time order: the project's sessions (by the
 // project snapshot saved with each session, plus older sessions through their task),
@@ -358,9 +353,10 @@ export const createWithFirstStep = mutation({
     const owner = await requireOwner(ctx);
     const projectId = await ctx.db.insert("projects", { owner, ...projectValues({ title: args.title, purpose: args.purpose }), status: "Active" });
     const taskId = await ctx.db.insert("tasks", {
-      owner, title: nonempty(args.step.title), lane: args.step.lane, ...effortValues(args.step.minutes, args.step.energy), doneWhen: nonempty(args.step.doneWhen, 1000),
+      owner, title: nonempty(args.step.title), lane: args.step.lane, ...effortValues(args.step.minutes, args.step.energy), doneWhen: doneWhenValue(args.step.doneWhen),
       nextStep: "", dependencies: [], status: "Ready", projectId,
     });
+    await logEvent(ctx, owner, { _id: taskId, projectId }, "created");
     return { projectId, taskId };
   },
 });

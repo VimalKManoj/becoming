@@ -12,6 +12,13 @@ export function effortValues(minutes: number, energy: number) {
   return { minutes, energy };
 }
 
+/** "Done when" is optional when a task is made (quick add); Today asks for it later. */
+export function doneWhenValue(value: string) {
+  const done = value.trim();
+  if (done.length > 1000) throw new ConvexError("Keep \"done when\" under 1,000 characters.");
+  return done;
+}
+
 export function nextStepValue(value: string) {
   const step = value.trim();
   if (!step || step.length > 2000) throw new ConvexError("Add a next step (up to 2000 characters).");

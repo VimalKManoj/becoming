@@ -208,6 +208,14 @@ export default defineSchema({
     source: v.string(),
     // What changed (done), what's blocking it (blocked), or the next step (unblocked, reopened).
     note: v.optional(v.string()),
+    // The task as it was just before this move, so the move can be undone (tasks.undo) while
+    // it is still the task's latest event. Absent on events that can't be undone.
+    before: v.optional(v.object({
+      status: taskStatus, nextStep: v.string(),
+      startedAt: v.optional(v.number()), completedAt: v.optional(v.number()),
+      archivedFrom: v.optional(workingStatus), archivedWithProject: v.optional(v.boolean()),
+      skills: v.optional(v.array(v.string())), pinned: v.optional(v.boolean()),
+    })),
   }).index("by_task", ["taskId", "at"]).index("by_owner_at", ["owner", "at"]),
   // Access tokens for assistants (MCP), made in Settings. Only a SHA-256 hash is kept; the
   // token itself is shown once. Deleting the row revokes it.

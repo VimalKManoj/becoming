@@ -24,11 +24,13 @@ describe("moving tasks freely (no timer)", () => {
     expect(started).toMatchObject({ status: "In progress", completedAt: null });
     expect(started!.startedAt).toBeTypeOf("number");
 
-    await expect(asA.mutation(api.tasks.setStatus, { taskId, status: "Blocked" })).rejects.toThrow("blocking");
+    // Notes are optional: blocking or unblocking without one keeps the next step.
+    await asA.mutation(api.tasks.setStatus, { taskId, status: "Blocked" });
+    await asA.mutation(api.tasks.setStatus, { taskId, status: "In progress" });
+    expect(await asA.query(api.tasks.get, { taskId })).toMatchObject({ status: "In progress", nextStep: "" });
     await asA.mutation(api.tasks.setStatus, { taskId, status: "Blocked", note: "Waiting on the API key" });
     expect(await asA.query(api.tasks.get, { taskId })).toMatchObject({ status: "Blocked", nextStep: "Waiting on the API key" });
 
-    await expect(asA.mutation(api.tasks.setStatus, { taskId, status: "In progress" })).rejects.toThrow("next step");
     await asA.mutation(api.tasks.setStatus, { taskId, status: "In progress", note: "Wire the token check" });
 
     await asA.mutation(api.tasks.setStatus, { taskId, status: "Done", note: "Shipped it.", skills: ["Systems", "systems", "Shipping"] });
@@ -40,7 +42,7 @@ describe("moving tasks freely (no timer)", () => {
     expect(await asA.query(api.tasks.get, { taskId })).toMatchObject({ status: "In progress", completedAt: null, startedAt: started!.startedAt });
 
     expect(await events(t, taskId)).toEqual([
-      ["created", null, "app"], ["started", null, "app"], ["blocked", "Waiting on the API key", "app"],
+      ["created", null, "app"], ["started", null, "app"], ["blocked", null, "app"], ["unblocked", null, "app"], ["blocked", "Waiting on the API key", "app"],
       ["unblocked", "Wire the token check", "app"], ["done", "Shipped it.", "app"], ["reopened", "One more edge case", "app"],
     ]);
   });

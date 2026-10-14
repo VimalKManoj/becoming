@@ -7,11 +7,13 @@ import { lane, outcome, swapReason } from "./schema";
 import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
 import { projectIsOpen, refreshMilestone, taskLinks } from "./lib/projects";
 import { fitFor, pinnedNote, rankFocuses } from "./lib/recommend";
-import { clearPinIf, dependencyValues, effortValues, nextStepValue, prerequisiteCleared, smallerStepValues } from "./lib/taskRules";
+import { clearPinIf, dependencyValues, doneWhenValue, effortValues, nextStepValue, prerequisiteCleared, smallerStepValues } from "./lib/taskRules";
 import { httpUrl, tagList } from "./lib/validate";
-import { logEvent } from "./lib/taskEvents";
+import { logEvent, snapshot } from "./lib/taskEvents";
 import { progressKinds } from "./lib/work";
 import { archiveTask, restoreTask } from "./lib/taskArchive";
+import { completionOf, finishFor, type Finish } from "./lib/finish";
+import { mentions } from "./lib/mentions";
 
 // Work shows one view at a time so finished and archived tasks don't crowd active work.
 const taskView = v.union(v.literal("active"), v.literal("blocked"), v.literal("done"), v.literal("archived"));
@@ -120,7 +122,7 @@ type TaskInput = { title: string; lane: Doc<"tasks">["lane"]; minutes: number; e
 export async function createTaskFor(ctx: MutationCtx, owner: string, args: TaskInput, source = "app") {
     const links = await taskLinks(ctx, owner, args);
     const taskId = await ctx.db.insert("tasks", {
-      owner, title: nonempty(args.title), lane: args.lane, ...effortValues(args.minutes, args.energy), doneWhen: nonempty(args.doneWhen, 1000),
+      owner, title: nonempty(args.title), lane: args.lane, ...effortValues(args.minutes, args.energy), doneWhen: doneWhenValue(args.doneWhen),
       ...links, ...smallerStepValues(args), nextStep: "", dependencies: await dependencyValues(ctx, owner, undefined, args.dependencies ?? []), status: "Ready",
       ...(skillValues(args.skills).length ? { skills: skillValues(args.skills) } : {}),
       ...(plannedSessionsValue(args.plannedSessions) ? { plannedSessions: plannedSessionsValue(args.plannedSessions) } : {}),
@@ -139,7 +141,7 @@ export const update = mutation({
     assertOwner(task, owner);
     const links = await taskLinks(ctx, owner, args, task);
     await ctx.db.patch(task._id, {
-      title: nonempty(args.title), lane: args.lane, ...effortValues(args.minutes, args.energy), doneWhen: nonempty(args.doneWhen, 1000),
+      title: nonempty(args.title), lane: args.lane, ...effortValues(args.minutes, args.energy), doneWhen: doneWhenValue(args.doneWhen),
       projectId: links.projectId, milestoneId: links.milestoneId, ...smallerStepValues(args),
       ...(args.dependencies ? { dependencies: await dependencyValues(ctx, owner, task._id, args.dependencies) } : {}),
       ...(args.skills ? { skills: skillValues(args.skills) } : {}),
@@ -151,49 +153,42 @@ export const update = mutation({
   },
 });
 
-// A blocked task returns to Ready with the action that moves it forward again.
-// The blocker itself stays in the session history that recorded it.
+// A blocked task returns to Ready. A next step is optional: without one, the task keeps the
+// next step it had. The blocker itself stays in the task's history.
 export const unblock = mutation({
-  args: { taskId: v.id("tasks"), nextStep: v.string() },
+  args: { taskId: v.id("tasks"), nextStep: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
     const task = await ctx.db.get(args.taskId);
     assertOwner(task, owner);
     if (task.status !== "Blocked") throw new ConvexError("Only a blocked task can be unblocked.");
-    const nextStep = nextStepValue(args.nextStep);
-    await ctx.db.patch(task._id, { status: "Ready", nextStep });
-    await logEvent(ctx, owner, task, "unblocked", { note: nextStep });
-    return task._id;
+    return (await setStatusFor(ctx, owner, { taskId: task._id, status: "Ready", note: args.nextStep })).taskId;
   },
 });
 
 export const reopen = mutation({
-  args: { taskId: v.id("tasks"), nextStep: v.string() },
+  args: { taskId: v.id("tasks"), nextStep: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
     const task = await ctx.db.get(args.taskId);
     assertOwner(task, owner);
     if (task.status !== "Done") throw new ConvexError("Only a finished task can be reopened.");
-    const nextStep = nextStepValue(args.nextStep);
-    await ctx.db.patch(task._id, { status: "In progress", nextStep, completedAt: undefined });
-    await refreshMilestone(ctx, task.milestoneId);
-    await logEvent(ctx, owner, task, "reopened", { note: nextStep });
-    return task._id;
+    return (await setStatusFor(ctx, owner, { taskId: task._id, status: "In progress", note: args.nextStep })).taskId;
   },
 });
 
-// Archive is reversible and keeps every session. Repeating it is harmless.
+// Archive is reversible and keeps every session. Repeating it is harmless. Both return the
+// event they wrote (null when nothing changed), so the app can offer Undo.
 export const archive = mutation({
   args: { taskId: v.id("tasks") },
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
     const task = await ctx.db.get(args.taskId);
     assertOwner(task, owner);
-    if (task.status === "Archived") return task._id;
+    if (task.status === "Archived") return { taskId: task._id, eventId: null };
     const active = await ctx.db.query("activeSessions").withIndex("by_owner", q => q.eq("owner", owner)).unique();
     if (active?.taskId === task._id) throw new ConvexError("Finish or cancel this task's session before archiving it.");
-    await archiveTask(ctx, owner, task);
-    return task._id;
+    return { taskId: task._id, eventId: await archiveTask(ctx, owner, task) };
   },
 });
 
@@ -203,11 +198,157 @@ export const restore = mutation({
     const owner = await requireOwner(ctx);
     const task = await ctx.db.get(args.taskId);
     assertOwner(task, owner);
-    if (task.status !== "Archived") return task._id;
-    await restoreTask(ctx, owner, task);
+    if (task.status !== "Archived") return { taskId: task._id, eventId: null };
+    return { taskId: task._id, eventId: await restoreTask(ctx, owner, task) };
+  },
+});
+
+// ---------- One tap (PLAN-one-tap-and-daily-loop, Phase 1) ----------
+
+/**
+ * A task from just a title, typed where it belongs (a milestone, a lane, Up next). Size and
+ * energy take everyday defaults and "done when" can wait; Today asks for it later. A task in
+ * a project or milestone is a Projects task; a loose one takes your favoured lane.
+ */
+export const quickAdd = mutation({
+  args: {
+    title: v.string(), lane: v.optional(lane), projectId: v.optional(v.id("projects")), milestoneId: v.optional(v.id("milestones")),
+    minutes: v.optional(v.number()), energy: v.optional(v.number()), doneWhen: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const profile = args.lane || args.projectId || args.milestoneId ? null : await ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique();
+    const taskId = await createTaskFor(ctx, owner, {
+      title: args.title, lane: args.lane ?? (args.projectId || args.milestoneId ? "Projects" : profile?.laneFocus ?? "Projects"),
+      minutes: args.minutes ?? 30, energy: args.energy ?? 2, doneWhen: args.doneWhen ?? "",
+      projectId: args.projectId, milestoneId: args.milestoneId,
+    });
+    const created = await ctx.db.query("taskEvents").withIndex("by_task", q => q.eq("taskId", taskId)).order("desc").first();
+    return { taskId, eventId: created?._id ?? null };
+  },
+});
+
+/** Edits in place, one field or a few: only the fields sent change. */
+export const edit = mutation({
+  args: {
+    taskId: v.id("tasks"), title: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()),
+    minutes: v.optional(v.number()), energy: v.optional(v.number()), skills: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const task = await ctx.db.get(args.taskId);
+    assertOwner(task, owner);
+    if (task.status === "Archived") throw new ConvexError(`"${task.title}" is archived. Restore it first.`);
+    const nextStep = args.nextStep?.trim();
+    if (nextStep !== undefined && nextStep.length > 2000) throw new ConvexError("Keep the next step under 2,000 characters.");
+    await ctx.db.patch(task._id, {
+      ...(args.title !== undefined ? { title: nonempty(args.title) } : {}),
+      ...(nextStep !== undefined ? { nextStep } : {}),
+      ...(args.doneWhen !== undefined ? { doneWhen: doneWhenValue(args.doneWhen) } : {}),
+      ...(args.minutes !== undefined || args.energy !== undefined ? effortValues(args.minutes ?? task.minutes, args.energy ?? task.energy) : {}),
+      ...(args.skills !== undefined ? { skills: skillValues(args.skills) } : {}),
+    });
     return task._id;
   },
 });
+
+/** Adds "what changed" (or a blocker) to a move after it happened, from the toast that followed it. */
+export const noteOn = mutation({
+  args: { eventId: v.id("taskEvents"), note: v.string() },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const event = await ctx.db.get(args.eventId);
+    if (!event || event.owner !== owner) throw new ConvexError("That change can't be found any more.");
+    const note = args.note.trim();
+    if (note.length > 4000) throw new ConvexError("Keep the note under 4,000 characters.");
+    await ctx.db.patch(event._id, { note: note || undefined });
+    // A blocker written afterwards is what the task shows as blocking it.
+    if (event.kind === "blocked" && note) {
+      const task = await ctx.db.get(event.taskId);
+      if (task?.owner === owner && task.status === "Blocked") await ctx.db.patch(task._id, { nextStep: nextStepValue(note) });
+    }
+    return null;
+  },
+});
+
+/**
+ * Undoes a move while it is still the task's latest event: the task goes back to exactly how
+ * it was (status, next step, dates, skills, pin) and the event is removed, so history reads as
+ * if it never happened. Undoing "created" deletes a task that has had no sessions.
+ */
+export const undo = mutation({
+  args: { eventId: v.id("taskEvents") },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const event = await ctx.db.get(args.eventId);
+    if (!event || event.owner !== owner) throw new ConvexError("That change can't be found any more.");
+    const task = await ctx.db.get(event.taskId);
+    if (!task || task.owner !== owner) throw new ConvexError("That task can't be found any more.");
+    const latest = await ctx.db.query("taskEvents").withIndex("by_task", q => q.eq("taskId", task._id)).order("desc").first();
+    if (latest?._id !== event._id) throw new ConvexError(`"${task.title}" changed since. Move it yourself.`);
+    const active = await ctx.db.query("activeSessions").withIndex("by_owner", q => q.eq("owner", owner)).unique();
+    if (active?.taskId === task._id) throw new ConvexError("This task has a focus session running. Finish or cancel it first.");
+    if (event.kind === "created") {
+      if (await ctx.db.query("sessions").withIndex("by_task", q => q.eq("taskId", task._id)).first()) throw new ConvexError(`"${task.title}" has sessions now. Archive it instead.`);
+      await deleteTask(ctx, owner, task);
+      return { taskId: null, status: null };
+    }
+    const before = event.before;
+    if (!before) throw new ConvexError("This change can't be undone.");
+    await ctx.db.patch(task._id, {
+      status: before.status, nextStep: before.nextStep, startedAt: before.startedAt, completedAt: before.completedAt,
+      archivedFrom: before.archivedFrom, archivedWithProject: before.archivedWithProject, skills: before.skills,
+    });
+    if (before.pinned) {
+      const profile = await ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique();
+      if (profile && !profile.pinnedTaskId) await ctx.db.patch(profile._id, { pinnedTaskId: task._id });
+    }
+    await ctx.db.delete(event._id);
+    await refreshMilestone(ctx, task.milestoneId);
+    return { taskId: task._id, status: before.status };
+  },
+});
+
+/** Deletes an archived task for good, with its history, sessions and evidence. Archive first, then delete. */
+export const remove = mutation({
+  args: { taskId: v.id("tasks") },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const task = await ctx.db.get(args.taskId);
+    assertOwner(task, owner);
+    if (task.status !== "Archived") throw new ConvexError("Archive the task first; delete it from Archived.");
+    await deleteTask(ctx, owner, task);
+    return null;
+  },
+});
+
+async function deleteTask(ctx: MutationCtx, owner: string, task: Doc<"tasks">) {
+  const sessions = await ctx.db.query("sessions").withIndex("by_task", q => q.eq("taskId", task._id)).collect();
+  for (const session of sessions) {
+    for (const artifact of await ctx.db.query("artifacts").withIndex("by_session", q => q.eq("sessionId", session._id)).collect()) {
+      if (artifact.imageId) await ctx.storage.delete(artifact.imageId);
+      await ctx.db.delete(artifact._id);
+    }
+    await ctx.db.delete(session._id);
+  }
+  for (const event of await ctx.db.query("taskEvents").withIndex("by_task", q => q.eq("taskId", task._id)).collect()) await ctx.db.delete(event._id);
+  for (const other of await ctx.db.query("tasks").withIndex("by_owner", q => q.eq("owner", owner)).collect()) {
+    if (other.dependencies.includes(task._id)) await ctx.db.patch(other._id, { dependencies: other.dependencies.filter(id => id !== task._id) });
+  }
+  for (const idea of await ctx.db.query("ideas").withIndex("by_owner", q => q.eq("owner", owner)).collect()) {
+    if (idea.taskId === task._id) await ctx.db.patch(idea._id, { taskId: undefined });
+  }
+  for (const plan of await ctx.db.query("weekPlans").withIndex("by_owner_week", q => q.eq("owner", owner)).collect()) {
+    if (plan.taskIds.includes(task._id)) await ctx.db.patch(plan._id, { taskIds: plan.taskIds.filter(id => id !== task._id) });
+  }
+  await clearPinIf(ctx, owner, task._id);
+  const gone = new Set<string>([task._id]);
+  for (const item of await ctx.db.query("inbox").withIndex("by_owner", q => q.eq("owner", owner)).collect()) {
+    if (Object.values(item.proposal).some(value => mentions(value, gone))) await ctx.db.delete(item._id);
+  }
+  await ctx.db.delete(task._id);
+  await refreshMilestone(ctx, task.milestoneId);
+}
 
 // Pins (or, with no task, unpins) the focus Today should offer first whenever it fits.
 export const pin = mutation({
@@ -533,44 +674,57 @@ export type StatusMove = { taskId: Id<"tasks">; status: "Ready" | "In progress" 
 
 /**
  * Start, finish, block or move a task back, from anywhere, with no timer and no form.
- * Blocking needs what's blocking it; unblocking or reopening needs the next step; finishing
- * takes an optional "what changed" and skills (which count in the Mind Bloom). A task with
- * a running focus session changes only through that session.
+ * Every note is optional: blocking without one keeps the next step, and unblocking or
+ * reopening without one picks up where it was. Finishing takes an optional "what changed"
+ * and skills (which count in the Mind Bloom). A task with a running focus session changes
+ * only through that session. Returns the event (for Undo) and, on Done, what the finish means.
  */
 export const setStatus = mutation({
   args: { taskId: v.id("tasks"), status: movable, note: v.optional(v.string()), skills: v.optional(v.array(v.string())) },
   handler: async (ctx, args) => setStatusFor(ctx, await requireOwner(ctx), args),
 });
 
-export async function setStatusFor(ctx: MutationCtx, owner: string, args: StatusMove, source = "app") {
+export type MoveResult = { taskId: Id<"tasks">; eventId: Id<"taskEvents"> | null; finish: Finish | null };
+
+export async function setStatusFor(ctx: MutationCtx, owner: string, args: StatusMove, source = "app"): Promise<MoveResult> {
   const task = await ctx.db.get(args.taskId);
   assertOwner(task, owner);
   if (task.status === "Archived") throw new ConvexError(`"${task.title}" is archived. Restore it first.`);
-  if (task.status === args.status) return task._id;
+  if (task.status === args.status) return { taskId: task._id, eventId: null, finish: null };
   const active = await ctx.db.query("activeSessions").withIndex("by_owner", q => q.eq("owner", owner)).unique();
   if (active?.taskId === task._id) throw new ConvexError("This task has a focus session running. Finish or cancel it first.");
+  // Work on a finished or archived project stays put until the project is active again.
+  if (args.status === "In progress" && !(await projectIsOpen(ctx, owner, task.projectId))) throw new ConvexError("This task's project is done or archived. Make the project active to work on it.");
   const note = (args.note ?? "").trim();
   if (note.length > 4000) throw new ConvexError("Keep the note under 4,000 characters.");
   const now = Date.now();
   const leavingDone = task.status === "Done" ? { completedAt: undefined } : {};
+  // Unblocking without a note goes back to the next step the task had before it was blocked,
+  // rather than keeping the blocker as its next step.
+  const lastBlock = task.status === "Blocked" && !note
+    ? (await ctx.db.query("taskEvents").withIndex("by_task", q => q.eq("taskId", task._id)).order("desc").take(20)).find(event => event.kind === "blocked")
+    : undefined;
+  const nextStep = note ? { nextStep: nextStepValue(note) } : lastBlock?.before ? { nextStep: lastBlock.before.nextStep } : {};
+  const profile = args.status === "Done" ? await ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique() : null;
+  const before = snapshot(task, profile?.pinnedTaskId === task._id);
+  const completion = args.status === "Done" ? await completionOf(ctx, task) : null;
+  let eventId: Id<"taskEvents">;
   switch (args.status) {
     case "In progress": {
       // From Blocked, the blocker is cleared; a note becomes the next step.
-      if ((task.status === "Blocked" || task.status === "Done") && !note) throw new ConvexError("Add the next step, so you know where to pick up.");
-      await ctx.db.patch(task._id, { status: "In progress", ...leavingDone, ...(note ? { nextStep: nextStepValue(note) } : {}), ...(task.startedAt ? {} : { startedAt: now }) });
-      await logEvent(ctx, owner, task, task.status === "Done" ? "reopened" : task.status === "Blocked" ? "unblocked" : "started", { note, source });
+      await ctx.db.patch(task._id, { status: "In progress", ...leavingDone, ...nextStep, ...(task.startedAt ? {} : { startedAt: now }) });
+      eventId = await logEvent(ctx, owner, task, task.status === "Done" ? "reopened" : task.status === "Blocked" ? "unblocked" : "started", { note, source, before });
       break;
     }
     case "Ready": {
-      if ((task.status === "Blocked" || task.status === "Done") && !note) throw new ConvexError("Add the next step, so you know where to pick up.");
-      await ctx.db.patch(task._id, { status: "Ready", ...leavingDone, ...(note ? { nextStep: nextStepValue(note) } : {}) });
-      await logEvent(ctx, owner, task, task.status === "Done" ? "reopened" : task.status === "Blocked" ? "unblocked" : "ready", { note, source });
+      await ctx.db.patch(task._id, { status: "Ready", ...leavingDone, ...nextStep });
+      eventId = await logEvent(ctx, owner, task, task.status === "Done" ? "reopened" : task.status === "Blocked" ? "unblocked" : "ready", { note, source, before });
       break;
     }
     case "Blocked": {
-      if (!note) throw new ConvexError("Say what's blocking it, so you know how to unblock it later.");
-      await ctx.db.patch(task._id, { status: "Blocked", nextStep: nextStepValue(note), ...leavingDone });
-      await logEvent(ctx, owner, task, "blocked", { note, source });
+      // What's blocking it becomes the task's next step, so unblocking starts from it.
+      await ctx.db.patch(task._id, { status: "Blocked", ...nextStep, ...leavingDone });
+      eventId = await logEvent(ctx, owner, task, "blocked", { note, source, before });
       break;
     }
     case "Done": {
@@ -579,10 +733,10 @@ export async function setStatusFor(ctx: MutationCtx, owner: string, args: Status
       for (const skill of skillValues(args.skills)) if (!skills.some(kept => kept.toLowerCase() === skill.toLowerCase())) skills.push(skill);
       await ctx.db.patch(task._id, { status: "Done", completedAt: now, ...(task.startedAt ? {} : { startedAt: now }), ...(skills.length ? { skills: skills.slice(0, 5) } : {}) });
       await clearPinIf(ctx, owner, task._id);
-      await logEvent(ctx, owner, task, "done", { note, source });
+      eventId = await logEvent(ctx, owner, task, "done", { note, source, before });
       break;
     }
   }
   await refreshMilestone(ctx, task.milestoneId);
-  return task._id;
+  return { taskId: task._id, eventId, finish: completion ? await finishFor(ctx, owner, task._id, completion) : null };
 }

@@ -245,7 +245,6 @@ describe("task lifecycle", () => {
     await recapAs(asA, taskId, "Blocked");
     expect((await asA.query(api.tasks.todayOverview, { minutes: 60, energy: 3 })).choices).toEqual([]);
     await expect(asB.mutation(api.tasks.unblock, { taskId, nextStep: "Foreign" })).rejects.toThrow("Record not found");
-    await expect(asA.mutation(api.tasks.unblock, { taskId, nextStep: "   " })).rejects.toThrow("Add a next step");
     await asA.mutation(api.tasks.unblock, { taskId, nextStep: "Use the new API key" });
     expect(await t.run(ctx => ctx.db.get(taskId))).toMatchObject({ status: "Ready", nextStep: "Use the new API key" });
     expect((await asA.query(api.tasks.todayOverview, { minutes: 60, energy: 3 })).choices.map(choice => choice.taskId)).toEqual([taskId]);

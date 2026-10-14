@@ -8,6 +8,7 @@ import { brainstormValues } from "./lib/ideaRules";
 import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
 import { refreshMilestone, taskLinks } from "./lib/projects";
 import { clearPinIf, effortValues, smallerStepValues } from "./lib/taskRules";
+import { logEvent } from "./lib/taskEvents";
 
 // Ideas are a low-pressure notebook. Saving or brainstorming never touches Today; only
 // a deliberate activation creates a linked Ready task, and it can be moved back.
@@ -141,6 +142,7 @@ export const activate = mutation({
       nextStep: "", dependencies: [], status: "Ready",
     });
     await refreshMilestone(ctx, links.milestoneId);
+    await logEvent(ctx, owner, { _id: taskId, projectId: links.projectId }, "created", { note: "From an idea" });
     await ctx.db.patch(idea._id, { taskId, ...(args.lane ? { lane: args.lane } : {}) });
     return taskId;
   },
