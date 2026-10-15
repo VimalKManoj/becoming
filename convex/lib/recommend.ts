@@ -83,6 +83,26 @@ export function explain(task: Candidate, smaller: boolean, recentLanes: Lane[], 
   return `${context}${favoured} ${fit}`;
 }
 
+/**
+ * A task you chose yourself (Focus on it, from Today or Work) is offered even when it needs
+ * more time or energy than you said, with a note saying so. Only open work, as always.
+ */
+export function chosenFocus(task: Candidate, capacity: Capacity, preferences: Preferences = {}): Focus | null {
+  if (task.status !== "Ready" && task.status !== "In progress") return null;
+  const over = [
+    ...(task.minutes > capacity.minutes ? [`${task.minutes} minutes`] : []),
+    ...(task.energy > capacity.energy ? [`${energyLabel[task.energy] ?? "more"} energy`] : []),
+  ];
+  return {
+    taskId: task._id, title: task.title, taskTitle: task.title, lane: task.lane, status: task.status,
+    minutes: task.minutes, energy: task.energy, doneWhen: task.doneWhen, nextStep: task.nextStep,
+    smaller: false, pinned: task._id === preferences.pinnedTaskId,
+    reason: over.length
+      ? `You chose this one. It needs ${over.join(" and ")}, more than you said, so take it as far as tonight allows.`
+      : "You chose this one.",
+  };
+}
+
 /** Why a pinned task can't be offered tonight, in plain language. */
 export function pinnedNote(task: Candidate, capacity: Capacity) {
   const needs = `${task.minutes} minutes and ${energyLabel[task.energy] ?? "more"} energy`;

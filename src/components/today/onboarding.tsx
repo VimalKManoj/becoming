@@ -20,13 +20,15 @@ import { Glyph } from "@/components/assistants/assistant-badge";
 type Lane = "Projects" | "Showcases" | "Writing";
 const motives = ["Ship things people can touch.", "Get a little better at my craft.", "Make one small thing better every week."];
 const targets = [2, 3, 4, 5, 6];
-const firsts: { title: string; detail: string; lane: Lane | null; example: { title: string; done: string; minutes: number } | null }[] = [
-  { title: "A project", detail: "Something big, in steps", lane: "Projects", example: { title: "Wire the recap's save-failed state", done: "Retry keeps the typed recap and says it isn't saved yet.", minutes: 45 } },
+// "A project" opens the New project page after setup (phases, milestones and tasks), so it
+// asks for no first step here; the others make one small first task.
+const firsts: { title: string; detail: string; lane: Lane | null; project?: boolean; example: { title: string; done: string; minutes: number } | null }[] = [
+  { title: "A project", detail: "Something big, in steps", lane: null, project: true, example: null },
   { title: "A small piece", detail: "A component or showcase", lane: "Showcases", example: { title: "Finish the orbit loader showcase", done: "The loop is seamless and a 6s clip is exported.", minutes: 20 } },
   { title: "Some writing", detail: "A note or a post", lane: "Writing", example: { title: "Draft: what a recap form taught me", done: "400 rough words and one diagram idea.", minutes: 30 } },
   { title: "Just look around", detail: "Skip for now", lane: null, example: null },
 ];
-const features = ["Check in: time, energy, mood. About 10 seconds.", "Focus on one thing, then say how it went.", "Watch your Mind Bloom fill in, skill by skill."];
+const features = ["Check in: your time and energy. About 10 seconds.", "Focus on one thing, then say how it went.", "Watch your Mind Bloom fill in, skill by skill."];
 const assistantChoices = [
   { yes: true, title: "Connect it after setup", detail: "About a minute: one command to copy." },
   { yes: false, title: "Not now", detail: "It waits on Today whenever you want it." },
@@ -34,7 +36,7 @@ const assistantChoices = [
 const choiceStyle = { minHeight: 86, padding: 16, borderRadius: 20, flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", gap: 8, color: "var(--r-ink)" } as const;
 
 export function Onboarding({ onClose }: { onClose: () => void }) {
-  const { showToast, openConnect } = useRitual();
+  const { showToast, openConnect, openNewProject } = useRitual();
   const saveMotive = useMutation(api.settings.saveMotive);
   const setRhythm = useMutation(api.rhythm.setRhythm);
   const savePreferences = useMutation(api.settings.savePreferences);
@@ -68,7 +70,8 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
       }
       await complete({});
       onClose();
-      if (!skip) showToast(pick.lane ? "You're set. Tonight's first focus is ready." : "You're set. Have a look around.");
+      if (!skip) showToast(pick.lane ? "You're set. Tonight's first focus is ready." : pick.project ? "You're set. Now shape your project." : "You're set. Have a look around.");
+      if (!skip && pick.project) openNewProject();
       if (!skip && connectAfter) openConnect();
     } catch (caught) { setError(readableError(caught, "Could not save your setup. Please try again.")); }
     finally { setBusy(false); }
@@ -147,7 +150,7 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
       {error && <p role="alert" className="r-small" style={{ color: "var(--r-red-pale)" }}>{error}</p>}
       <div className="r-row" style={{ marginTop: "auto", gap: 8, paddingTop: 12, flexWrap: "nowrap" }}>
         {step > 0 && <button type="button" className="r-ghost" style={{ height: 56, fontSize: 15 }} disabled={busy} onClick={() => setStep(step - 1)}>Back</button>}
-        <button type="button" className="r-btn" style={{ flex: 1 }} disabled={busy} onClick={next}>{busy ? "Saving…" : step === 0 ? "Begin" : step >= last ? "Start my first evening" : "Continue"}</button>
+        <button type="button" className="r-btn" style={{ flex: 1 }} disabled={busy} onClick={next}>{busy ? "Saving…" : step === 0 ? "Begin" : step >= last ? (pick.project ? "Set up my project" : "Start my first evening") : "Continue"}</button>
       </div>
     </div>
   </div>;

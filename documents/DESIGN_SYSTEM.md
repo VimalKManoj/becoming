@@ -62,6 +62,8 @@ Sizes follow the prototype and scale with the content column through container q
 | `r-cap*`, `r-toast` | Quick capture sheet and the toast (3.4s; 6.5–8s with actions, paused while pointed at or focused). A toast can carry `actions` (Undo, Start the next task), a `note` field (Add what changed, Say why) and a `body` (a finish's skills and milestone bar). Work's sheets (`Sheet` in task-forms.tsx) use the same parts and render through a portal into `.r-app`, because the animated page (`r-rise`) would otherwise pin a fixed sheet inside itself |
 | `r-embers`, `r-spark` (`ritual/embers.tsx`) | Behind every workspace screen and onboarding: a light breathing glow and embers drifting up, as on the sign-in screen; hidden with reduced motion |
 
+Today's bars (`src/components/today/today-bars.tsx`, `today.css`): `.t-bar` is a slim bordered bar like the week bar (`.t-weekbar`), with a mono ember label (`.t-bar-k`). On it now (`.t-onit`) has one 34px row per task: the status circle, the title, a mono meta line that truncates, and a small ▶ Focus pill. Last time (`.t-last`) is one or two lines of text. They sit just above the week, below the tiles.
+
 Connecting Claude Code (`src/components/assistants/`, `assistants.css`):
 
 - `ClaudeLoop` (`.cl`) is the motion graphic: one SVG (it scales with its box), an 8-second loop of a Claude Code terminal and a Becoming task card. `/becoming:next` types, a spark crosses, the task goes In progress; `/becoming:done` types, a spark crosses, it turns Done with a mint check, a glow, "via Claude Code", "+ Systems" and "PR #42". Every resting style is the last frame, so with reduced motion it shows the finished task.

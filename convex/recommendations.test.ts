@@ -68,18 +68,17 @@ describe("pins, choices and preferences in Convex", () => {
     expect(await asA.query(api.settings.getProfile, {})).toMatchObject({ pinnedTaskId: null });
   });
 
-  it("records whether a session followed the recommendation, and why not", async () => {
+  it("records whether a session followed the recommendation (swap reasons are no longer asked)", async () => {
     const t = convexTest(schema, modules);
     const asA = t.withIdentity({ subject: "user-a", issuer: "https://auth.example.test" });
     const first = await asA.mutation(api.tasks.create, { ...task, title: "First" });
     const second = await asA.mutation(api.tasks.create, { ...task, title: "Second" });
-    await expect(asA.mutation(api.tasks.startSession, { taskId: first, recommended: true, swapReason: "Too big tonight" })).rejects.toThrow("swap reason only applies");
-    const swapped = await asA.mutation(api.tasks.startSession, { taskId: second, recommended: false, swapReason: "Not in the mood" });
+    const swapped = await asA.mutation(api.tasks.startSession, { taskId: second, recommended: false });
     await asA.mutation(api.tasks.recordSession, { activeSessionId: swapped, outcome: "Made progress", contribution: "Some", nextStep: "More", evidence: "" });
     const followed = await asA.mutation(api.tasks.startSession, { taskId: first, recommended: true });
     await asA.mutation(api.tasks.recordSession, { activeSessionId: followed, outcome: "Made progress", contribution: "Some", nextStep: "More", evidence: "" });
     const history = (await asA.query(api.journey.listPage, { paginationOpts: { numItems: 5, cursor: null } })).page;
-    expect(history.map(session => [session.title, session.recommended, session.swapReason])).toEqual([["First", true, undefined], ["Second", false, "Not in the mood"]]);
+    expect(history.map(session => [session.title, session.recommended, session.swapReason])).toEqual([["First", true, undefined], ["Second", false, undefined]]);
   });
 
   it("saves a lane preference that Today applies and reports", async () => {

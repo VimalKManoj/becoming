@@ -225,7 +225,7 @@ const energyName = ["", "Low", "Steady", "High"];
  * at the foot, quiet links for the rest. Every move has an Undo in the toast, and the latest
  * move (yours or an assistant's) can also be undone from the history.
  */
-function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tasks">; onClose: () => void; onEdit: () => void; onOpenProject: (id: Id<"projects">) => void }) {
+export function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tasks">; onClose: () => void; onEdit: () => void; onOpenProject: (id: Id<"projects">) => void }) {
   const task = useQuery(api.tasks.get, { taskId });
   const options = useQuery(api.projects.options);
   const profile = useQuery(api.settings.getProfile);
@@ -364,7 +364,7 @@ function plannedSessionsIn(map: Constellation | undefined, taskId: Id<"tasks">) 
   return found ? found.plannedSessions : undefined;
 }
 
-function EditTaskSheet({ taskId, onDone }: { taskId: Id<"tasks">; onDone: () => void }) {
+export function EditTaskSheet({ taskId, onDone }: { taskId: Id<"tasks">; onDone: () => void }) {
   const task = useQuery(api.tasks.get, { taskId });
   // The task's own record doesn't carry its planned sessions, so a project task reads them
   // from its project's map; the form keeps an unknown value instead of clearing it.

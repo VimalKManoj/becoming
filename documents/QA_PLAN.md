@@ -293,6 +293,18 @@ Every task shows the same **status circle** (empty Ready, half In progress, ✓ 
 - [ ] **Plugin:** `claude plugin marketplace add VimalKManoj/becoming` (after the push), then `claude plugin install becoming@becoming`, then restart Claude Code. **Expect:** a new session knows the tasks In progress (ask "what's in progress in Becoming?"). `/becoming:next` lists or starts a task and explains the plan; `/becoming:done` finishes it with a summary, skills and the PR or commit link; `/becoming:log 30m` logs progress with a next step.
 - [ ] With the token revoked, start a session. **Expect:** one line saying Becoming's tasks couldn't be loaded; the session starts normally.
 
+### B5b. Today: On it now and Last time (added 15 October, Phase 3)
+
+- [ ] With a task In progress, Today shows **On it now** just above the week bar, as a slim bar: the status circle, the title, "Project · 0A·2" and ▶ Focus. **Expect:** latest moved first, at most 3, "+ N more in Work" beyond that.
+- [ ] Click a title. **Expect:** the task sheet opens on Today; close it and you're still on Today. Change its status from the circle. **Expect:** the bar updates at once (finishing removes it).
+- [ ] ▶ Focus on a task that needs more time or energy than you pick. **Expect:** the plan still offers it, saying it needs more than you said.
+- [ ] **Last time** sits between On it now and the week: "Last time · Yesterday" (or "Today so far") with what you finished, started and blocked, then what an assistant did. With an open task that has a next step: "You left off: …" and **Pick up**, which opens it. **Expect:** the question card no longer shows "A note from last time" when Last time shows a pick-up.
+- [ ] A new account with nothing moved: neither bar shows.
+- [ ] Tiles: Build reads "Next: <task> · N min"; Small piece and Write say how many are open.
+- [ ] The check-in has **2h+**; the plan header then reads "2h+".
+- [ ] On a phone, the bars stack above the week bar with no sideways scroll.
+- [ ] Onboarding: "Check in: your time and energy"; choosing "A project" ends with "Set up my project" and opens the New project page.
+
 ### B8a-3. Connecting is easy (added 15 October)
 
 - [ ] On an account with no assistant connected, Today shows **Connect Claude Code · your work records itself** beside the date, with a sheen and a spark running into the orb. **Expect:** on a phone it sits under the date, with no sideways scroll.

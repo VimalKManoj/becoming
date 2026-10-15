@@ -282,14 +282,11 @@ function ChoicePanel({ sessions }: { sessions: Session[] }) {
   const recorded = sessions.filter(session => session.recommended !== undefined);
   if (!recorded.length) return null;
   const followed = recorded.filter(session => session.recommended).length;
-  const reasons = new Map<string, number>();
-  for (const session of recorded) if (session.swapReason) reasons.set(session.swapReason, (reasons.get(session.swapReason) ?? 0) + 1);
-  const top = [...reasons.entries()].sort((a, b) => b[1] - a[1])[0];
   return <section className="j-card j-insight" aria-labelledby="choices-heading">
     <h2 id="choices-heading" className="r-eyebrow">Suggestions</h2>
     <p className="j-big">{followed}<span className="j-of"> / {recorded.length}</span></p>
     <p className="r-small">followed Today’s top suggestion</p>
-    <p className="j-13">Of {plural(recorded.length, "session")} shown with a recorded choice, {followed} followed the suggestion and {recorded.length - followed} chose another task{top ? `, most often because: ${top[0].toLowerCase()} (${top[1]})` : ""}.</p>
+    <p className="j-13">Of {plural(recorded.length, "session")} shown with a recorded choice, {followed} followed the suggestion and {recorded.length - followed} chose another task.</p>
     <p className="r-small">This helps you judge whether the suggestions fit your evenings. It never changes your history.</p>
   </section>;
 }

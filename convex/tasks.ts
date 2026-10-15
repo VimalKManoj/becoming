@@ -3,10 +3,10 @@ import { v, ConvexError } from "convex/values";
 import { query, mutation, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { isWeekKey } from "./lib/time";
 import type { Doc, Id } from "./_generated/dataModel";
-import { lane, outcome, swapReason } from "./schema";
+import { lane, outcome } from "./schema";
 import { assertOwner, nonempty, requireOwner } from "./lib/ownership";
 import { projectIsOpen, refreshMilestone, taskLinks } from "./lib/projects";
-import { fitFor, pinnedNote, rankFocuses } from "./lib/recommend";
+import { chosenFocus, fitFor, pinnedNote, rankFocuses } from "./lib/recommend";
 import { clearPinIf, dependencyValues, doneWhenValue, effortValues, nextStepValue, prerequisiteCleared, smallerStepValues } from "./lib/taskRules";
 import { httpUrl, notesValue, tagList } from "./lib/validate";
 import { logEvent, snapshot } from "./lib/taskEvents";
@@ -458,7 +458,11 @@ export async function todayFor(ctx: QueryCtx, owner: string, args: TodayArgs) {
     const scopeProject = args.projectId === undefined ? undefined : ctx.db.normalizeId("projects", args.projectId);
     const scopeTask = args.taskId === undefined ? undefined : ctx.db.normalizeId("tasks", args.taskId);
     const inScope = (task: Doc<"tasks">) => (!args.lane || task.lane === args.lane) && (scopeProject === undefined || task.projectId === scopeProject) && (scopeTask === undefined || task._id === scopeTask);
-    const ranked = rankFocuses(eligible.filter(inScope), recentLanes, capacity, preferences);
+    const fitting = rankFocuses(eligible.filter(inScope), recentLanes, capacity, preferences);
+    // A task you chose yourself is offered even when it's bigger than tonight, with a note.
+    const chosenTask = scopeTask ? eligible.find(task => task._id === scopeTask) : undefined;
+    const chosen = !fitting.length && chosenTask ? chosenFocus(chosenTask, capacity, preferences) : null;
+    const ranked = chosen ? [chosen] : fitting;
     // "Or, explicitly": the best fit from each other lane, so a different kind of evening is one tap away.
     const overall = rankFocuses(eligible, recentLanes, capacity, preferences, 50);
     const alternativeIds = (["Projects", "Showcases", "Writing"] as const)
@@ -538,13 +542,12 @@ export async function assertPrerequisitesDone(ctx: Parameters<typeof refreshMile
 }
 
 export const startSession = mutation({
-  args: { taskId: v.id("tasks"), smaller: v.optional(v.boolean()), recommended: v.optional(v.boolean()), swapReason: v.optional(swapReason) },
+  args: { taskId: v.id("tasks"), smaller: v.optional(v.boolean()), recommended: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
     const task = await ctx.db.get(args.taskId);
     assertOwner(task, owner);
     const smaller = args.smaller ?? false;
-    if (args.recommended && args.swapReason) throw new ConvexError("A swap reason only applies when you chose a different focus.");
     const current = await ctx.db.query("activeSessions").withIndex("by_owner", q => q.eq("owner", owner)).unique();
     if (current) {
       if (current.taskId === task._id && (current.smaller ?? false) === smaller) return current._id;
@@ -560,7 +563,7 @@ export const startSession = mutation({
       focusTitle: smaller ? task.smallerStep : task.title,
       focusDoneWhen: smaller ? task.smallerDone : task.doneWhen,
       focusMinutes: smaller ? task.smallerMinutes : task.minutes,
-      recommended: args.recommended, swapReason: args.swapReason,
+      recommended: args.recommended,
     });
   },
 });

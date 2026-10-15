@@ -1,6 +1,6 @@
 # Plan: one tap, an app that records itself, and a daily loop
 
-Proposed 14 October 2026. **Decisions: all ten recommendations taken (owner, 14 October). Phase 1 built 14 October; Phase 2 built 15 October (uncommitted); Phases 3–5 next.**
+Proposed 14 October 2026. **Decisions: all ten recommendations taken (owner, 14 October). Phase 1 built 14 October; Phase 2 shipped 15 October; Phase 3 built 15 October (uncommitted); Phases 4–5 next.**
 
 - **Source:** the first-tier ideas in [IDEAS-flow-and-return.md](IDEAS-flow-and-return.md) (sections 3A–3G).
 - **Supersedes** Phases 3–5 of [PLAN-tasks-and-focus.md](PLAN-tasks-and-focus.md): focus decoupled, In progress on Today, and assistant status tools.
@@ -208,7 +208,28 @@ The goal of this plan is that **a normal evening needs no data entry**:
 - It's visible on Today within seconds, with Undo.
 - Nothing waits for approval.
 
-## Phase 3: Today keeps its tiles, and gains two things (rethought 15 October)
+## Phase 3: Today keeps its tiles, and gains two things (rethought 15 October, built 15 October)
+
+**As built:**
+- **Placement (owner, while it was being built):** "make it small like the week streak at the bottom and add just above it". On it now and Last time are slim bars (`.t-bar`, the week bar's look) just above the week, below the tiles, rather than near the top.
+- **`today.home({ today, timezone })`** (convex/today.ts), one query:
+  - `onItNow`: up to 3 tasks In progress, latest moved first (by their latest task event), each with its project and plan code ("0A·2", the constellation's); `moreInProgress` counts the rest;
+  - `lastTime`: the moves (finished, started, blocked, worked on) of today, or else of the last day something moved, in your timezone. One per task (its latest that day), grouped by who made them (you first, then each assistant), plus `pickUp`: the latest of those tasks still open with a next step;
+  - `openByLane`: open tasks per lane, for the tiles.
+- **On it now:** each row has the status circle (the usual menu), the title (opens the task sheet right on Today; `TaskSheet` and `EditTaskSheet` are now exported from the Work screen), "Project · code" and ▶ Focus; "+ N more in Work".
+- **Last time:** "Last time · Yesterday: You finished “R1” and started “R2”. Claude Code finished “R3”." and "You left off: *next step*" with **Pick up**, which opens that task. With it, the prompt card drops "A note from last time", and the away block (3+ days) keeps its headline but leaves "where you were" to Last time.
+- **Tiles:** Build reads "Next: <task> · 30 min" (the best Projects choice); Small piece and Write say how many are open.
+- **Fixes folded in:**
+  - the check-in has **2h+** (240 minutes);
+  - a task you chose yourself (▶ Focus) is offered even when it needs more time or energy than you said, with a note (`chosenFocus` in lib/recommend.ts), and it no longer counts as "recommended";
+  - swap reasons are retired (decision 6): `startSession` no longer takes one and Journey no longer mentions them; old sessions keep theirs, so the schema and backups still carry the field;
+  - the Sunday card counts days, not sessions;
+  - onboarding promises "your time and energy", not "mood", and "A project" opens the New project page after setup;
+  - the unreachable `?intent=build|small|write` links and the plan's project chips are gone (`?task=` stays);
+  - the empty plan says why, by the server's state: first run, blocked only, nothing open, waiting on prerequisites, or nothing fits.
+- **Tests:** `convex/today.test.ts` (On it now order, limit, code and ownership; Last time's day window, grouping by source and pick-up; none before anything moved; a chosen task bigger than tonight) and the updated recommendation test.
+
+**The plan as written:**
 
 *Today stays as it is, with the greeting, the prompt card, the quick tiles and the week bar. It gains two compact blocks, so you can act on what you're doing and see what happened without leaving.*
 
@@ -354,7 +375,7 @@ The goal of this plan is that **a normal evening needs no data entry**:
 |---|---|---|---|
 | 1. One tap | Medium | – | Yes, and it changes the daily feel straight away |
 | 2. The app records itself (built 15 Oct) | Medium | 1 (Undo, finish result) | Yes |
-| 3. Today keeps its tiles, gains On it now and Last time | Small | 1 (Last time reads task events; richer with 2) | Yes |
+| 3. Today keeps its tiles, gains On it now and Last time (built 15 Oct) | Small | 1 (Last time reads task events; richer with 2) | Yes |
 | 4. Focus as a tool | Medium | 1 | Yes; can run in parallel with 3 |
 | 5. The daily loop | Medium | 3 | Yes |
 

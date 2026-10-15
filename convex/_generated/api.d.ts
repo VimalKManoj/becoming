@@ -45,6 +45,7 @@ import type * as reminders from "../reminders.js";
 import type * as rhythm from "../rhythm.js";
 import type * as settings from "../settings.js";
 import type * as tasks from "../tasks.js";
+import type * as today from "../today.js";
 
 import type {
   ApiFromModules,
@@ -90,6 +91,7 @@ declare const fullApi: ApiFromModules<{
   rhythm: typeof rhythm;
   settings: typeof settings;
   tasks: typeof tasks;
+  today: typeof today;
 }>;
 
 /**

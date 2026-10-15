@@ -171,7 +171,7 @@ Every change below is additive: new tables, new optional fields and new indexes.
 **Recommendations (3C).**
 - `profiles.pinnedTaskId` is set by `tasks.pin` and cleared automatically when that task finishes or is archived.
 - `profiles.laneFocus` favours one lane by counting it one session fewer.
-- `activeSessions`/`sessions` record `recommended` and an optional `swapReason`, a fixed list of five.
+- `activeSessions`/`sessions` record `recommended` and an optional `swapReason`, a fixed list of five. Since 15 October nothing asks for a swap reason (`startSession` no longer takes one); older sessions keep theirs.
 - Today reads at most the 200 oldest Ready and 200 oldest In-progress tasks, always plus the pinned one.
 
 **Delight (4C).** `journey.summary` derives lifetime counts and "firsts" from records each time it's read: first session, first showcase and writing sessions, first completed milestone, first portfolio candidate (from `candidateSince`) and first published piece. Nothing is stored as an award, so nothing can be granted twice, and a first disappears if its record does.
@@ -277,6 +277,8 @@ See [PLAN-project-constellation.md](PLAN-project-constellation.md) and, for the 
 - `constellation.taskStory` returns each entry's `id` and `undoable` (the latest entry, when it kept a snapshot), and now reads the latest 200 entries.
 - `tasks.undo` restores skills only when undoing a finish, so skills added after another move are kept.
 - No new tables; nothing to migrate.
+
+**Today's bars (15 October 2026, PLAN-one-tap-and-daily-loop Phase 3).** `today.home({ today, timezone })` derives On it now (tasks In progress by their latest event, with plan codes), Last time (the day's moves from `taskEvents`, grouped by `source`) and open tasks per lane. A chosen task (`todayOverview` with `taskId`) is offered even when it doesn't fit, with a note. No new tables.
 
 **New project page (15 October 2026).**
 - `newProject.create({ title, purpose, ideaId?, lane?, docs, phases })` makes a whole project in one transaction: docs (planned, not yet written, each feeding the phases whose `docCodes` name it); phases with goal, done-when and notes; their milestones (phase set, with done-when and notes); and tasks (30–90 min, steady, empty done-when, the given lane).
