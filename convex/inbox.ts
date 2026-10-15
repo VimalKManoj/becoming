@@ -9,7 +9,7 @@ import { addDocFor, addPhaseFor, ownedProject, setMilestonePhaseFor, skillsValue
 import { addResearchFor, addSourceFor, saveReportFor, setDecisionFor } from "./genesis";
 import { createIdeaFor } from "./ideas";
 import { addMilestoneFor } from "./projects";
-import { createTaskFor, saveLoggedSession } from "./tasks";
+import { createTaskFor, editTaskFor, saveLoggedSession, setStatusFor } from "./tasks";
 
 // The Inbox on Today: what assistants proposed through the MCP endpoint (convex/mcp.ts).
 // Nothing counts until you approve it, and approving runs the same rules as the app, so
@@ -95,6 +95,15 @@ export async function describeItem(ctx: Db, owner: string, item: Doc<"inbox">) {
     case "idea": return { ...base, title: p.title, details: [p.lane], body: p.notes.length > 400 ? `${p.notes.slice(0, 400)}…` : p.notes || null };
     case "milestone": return { ...base, title: p.title, details: [await titleOf(ctx, owner, p.projectId) ?? gone("project")], body: p.doneWhen ? `Done when: ${p.doneWhen}` : null };
     case "nextStep": return { ...base, title: await titleOf(ctx, owner, p.taskId) ?? gone("task"), details: ["New next step"], body: null, next: p.nextStep };
+    case "move": {
+      const word = p.status === "In progress" ? "Start it" : p.status === "Done" ? "Mark it done" : "Mark it blocked";
+      return { ...base, title: await titleOf(ctx, owner, p.taskId) ?? gone("task"), details: [word, ...(p.skills?.length ? [p.skills.join(", ")] : [])], body: p.note ?? null };
+    }
+    case "taskEdit": {
+      const changed = (["title", "nextStep", "doneWhen", "minutes", "notes"] as const).filter(key => p[key] !== undefined)
+        .map(key => ({ nextStep: "next step", doneWhen: "done when" } as Record<string, string>)[key] ?? key);
+      return { ...base, title: await titleOf(ctx, owner, p.taskId) ?? gone("task"), details: [`Changes: ${changed.join(", ") || "nothing"}`], body: p.doneWhen ? `Done when: ${p.doneWhen}` : p.notes ?? null, next: p.nextStep ?? null };
+    }
     case "phase":
       return { ...base, title: p.name, details: [await titleOf(ctx, owner, p.projectId) ?? gone("project")], body: [p.goal && `Goal: ${p.goal}`, p.doneWhen && `Done when: ${p.doneWhen}`].filter(Boolean).join("\n") || null, next: p.nextStep ?? null };
     case "doc": {
@@ -246,62 +255,77 @@ export async function applyPlan(ctx: MutationCtx, owner: string, p: PlanProposal
   return counts;
 }
 
+export type Applied = { taskId?: Id<"tasks">; eventId?: Id<"taskEvents"> | null };
+
+/**
+ * Applies one change with the app's own rules: approving it in the Inbox, or straight away
+ * when the assistant's token trusts it to (convex/mcp.ts). `key` keeps a logged session from
+ * being saved twice. Returns the task and the event it wrote, when there is one, for Undo.
+ */
+export async function applyProposal(ctx: MutationCtx, owner: string, p: Proposal, source: string, key: string): Promise<Applied> {
+  switch (p.kind) {
+    case "session": {
+      const taskId = p.taskId ?? (p.newTask ? await createTaskFor(ctx, owner, p.newTask, source) : null);
+      if (!taskId) throw new ConvexError("This session has no task to belong to. Discard it.");
+      await saveLoggedSession(ctx, owner, { taskId, minutes: p.minutes, outcome: p.outcome, contribution: p.contribution, nextStep: p.nextStep, skills: p.skills, evidence: p.evidence, endedAt: p.endedAt, source, key });
+      return { taskId };
+    }
+    case "task": return { taskId: await createTaskFor(ctx, owner, p, source) };
+    case "idea": await createIdeaFor(ctx, owner, p); break;
+    case "milestone": await addMilestoneFor(ctx, owner, p); break;
+    case "nextStep": {
+      const task = await ctx.db.get(p.taskId);
+      assertOwner(task, owner);
+      if (task.status === "Done" || task.status === "Archived") throw new ConvexError(`"${task.title}" is ${task.status.toLowerCase()}, so it has no next step to change.`);
+      await ctx.db.patch(task._id, { nextStep: nextStepValue(p.nextStep) });
+      return { taskId: task._id };
+    }
+    case "move": {
+      const moved = await setStatusFor(ctx, owner, { taskId: p.taskId, status: p.status, note: p.note, skills: p.skills }, source);
+      return { taskId: moved.taskId, eventId: moved.eventId };
+    }
+    case "taskEdit": return { taskId: await editTaskFor(ctx, owner, { taskId: p.taskId, title: p.title, nextStep: p.nextStep, doneWhen: p.doneWhen, minutes: p.minutes, notes: p.notes }) };
+    case "phase": {
+      const project = await ownedProject(ctx, owner, p.projectId);
+      const taken = (await ctx.db.query("phases").withIndex("by_project", q => q.eq("projectId", project._id)).collect()).some(x => x.name.trim().toLowerCase() === p.name.trim().toLowerCase());
+      if (taken) throw new ConvexError(`This project already has a phase called "${p.name}".`);
+      await addPhaseFor(ctx, owner, p.projectId, p);
+      break;
+    }
+    case "doc": await addDocFor(ctx, owner, p.projectId, p, source); break;
+    case "docUpdate": {
+      const doc = await ctx.db.get(p.docId);
+      assertOwner(doc, owner);
+      await updateDocFor(ctx, owner, doc._id, {
+        code: p.code ?? doc.code, title: p.title ?? doc.title, summary: p.summary ?? doc.summary, sections: p.sections ?? doc.sections, link: p.link ?? doc.link,
+        phaseIds: p.phaseIds ?? doc.phaseIds, nextEdit: p.nextEdit ?? doc.nextEdit, doneWhen: p.doneWhen ?? doc.doneWhen, written: p.written,
+      });
+      break;
+    }
+    case "research": {
+      // Sources for a thread that already exists (same title) join it instead of repeating it.
+      const threads = await ctx.db.query("research").withIndex("by_idea", q => q.eq("ideaId", p.ideaId)).collect();
+      const same = threads.find(x => x.owner === owner && x.title.trim().toLowerCase() === p.title.trim().toLowerCase());
+      if (same) for (const s of p.sources) await addSourceFor(ctx, owner, same._id, s, source);
+      else await addResearchFor(ctx, owner, p.ideaId, p, source);
+      break;
+    }
+    case "report": await saveReportFor(ctx, owner, p.ideaId, p, source); break;
+    case "decision": await setDecisionFor(ctx, owner, p.ideaId, p, source); break;
+    case "plan": await applyPlan(ctx, owner, p, source); break;
+  }
+  return {};
+}
+
 export const approve = mutation({
   args: { itemId: v.id("inbox") },
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
     const item = await ctx.db.get(args.itemId);
     assertOwner(item, owner);
-    const p = item.proposal;
-    const source = item.source;
-    switch (p.kind) {
-      case "session": {
-        const taskId = p.taskId ?? (p.newTask ? await createTaskFor(ctx, owner, p.newTask, source) : null);
-        if (!taskId) throw new ConvexError("This session has no task to belong to. Discard it.");
-        await saveLoggedSession(ctx, owner, { taskId, minutes: p.minutes, outcome: p.outcome, contribution: p.contribution, nextStep: p.nextStep, skills: p.skills, evidence: p.evidence, endedAt: p.endedAt, source, key: `inbox:${item._id}` });
-        break;
-      }
-      case "task": await createTaskFor(ctx, owner, p, source); break;
-      case "idea": await createIdeaFor(ctx, owner, p); break;
-      case "milestone": await addMilestoneFor(ctx, owner, p); break;
-      case "nextStep": {
-        const task = await ctx.db.get(p.taskId);
-        assertOwner(task, owner);
-        if (task.status === "Done" || task.status === "Archived") throw new ConvexError(`"${task.title}" is ${task.status.toLowerCase()}, so it has no next step to change.`);
-        await ctx.db.patch(task._id, { nextStep: nextStepValue(p.nextStep) });
-        break;
-      }
-      case "phase": {
-        const project = await ownedProject(ctx, owner, p.projectId);
-        const taken = (await ctx.db.query("phases").withIndex("by_project", q => q.eq("projectId", project._id)).collect()).some(x => x.name.trim().toLowerCase() === p.name.trim().toLowerCase());
-        if (taken) throw new ConvexError(`This project already has a phase called "${p.name}".`);
-        await addPhaseFor(ctx, owner, p.projectId, p);
-        break;
-      }
-      case "doc": await addDocFor(ctx, owner, p.projectId, p, source); break;
-      case "docUpdate": {
-        const doc = await ctx.db.get(p.docId);
-        assertOwner(doc, owner);
-        await updateDocFor(ctx, owner, doc._id, {
-          code: p.code ?? doc.code, title: p.title ?? doc.title, summary: p.summary ?? doc.summary, sections: p.sections ?? doc.sections, link: p.link ?? doc.link,
-          phaseIds: p.phaseIds ?? doc.phaseIds, nextEdit: p.nextEdit ?? doc.nextEdit, doneWhen: p.doneWhen ?? doc.doneWhen, written: p.written,
-        });
-        break;
-      }
-      case "research": {
-        // Sources for a thread that already exists (same title) join it instead of repeating it.
-        const threads = await ctx.db.query("research").withIndex("by_idea", q => q.eq("ideaId", p.ideaId)).collect();
-        const same = threads.find(x => x.owner === owner && x.title.trim().toLowerCase() === p.title.trim().toLowerCase());
-        if (same) for (const s of p.sources) await addSourceFor(ctx, owner, same._id, s, source);
-        else await addResearchFor(ctx, owner, p.ideaId, p, source);
-        break;
-      }
-      case "report": await saveReportFor(ctx, owner, p.ideaId, p, source); break;
-      case "decision": await setDecisionFor(ctx, owner, p.ideaId, p, source); break;
-      case "plan": await applyPlan(ctx, owner, p, source); break;
-    }
+    await applyProposal(ctx, owner, item.proposal, item.source, `inbox:${item._id}`);
     await ctx.db.delete(item._id);
-    return p.kind;
+    return item.proposal.kind;
   },
 });
 

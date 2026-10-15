@@ -18,6 +18,7 @@ import { EVENT_NOTE } from "@/components/constellation/panel";
 import { plural } from "@/lib/format";
 import { readableError } from "@/lib/errors";
 import { StatusControl } from "@/components/tasks/status-control";
+import { copyWorkPrompt, workPrompt } from "@/components/tasks/work-prompt";
 import { QuickAdd } from "@/components/tasks/quick-add";
 import { ChoiceField, InlineField } from "@/components/tasks/inline-field";
 import { useTaskMove, type MoveTarget } from "@/components/tasks/use-task-move";
@@ -221,7 +222,8 @@ const energyName = ["", "Low", "Steady", "High"];
  * One task, as a clean properties sheet. At the top: the title (click to edit), then one row
  * to act on it: the status button (which opens the status menu), the obvious next step and
  * Focus. Below, a list of details, each edited where it's shown. Then its recent history and,
- * at the foot, quiet links for the rest. Every move has an Undo in the toast.
+ * at the foot, quiet links for the rest. Every move has an Undo in the toast, and the latest
+ * move (yours or an assistant's) can also be undone from the history.
  */
 function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tasks">; onClose: () => void; onEdit: () => void; onOpenProject: (id: Id<"projects">) => void }) {
   const task = useQuery(api.tasks.get, { taskId });
@@ -229,10 +231,12 @@ function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tas
   const profile = useQuery(api.settings.getProfile);
   const editTask = useMutation(api.tasks.edit);
   const pin = useMutation(api.tasks.pin);
+  const undoMove = useMutation(api.tasks.undo);
   const moves = useTaskMove();
   const { showToast } = useRitual();
   const [skilling, setSkilling] = useState(false);
   const [allHistory, setAllHistory] = useState(false);
+  const [prompting, setPrompting] = useState(false);
   // Where it sits in its project's plan (code, phase, milestone, sessions) and its story.
   const map = useQuery(api.constellation.get, task?.projectId ? { projectId: task.projectId } : "skip");
   const story = useQuery(api.constellation.taskStory, { taskId });
@@ -268,6 +272,11 @@ function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tas
     if (!has && task.skills.length >= 5) { showToast("Up to 5 skills on a task.", "alert"); return; }
     void saveField({ skills: has ? task.skills.filter(skill => skill.toLowerCase() !== name.toLowerCase()) : [...task.skills, name] }, has ? `Removed ${name}.` : `Added ${name}.`);
   };
+  const undoLatest = async (eventId: Id<"taskEvents">, by: string) => {
+    try { await undoMove({ eventId }); showToast(by === "app" ? "Undone." : `Undone. That was ${by}'s change.`); }
+    catch (error) { showToast(readableError(error, "Couldn't undo that."), "alert"); }
+  };
+  const copyPrompt = () => copyWorkPrompt(task, showToast, "Select the prompt below and copy it by hand.");
   const togglePin = async () => {
     try { await pin({ taskId: pinned ? undefined : taskId }); showToast(pinned ? "Unpinned." : "Pinned for tonight. Today offers it first when it fits."); }
     catch (error) { showToast(readableError(error, "Could not change the pin."), "alert"); }
@@ -319,11 +328,19 @@ function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tas
     {history.length > 0 && <section className="tk-history" aria-label="History">
       <div className="r-row r-between"><div className="r-eyebrow-sm">History</div>
         {history.length > 3 && <button type="button" className="tk-menu-link" onClick={() => setAllHistory(on => !on)}>{allHistory ? "Show less" : `Show all ${history.length}`}</button>}</div>
-      <ol className="w-tl">{shownHistory.map((e, i) => <li key={`${e.at}-${i}`} className={`w-te${e.source !== "app" ? " ai" : ""}${e.kind === "blocked" ? " blk" : ""}`}>
+      <ol className="w-tl">{shownHistory.map(e => <li key={e.id} className={`w-te${e.source !== "app" ? " ai" : ""}${e.kind === "blocked" ? " blk" : ""}`}>
         <div className="w-tek">{e.kind.toUpperCase()}{e.source !== "app" && <span className="w-mcp">MCP</span>}</div>
         <div className="w-tet">{e.note ?? EVENT_NOTE[e.kind] ?? e.kind}</div>
-        <div className="w-tew">{dayMonth(e.at)}{e.source !== "app" ? ` · ${e.source}` : ""}</div>
+        <div className="w-tew">{dayMonth(e.at)}{e.source !== "app" ? ` · via ${e.source}` : ""}
+          {e.undoable && !archived && <> · <button type="button" className="tk-undo" aria-label={`Undo: ${e.kind}${e.source !== "app" ? ` by ${e.source}` : ""}`} onClick={() => void undoLatest(e.id, e.source)}>Undo</button></>}</div>
       </li>)}</ol>
+    </section>}
+
+    {prompting && <section className="tk-claude" aria-label="Work on this with Claude">
+      <div className="r-row r-between"><div className="r-eyebrow-sm">Work on this with Claude</div><button type="button" className="tk-menu-link" onClick={() => setPrompting(false)}>Close</button></div>
+      <p className="r-small">Paste this into Claude Code, or any assistant connected to Becoming. It starts the task and finishes it when the done-when is met. With the Becoming plugin, <code className="s-inline-code">/becoming:next {task._id}</code> does the same.</p>
+      <pre className="tk-prompt">{workPrompt(task)}</pre>
+      <button type="button" className="r-ghost xs" onClick={copyPrompt}>Copy the prompt</button>
     </section>}
 
     <nav className="tk-sheet-foot" aria-label="More for this task">
@@ -331,6 +348,7 @@ function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: Id<"tas
       {where && <button type="button" className="tk-foot-link" onClick={() => onOpenProject(where.projectId)}>Open the project</button>}
       {task.projectId && <Link className="tk-foot-link" href={`/work?view=projects&project=${task.projectId}&visual=1`}>See it on the map</Link>}
       {open && <button type="button" className="tk-foot-link" onClick={() => void togglePin()}>{pinned ? "Unpin" : "Pin for tonight"}</button>}
+      {!archived && task.status !== "Done" && <button type="button" className="tk-foot-link" aria-expanded={prompting} onClick={() => { setPrompting(true); copyPrompt(); }}>Work on this with Claude</button>}
       {!archived && <button type="button" className="tk-foot-link" disabled={busy} onClick={() => void moves.archive(task)}>Archive</button>}
     </nav>
   </Sheet>;

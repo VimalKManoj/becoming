@@ -1,0 +1,156 @@
+/* Connecting Claude Code (PLAN-one-tap-and-daily-loop, Phase 2 follow-up): the motion
+   graphic (.cl), Today's badge (.ab), the connect sheet (.cn) and onboarding's assistant step.
+   Every resting style is the finished frame, so with reduced motion (globals.css stops all
+   animation) the graphic shows the task done, the badge sits still and the sheet just appears. */
+
+/* ---------- The motion graphic: an 8s loop ---------- */
+.cl{display:block;width:100%;height:auto;overflow:visible}
+.cl-term-box,.cl-cover{fill:#110C0A}
+.cl-term-box{stroke:rgba(255,240,225,.1)}
+.cl-light{fill:rgba(255,240,225,.14)}
+.cl-rule{stroke:rgba(255,240,225,.08)}
+.cl-mono{font:500 11.5px var(--r-mono);fill:var(--r-text)}
+.cl-muted{fill:var(--r-muted)}
+.cl-ember{fill:var(--r-ember)}
+.cl-mint{fill:var(--r-mint)}
+.cl-ink{fill:var(--r-ink)}
+.cl-wire{fill:none;stroke:rgba(255,170,110,.2);stroke-width:1.2;stroke-dasharray:3 5}
+.cl-beam{fill:none;stroke:var(--r-ember-pale);stroke-width:3;stroke-linecap:round;stroke-dasharray:22 122;stroke-dashoffset:22;opacity:0;filter:drop-shadow(0 0 5px rgba(255,138,61,.9))}
+.cl-card-box{fill:rgba(255,240,225,.045);stroke:rgba(255,240,225,.12)}
+.cl-card-glow{fill:none;stroke:var(--r-mint);stroke-width:1.5;opacity:0}
+.cl-halo{opacity:.55}
+.cl-eyebrow{font-size:9.5px;letter-spacing:.12em;fill:var(--r-ember-soft)}
+.cl-title{font:500 15px var(--r-sans);fill:var(--r-ink)}
+.cl-ring{fill:none;stroke:rgba(255,240,225,.38);stroke-width:1.6}
+.cl-half{fill:var(--r-ember);opacity:0}
+.cl-ping{fill:none;stroke:var(--r-ember);stroke-width:1.5;opacity:0}
+.cl-ping-2{stroke:var(--r-mint)}
+.cl-check-dot{fill:var(--r-mint)}
+.cl-check-mark{fill:none;stroke:var(--r-on-mint);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cl-status{font:500 12.5px var(--r-sans);fill:var(--r-text)}
+.cl-s-ready,.cl-s-doing{opacity:0}
+.cl-s-doing{fill:var(--r-ember-soft)}
+.cl-s-done{fill:var(--r-mint)}
+.cl-chip-box{fill:rgba(134,227,195,.12);stroke:rgba(134,227,195,.42)}
+.cl-chip-text{font:500 11.5px var(--r-sans);fill:var(--r-mint)}
+.cl-pr-box{fill:rgba(255,240,225,.06);stroke:rgba(255,240,225,.18)}
+.cl-pr-text{font:500 11px var(--r-mono);fill:var(--r-text)}
+.cl-cover{transform:scaleX(0)}
+.cl-cover,.cl-check,.cl-chip,.cl-ping{transform-box:fill-box}
+.cl-cover{transform-origin:right center}
+.cl-check,.cl-chip,.cl-ping{transform-origin:center}
+
+/* The story: type /becoming:next, a spark, the task starts; work; type /becoming:done, a spark, done. */
+.cl-type-1{animation:cl-type-1 8s steps(14,end) infinite both}
+.cl-type-2{animation:cl-type-2 8s steps(14,end) infinite both}
+.cl-beam-1{animation:cl-beam-1 8s ease-in-out infinite both}
+.cl-beam-2{animation:cl-beam-2 8s ease-in-out infinite both}
+.cl-ping-1{animation:cl-ping-1 8s ease-out infinite both}
+.cl-ping-2{animation:cl-ping-2 8s ease-out infinite both}
+.cl-half{animation:cl-half 8s linear infinite both}
+.cl-s-ready{animation:cl-s-ready 8s linear infinite both}
+.cl-s-doing{animation:cl-s-doing 8s linear infinite both}
+.cl-s-done{animation:cl-s-done 8s linear infinite both}
+.cl-check{animation:cl-check 8s ease-out infinite both}
+.cl-card-glow{animation:cl-glow 8s ease-out infinite both}
+.cl-halo{animation:cl-halo 8s ease-out infinite both}
+.cl-l2{animation:cl-l2 8s ease-out infinite both}
+.cl-l3{animation:cl-l3 8s ease-out infinite both}
+.cl-l4{animation:cl-l4 8s ease-out infinite both}
+.cl-l6{animation:cl-l6 8s ease-out infinite both}
+.cl-via{animation:cl-via 8s ease-out infinite both}
+.cl-chip{animation:cl-chip 8s ease-out infinite both}
+.cl-chip-pr{animation-name:cl-chip-pr}
+@keyframes cl-type-1{0%,4%{transform:scaleX(1)}13%,96%{transform:scaleX(0)}99%,100%{transform:scaleX(1)}}
+@keyframes cl-type-2{0%,44%{transform:scaleX(1)}53%,96%{transform:scaleX(0)}99%,100%{transform:scaleX(1)}}
+@keyframes cl-beam-1{0%,13%{stroke-dashoffset:22;opacity:1}20%,100%{stroke-dashoffset:-100;opacity:1}}
+@keyframes cl-beam-2{0%,53%{stroke-dashoffset:22;opacity:1}60%,100%{stroke-dashoffset:-100;opacity:1}}
+@keyframes cl-ping-1{0%,20%{transform:scale(1);opacity:0}20.5%{opacity:.9}27%,100%{transform:scale(2.8);opacity:0}}
+@keyframes cl-ping-2{0%,60%{transform:scale(1);opacity:0}60.5%{opacity:.9}68%,100%{transform:scale(3.2);opacity:0}}
+@keyframes cl-half{0%,20%{opacity:0}21.5%,60%{opacity:1}61%,100%{opacity:0}}
+@keyframes cl-s-ready{0%,19%{opacity:1}21%,96%{opacity:0}99%,100%{opacity:1}}
+@keyframes cl-s-doing{0%,19%{opacity:0}21.5%,59%{opacity:1}61%,100%{opacity:0}}
+@keyframes cl-s-done{0%,60%{opacity:0}62%,94%{opacity:1}97%,100%{opacity:0}}
+@keyframes cl-check{0%,60%{transform:scale(0);opacity:0}63%{transform:scale(1.25);opacity:1}66%,94%{transform:scale(1);opacity:1}97%,100%{transform:scale(1);opacity:0}}
+@keyframes cl-glow{0%,60%{opacity:0}63%{opacity:.9}80%,100%{opacity:0}}
+@keyframes cl-halo{0%,60%{opacity:0}65%{opacity:1}80%,94%{opacity:.55}97%,100%{opacity:0}}
+@keyframes cl-l2{0%,21%{opacity:0}24%,95%{opacity:1}98%,100%{opacity:0}}
+@keyframes cl-l3{0%,30%{opacity:0}33%,95%{opacity:1}98%,100%{opacity:0}}
+@keyframes cl-l4{0%,38%{opacity:0}41%,95%{opacity:1}98%,100%{opacity:0}}
+@keyframes cl-l6{0%,64%{opacity:0}67%,95%{opacity:1}98%,100%{opacity:0}}
+@keyframes cl-via{0%,63%{opacity:0}66%,95%{opacity:1}98%,100%{opacity:0}}
+@keyframes cl-chip{0%,67%{transform:scale(.6);opacity:0}70%{transform:scale(1.08);opacity:1}72%,95%{transform:scale(1);opacity:1}98%,100%{transform:scale(1);opacity:0}}
+@keyframes cl-chip-pr{0%,70%{transform:scale(.6);opacity:0}73%{transform:scale(1.08);opacity:1}75%,95%{transform:scale(1);opacity:1}98%,100%{transform:scale(1);opacity:0}}
+
+/* ---------- The glyph: a terminal, a wire with a spark, the orb ---------- */
+.ab-glyph{display:inline-flex;align-items:center;flex:none}
+.ab-term{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#110C0A;border:1px solid rgba(255,240,225,.14);font:600 9.5px var(--r-mono);letter-spacing:-.04em;color:var(--r-ember-soft)}
+.ab-wire{position:relative;width:14px;height:2px;background:rgba(255,170,110,.22);overflow:hidden}
+.ab-spark{position:absolute;top:0;left:-6px;width:6px;height:2px;border-radius:2px;background:var(--r-ember-pale);box-shadow:0 0 6px var(--r-ember);opacity:0;animation:ab-spark 1.8s ease-in infinite}
+.ab-orb{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFC08F,#F06A2A 60%,#7A2E0E);box-shadow:0 0 10px rgba(255,138,61,.55);animation:ab-orb 1.8s ease-out infinite}
+.ab-glyph.on .ab-wire{background:rgba(134,227,195,.45)}
+.ab-glyph.on .ab-spark{background:#D8FFF0;box-shadow:0 0 6px var(--r-mint);animation-duration:3.2s}
+.ab-glyph.on .ab-orb{background:radial-gradient(circle at 35% 30%,#D8FFF0,var(--r-mint) 60%,#2F7A60);box-shadow:0 0 10px rgba(134,227,195,.55);animation-duration:3.2s}
+@keyframes ab-spark{0%{transform:translateX(0);opacity:0}15%{opacity:1}70%,100%{transform:translateX(20px);opacity:0}}
+@keyframes ab-orb{0%,62%{transform:scale(1)}74%{transform:scale(1.28)}100%{transform:scale(1)}}
+
+/* ---------- Today's badge ---------- */
+.t-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.ab-wrap{display:inline-flex;align-items:center;gap:2px}
+.ab{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 7px;border-radius:999px;background:linear-gradient(120deg,rgba(255,138,61,.15),rgba(255,138,61,.05));border:1px solid rgba(255,170,110,.32);color:var(--r-ink);font:500 13px/1.25 var(--r-sans);text-decoration:none;cursor:pointer;box-shadow:0 6px 22px rgba(255,110,40,.12);transition:transform .2s,border-color .2s;animation:r-rise .6s .25s backwards}
+.ab:hover{transform:translateY(-1px);border-color:rgba(255,170,110,.6);color:var(--r-ink);filter:none;text-decoration:none}
+.ab:not(.on)::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 30%,rgba(255,225,200,.16) 50%,transparent 70%);transform:translateX(-120%);animation:ab-sheen 6s ease-in-out 1.2s infinite}
+@keyframes ab-sheen{0%{transform:translateX(-120%)}25%,100%{transform:translateX(120%)}}
+.ab-text{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:0 6px;text-align:left}
+.ab-text b{font-weight:500}
+.ab-sub{font:400 12.5px var(--r-sans);color:var(--r-muted)}
+.ab-sub::before{content:"·";margin-right:6px}
+.ab-go{color:var(--r-ember-soft);transition:transform .2s}
+.ab:hover .ab-go{transform:translateX(2px)}
+.ab.on{background:rgba(134,227,195,.06);border-color:rgba(134,227,195,.28);box-shadow:none}
+.ab.on:hover{border-color:rgba(134,227,195,.5)}
+.ab-x{width:26px;height:26px;padding:0;border:0;border-radius:50%;background:transparent;box-shadow:none;color:var(--r-muted);font:400 16px var(--r-sans);cursor:pointer;display:grid;place-items:center}
+.ab-x:hover{background:rgba(255,240,225,.06);color:var(--r-ink);filter:none}
+
+/* ---------- Onboarding ---------- */
+.t-ob-art{padding:10px 8px 6px;border-radius:22px;background:rgba(0,0,0,.2);border:1px solid var(--r-line-2)}
+.t-ob-claude{background:linear-gradient(120deg,rgba(255,138,61,.1),rgba(255,240,225,.03));border:1px solid rgba(255,170,110,.22)}
+
+/* ---------- The connect sheet ---------- */
+.r-cap-card.cn{max-width:600px;gap:16px;max-height:calc(100dvh - 64px);overflow-y:auto;scrollbar-width:thin}
+.r-cap-card.cn>*{flex-shrink:0}
+@media(max-width:899px){.r-cap-card.cn{max-height:94dvh}}
+.cn-steps{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;padding:0;list-style:none;font:500 10.5px var(--r-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--r-muted)}
+.cn-steps li{display:inline-flex;align-items:center;gap:6px}
+.cn-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,240,225,.18);transition:background .3s,box-shadow .3s}
+.cn-steps .now{color:var(--r-ink)}
+.cn-steps .now .cn-dot{background:var(--r-ember);box-shadow:0 0 8px var(--r-ember)}
+.cn-steps .past .cn-dot{background:var(--r-mint)}
+.cn-title{margin:0;font:400 32px/1.05 var(--r-serif);color:var(--r-ink)}
+.cn-title em{color:var(--r-ember-text);font-style:italic}
+.cn-title.center,.cn-lede.center{text-align:center}
+.cn-art{padding:10px 8px 6px;border-radius:20px;background:rgba(0,0,0,.22);border:1px solid var(--r-line-3)}
+.cn-points{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.cn-points li{display:flex;align-items:baseline;gap:12px;padding:10px 14px;border-radius:14px;background:rgba(255,240,225,.035);font:400 14px/1.45 var(--r-sans);color:var(--r-text)}
+.cn-num{flex:none;font:500 11.5px var(--r-mono);color:var(--r-ember-soft)}
+.cn-foot{text-align:center}
+.cn-error{color:var(--r-red-pale)}
+.cn-lede{margin:0;font-size:14.5px;line-height:1.5;color:var(--r-text)}
+.cn-inline{padding:1px 6px;border-radius:6px;background:rgba(255,240,225,.06);font:400 12.5px var(--r-mono);color:var(--r-ink-2)}
+.cn-code-row{display:flex;align-items:flex-start;gap:8px}
+.cn-code{flex:1;min-width:0;padding:12px 14px;border-radius:14px;background:#110C0A;border:1px solid var(--r-line-3);font:400 12.5px/1.55 var(--r-mono);color:var(--r-ink);white-space:pre-wrap;overflow-wrap:anywhere;user-select:all}
+.cn-wait{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px dashed rgba(255,170,110,.35);font:400 13.5px var(--r-sans);color:var(--r-ember-pale)}
+.cn-pulse{position:relative;flex:none;width:10px;height:10px;border-radius:50%;background:var(--r-ember)}
+.cn-pulse::after{content:"";position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--r-ember);animation:cn-ping 1.6s ease-out infinite}
+@keyframes cn-ping{from{transform:scale(1);opacity:.9}to{transform:scale(2.8);opacity:0}}
+.cn-later{align-self:flex-start}
+.cn-burst{position:relative;display:grid;place-items:center;width:96px;height:96px;margin:4px auto 0}
+.cn-check{position:relative;display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#D8FFF0,var(--r-mint) 60%,#2F7A60);color:var(--r-on-mint);font:600 28px var(--r-sans);box-shadow:0 0 40px rgba(134,227,195,.45);animation:cn-pop .7s cubic-bezier(.2,1.4,.4,1) both}
+.cn-ring{position:absolute;inset:16px;border-radius:50%;border:2px solid var(--r-mint);opacity:0;animation:cn-ring 1.4s ease-out .2s both}
+.cn-ring.two{animation-delay:.55s}
+@keyframes cn-pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes cn-ring{from{transform:scale(.8);opacity:.9}to{transform:scale(2);opacity:0}}
+.cn-section{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:18px;background:rgba(255,240,225,.035);border:1px solid var(--r-line-2)}
+.cn-h{display:flex;align-items:baseline;gap:8px;margin:0;font:500 14px var(--r-sans);color:var(--r-ink)}
+.cn-section .s-trust{margin-top:0}
+@media(max-width:520px){.cn-title{font-size:28px}.cn-code-row{flex-direction:column;align-items:stretch}}

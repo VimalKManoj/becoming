@@ -152,8 +152,10 @@ export const taskStory = query({
     const owner = await requireOwner(ctx);
     const task = await ctx.db.get(args.taskId);
     if (!task || task.owner !== owner) return null;
-    const events = await ctx.db.query("taskEvents").withIndex("by_task", q => q.eq("taskId", task._id)).order("asc").take(200);
-    return events.map(e => ({ kind: e.kind, note: e.note ?? null, at: e.at, source: e.source }));
+    // The latest 200, oldest first. Only the latest can be undone, and only a move that kept
+    // what came before it (tasks.undo); an assistant's moves undo the same way as yours.
+    const events = (await ctx.db.query("taskEvents").withIndex("by_task", q => q.eq("taskId", task._id)).order("desc").take(200)).reverse();
+    return events.map((e, i) => ({ id: e._id, kind: e.kind, note: e.note ?? null, at: e.at, source: e.source, undoable: i === events.length - 1 && Boolean(e.before) }));
   },
 });
 

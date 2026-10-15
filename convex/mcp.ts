@@ -9,14 +9,18 @@ import { weekKey, weekRange } from "./lib/time";
 import { hashToken } from "./lib/tokens";
 import { httpUrl } from "./lib/validate";
 import { constellationFor, docCodeValue, linkValue } from "./constellation";
-import { checkPlannedStatus, checkPlanShape, describeItem, inboxLimit, planCounts, planLimits, type PlanProposal } from "./inbox";
+import { applyProposal, checkPlannedStatus, checkPlanShape, describeItem, inboxLimit, planCounts, planLimits, type PlanProposal } from "./inbox";
+import { feedFor } from "./journey";
 import { projectFor, projectsFor } from "./projects";
 import { todayFor } from "./tasks";
 
 // Becoming as an MCP server: assistants (Claude Code, Claude, ChatGPT, Cursor) read your
-// work and propose updates. Requests carry an access token from Settings → Assistants; the
-// owner comes only from that token. Reads answer directly. Every write is a proposal that
-// waits in the Inbox on Today until you approve it there (convex/inbox.ts).
+// work and change it. Requests carry an access token from Settings → Assistants; the owner
+// comes only from that token. Reads answer directly. A write either applies at once or waits
+// in the Inbox on Today, by the token's trust (PLAN-one-tap-and-daily-loop, Phase 2):
+// "work" (the default) applies everyday work and asks about plans; "ask" asks about
+// everything; "all" applies everything. Applied or approved, it runs the app's own rules
+// (convex/inbox.ts applyProposal), and a moved task can be undone from its history.
 // Transport: Streamable HTTP, answered with plain JSON (no server-initiated messages).
 
 type Lane = Doc<"tasks">["lane"];
@@ -31,7 +35,8 @@ const iso = (time: number | null | undefined) => (time ? new Date(time).toISOStr
 
 const instructions = `Becoming is the user's evening work tracker: projects, tasks, focus sessions, ideas and proof of work.
 - Reads answer from the user's real records. Never invent numbers, minutes or outcomes; ask the user when you don't know.
-- Every change you make (log_session, add_task, capture_idea, add_milestone, set_next_step, add_phase, add_doc, update_doc, add_research, write_report, record_decision, import_plan) is a proposal: it waits in the user's Inbox on Today until they approve it. Tell them it's waiting there.
+- Changes either apply at once or wait in the user's Inbox on Today, depending on how much the user trusts this assistant (Settings → Assistants). Every result says which: status "applied" (done; the user can undo it from the task's history) or "waiting for approval" (tell them it's in their Inbox). Usually everyday work applies (start_task, complete_task, block_task, update_task, set_next_step, log_session, add_task, capture_idea) and plan changes wait (add_milestone, add_phase, add_doc, update_doc, add_research, write_report, record_decision, import_plan).
+- Working on a task: get_task for its context, start_task when you begin, and complete_task (with a short summary, the skills and a PR or commit link) once its done-when is met. If you stop before, update_task with the next step, or block_task with what's in the way.
 - Lanes: Projects (building a project), Showcases (small pieces, components), Writing (notes and posts).
 - Skills (for log_session) must come from: ${skillNames.join(", ")}.
 - Outcomes: finished (the task's done-when is met), progress (made progress; needs a next step), blocked (needs what's blocking it, as the next step).
@@ -81,7 +86,7 @@ export const tools = [
     description: "Proposals already waiting in the user's Inbox, so you don't send the same one twice.",
     inputSchema: { type: "object", properties: {} } },
   { name: "log_session", title: "Log work done", annotations: propose,
-    description: "Propose a finished stretch of work, e.g. at the end of a coding session or conversation. Goes to the Inbox for approval. Use an existing open task, or new_task_* to create one together with the session.",
+    description: "Log a finished stretch of work, e.g. at the end of a coding session or conversation. Applies at once or waits for approval, by the assistant's trust. Use an existing open task, or new_task_* to create one together with the session.",
     inputSchema: { type: "object", properties: {
       task: { type: "string", description: "Open task id or title" },
       new_task_title: { type: "string" }, new_task_lane: laneSchema, new_task_done_when: { type: "string", description: "When the new task counts as done" }, new_task_project: { type: "string", description: "Project id or title for the new task" },
@@ -94,17 +99,44 @@ export const tools = [
       ended_at: { type: "string", description: "Optional ISO time the work ended; default now" },
     }, required: ["minutes", "outcome", "what_changed"] } },
   { name: "add_task", title: "Add a task", annotations: propose,
-    description: "Propose a new Ready task. Goes to the Inbox for approval.",
+    description: "Add a new Ready task. Applies at once or waits for approval, by the assistant's trust.",
     inputSchema: { type: "object", properties: { title: { type: "string" }, lane: laneSchema, minutes: { type: "integer", minimum: 5, maximum: 240 }, energy: energySchema, done_when: { type: "string" }, project: { type: "string", description: "Project id or title" }, milestone: { type: "string", description: "Milestone title within the project" } }, required: ["title", "lane", "minutes", "energy", "done_when"] } },
   { name: "capture_idea", title: "Capture an idea", annotations: propose,
-    description: "Propose an idea for the user's notebook (not a commitment; it never adds work to Today). Goes to the Inbox for approval.",
+    description: "Capture an idea in the user's notebook (not a commitment; it never adds work to Today). Applies at once or waits for approval, by the assistant's trust.",
     inputSchema: { type: "object", properties: { title: { type: "string" }, lane: laneSchema, notes: { type: "string" } }, required: ["title", "lane"] } },
   { name: "add_milestone", title: "Add a milestone", annotations: propose,
-    description: "Propose a new last milestone for a project. Goes to the Inbox for approval.",
+    description: "Propose a new last milestone for a project. Waits in the Inbox for approval, unless the assistant is trusted with everything.",
     inputSchema: { type: "object", properties: { project: { type: "string", description: "Project id or title" }, title: { type: "string" }, done_when: { type: "string" } }, required: ["project", "title"] } },
   { name: "set_next_step", title: "Set a task's next step", annotations: propose,
-    description: "Propose a new next step for an open or blocked task. Goes to the Inbox for approval.",
+    description: "Set a new next step for an open or blocked task. Applies at once or waits for approval, by the assistant's trust.",
     inputSchema: { type: "object", properties: { task: { type: "string", description: "Task id or title" }, next_step: { type: "string" } }, required: ["task", "next_step"] } },
+  { name: "start_task", title: "Start a task", annotations: propose,
+    description: "Mark a task In progress when you begin working on it (also unblocks or reopens it). Applies at once or waits for approval, by the assistant's trust.",
+    inputSchema: { type: "object", properties: { task: { type: "string", description: "Task id or title" }, next_step: { type: "string", description: "Optional: the step you're starting with" } }, required: ["task"] } },
+  { name: "complete_task", title: "Finish a task", annotations: propose,
+    description: "Mark a task Done once its done-when is met, with what changed. With minutes, the work is also logged as a session and the evidence link becomes a draft in Proof. Applies at once or waits for approval, by the assistant's trust.",
+    inputSchema: { type: "object", properties: {
+      task: { type: "string", description: "Task id or title" },
+      summary: { type: "string", description: "One or two sentences on what changed" },
+      skills: { type: "array", items: { type: "string", enum: skillNames }, maxItems: 5 },
+      evidence_url: { type: "string", description: "Optional link: a PR, commit, deploy or post" },
+      minutes: { type: "integer", minimum: 1, maximum: 720, description: "Optional: real minutes spent, if known. Never guess." },
+    }, required: ["task"] } },
+  { name: "block_task", title: "Block a task", annotations: propose,
+    description: "Mark a task Blocked, with what's in the way and how it could be unblocked. Applies at once or waits for approval, by the assistant's trust.",
+    inputSchema: { type: "object", properties: { task: { type: "string", description: "Task id or title" }, reason: { type: "string", description: "What's blocking it, and how it could be unblocked" } }, required: ["task"] } },
+  { name: "update_task", title: "Change a task's details", annotations: propose,
+    description: "Change a task's title, next step, done-when, minutes or notes. Only the fields given change; an empty next step or notes clears it. Applies at once or waits for approval, by the assistant's trust.",
+    inputSchema: { type: "object", properties: {
+      task: { type: "string", description: "Task id or title" }, title: { type: "string" }, next_step: { type: "string" }, done_when: { type: "string" },
+      minutes: { type: "integer", minimum: 5, maximum: 240 }, notes: { type: "string", description: "Free notes about the task (replaces them)" },
+    }, required: ["task"] } },
+  { name: "get_task", title: "One task with its context", annotations: read,
+    description: "Everything about one task: status, done-when, next step, notes, its project, milestone and phase, the docs it's built from (with repo links), its prerequisites and its recent history.",
+    inputSchema: { type: "object", properties: { task: { type: "string", description: "Task id or title" } }, required: ["task"] } },
+  { name: "get_activity", title: "What happened recently", annotations: read,
+    description: "The user's recent activity, newest first: tasks finished, started, blocked and reopened (by them or an assistant), sessions, and milestones or phases completed.",
+    inputSchema: { type: "object", properties: { limit: { type: "integer", minimum: 1, maximum: 60, description: "Default 20" }, before: { type: "string", description: "ISO time, to page further back" } } } },
   { name: "get_constellation", title: "A project's whole map", annotations: read,
     description: "One project as its constellation: genesis (idea, research, report, decision), docs with the phases each feeds, and phases with their milestones and task codes and states (done, doing, ready, blocked), plus totals.",
     inputSchema: { type: "object", properties: { project: { type: "string", description: "Project id or title" } }, required: ["project"] } },
@@ -112,27 +144,27 @@ export const tools = [
     description: "One phase of a project: goal, next step, done-when, progress, the docs it's built from, and each milestone's tasks with status, estimate, next step and sessions.",
     inputSchema: { type: "object", properties: { project: { type: "string", description: "Project id or title" }, phase: { type: "string", description: 'Phase number ("05") or name' } }, required: ["project", "phase"] } },
   { name: "add_phase", title: "Add a phase", annotations: propose,
-    description: "Propose a new last phase for a project. Goes to the Inbox for approval.",
+    description: "Propose a new last phase for a project. Waits in the Inbox for approval, unless the assistant is trusted with everything.",
     inputSchema: { type: "object", properties: { project: { type: "string", description: "Project id or title" }, name: { type: "string" }, goal: { type: "string", description: "One line on what the phase delivers" }, next_step: { type: "string" }, done_when: { type: "string" }, skills: { type: "array", items: { type: "string", enum: skillNames }, maxItems: 8, description: "Skills its finished tasks practise (inherited by tasks without their own)" } }, required: ["project", "name"] } },
   { name: "add_doc", title: "Add a doc", annotations: propose,
-    description: "Propose a document the project's plan stands on (PRD, system design, schema…): its details and a link to the file in the repo (or a web address). The writing stays in the repo. Goes to the Inbox for approval.",
+    description: "Propose a document the project's plan stands on (PRD, system design, schema…): its details and a link to the file in the repo (or a web address). The writing stays in the repo. Waits in the Inbox for approval, unless the assistant is trusted with everything.",
     inputSchema: { type: "object", properties: docProperties, required: ["project", "code", "title"] } },
   { name: "update_doc", title: "Update a doc", annotations: propose,
-    description: "Propose changes to a project's doc, found by its code. Only the fields given change; an empty string clears a text field; feeds replaces the phases it feeds. Goes to the Inbox for approval.",
+    description: "Propose changes to a project's doc, found by its code. Only the fields given change; an empty string clears a text field; feeds replaces the phases it feeds. Waits in the Inbox for approval, unless the assistant is trusted with everything.",
     inputSchema: { type: "object", properties: { ...docProperties, new_code: { type: "string", description: "A new code, to rename it" } }, required: ["project", "code"] } },
   { name: "add_research", title: "Add a research thread", annotations: propose,
-    description: "Propose a research thread behind an idea, with its sources. Mark a summary you wrote yourself as kind \"brief\". A thread with the same title gets the new sources added. Goes to the Inbox for approval.",
+    description: "Propose a research thread behind an idea, with its sources. Mark a summary you wrote yourself as kind \"brief\". A thread with the same title gets the new sources added. Waits in the Inbox for approval, unless the assistant is trusted with everything.",
     inputSchema: { type: "object", properties: { ...ideaRef, title: { type: "string", description: "The thread's question or topic" }, summary: { type: "string" },
       sources: { type: "array", maxItems: 50, items: { type: "object", properties: { title: { type: "string" }, url: { type: "string" }, kind: { type: "string", enum: ["read", "interview", "tried", "brief"] } }, required: ["title", "kind"] } } }, required: ["title", "sources"] } },
   { name: "write_report", title: "Write the research report", annotations: propose,
-    description: "Propose the report an idea's research produced: a title, summary and findings, each with the source it traces to. Replaces the idea's earlier report. Goes to the Inbox for approval.",
+    description: "Propose the report an idea's research produced: a title, summary and findings, each with the source it traces to. Replaces the idea's earlier report. Waits in the Inbox for approval, unless the assistant is trusted with everything.",
     inputSchema: { type: "object", properties: { ...ideaRef, title: { type: "string" }, summary: { type: "string" },
       findings: { type: "array", maxItems: 20, items: { type: "object", properties: { text: { type: "string" }, basis: { type: "string", description: "The source it traces to" } }, required: ["text"] } } }, required: ["title", "findings"] } },
   { name: "record_decision", title: "Record the decision", annotations: propose,
-    description: "Propose the decision an idea's research led to: the verdict, an optional rule, and what was kept and dropped. Goes to the Inbox for approval.",
+    description: "Propose the decision an idea's research led to: the verdict, an optional rule, and what was kept and dropped. Waits in the Inbox for approval, unless the assistant is trusted with everything.",
     inputSchema: { type: "object", properties: { ...ideaRef, verdict: { type: "string" }, rule: { type: "string" }, kept: { type: "array", items: { type: "string" }, maxItems: 12 }, dropped: { type: "array", items: { type: "string" }, maxItems: 12 } }, required: ["verdict"] } },
   { name: "import_plan", title: "Import a whole plan", annotations: propose,
-    description: `Propose a whole plan for a project as ONE Inbox item, approved once: phases → milestones → tasks, plus the docs and the phases each feeds. Give "project" (an existing active project) or "new_project" (created on approval). Only what's missing is added: phases match by name, milestones by title within their phase, tasks by title within their milestone, and docs by code (updated). Work that already happened can carry its status and real dates. Up to ${planLimits.phases} phases, ${planLimits.milestones} milestones, ${planLimits.tasks} tasks and ${planLimits.docs} docs.`,
+    description: `Propose a whole plan for a project as ONE change (one Inbox item, approved once; applied at once if the assistant is trusted with everything): phases → milestones → tasks, plus the docs and the phases each feeds. Give "project" (an existing active project) or "new_project" (created on approval). Only what's missing is added: phases match by name, milestones by title within their phase, tasks by title within their milestone, and docs by code (updated). Work that already happened can carry its status and real dates. Up to ${planLimits.phases} phases, ${planLimits.milestones} milestones, ${planLimits.tasks} tasks and ${planLimits.docs} docs.`,
     inputSchema: { type: "object", properties: {
       project: { type: "string", description: "Existing project id or title" },
       new_project: { type: "object", properties: { title: { type: "string" }, purpose: { type: "string" } }, required: ["title", "purpose"] },
@@ -159,9 +191,17 @@ export const tools = [
     }, required: ["phases"] } },
 ] as const;
 
-const readTools = new Set(["whats_next", "list_projects", "get_project", "list_tasks", "get_week", "recent_sessions", "list_inbox", "get_constellation", "get_phase"]);
+const readTools = new Set(["whats_next", "list_projects", "get_project", "list_tasks", "get_week", "recent_sessions", "list_inbox", "get_constellation", "get_phase", "get_task", "get_activity"]);
+// Plan changes: they wait for approval unless the token trusts the assistant with everything.
+const planKinds = new Set(["milestone", "phase", "doc", "docUpdate", "research", "report", "decision", "plan"]);
+export type Trust = "ask" | "work" | "all";
+export const trustOf = (value: string | undefined): Trust => value === "ask" || value === "all" ? value : "work";
 
-const prompts = [
+type Prompt = { name: string; title: string; description: string; text: string; arguments?: { name: string; description: string; required: boolean }[] };
+const prompts: Prompt[] = [
+  { name: "work_on_task", title: "Work on a Becoming task", description: "Pick a task (or name one), start it, do it, and finish it in Becoming with a summary.",
+    arguments: [{ name: "task", description: "Task id or title; leave empty to choose together", required: false }],
+    text: "Work on a Becoming task with me. 1) {task} 2) Call start_task for it. 3) Read its done-when, next step and notes, and open the docs it's built from (their links are repo paths). 4) Do the work with me. 5) When the done-when is met, call complete_task with a one- or two-sentence summary, the skills practised and the PR or commit link (minutes only if we know them). If we stop before, call update_task with the next step, or block_task with what's in the way. 6) Tell me what changed in Becoming." },
   { name: "log_this_conversation", title: "Log this conversation to Becoming", description: "Turn what we did here into one Becoming session (sent to the Inbox).",
     text: "Summarise the work we did in this conversation as one Becoming session. First call list_tasks (and list_inbox) to find the task it belongs to; if none fits, propose it with new_task_* fields. Ask me for the minutes and the outcome if you can't tell them for certain. Pick at most 5 skills from the allowed list, add a link as evidence if we produced one, then call log_session and tell me it's waiting in my Inbox." },
   { name: "evening_check_in", title: "Evening check-in", description: "What to work on tonight.",
@@ -437,6 +477,39 @@ async function runRead(ctx: QueryCtx, owner: string, tool: string, input: Input)
         lastSession: overview.lastSession ? { title: overview.lastSession.title, outcome: overview.lastSession.outcome, nextStep: overview.lastSession.nextStep || null, endedAt: iso(overview.lastSession.endedAt) } : null,
       };
     }
+    case "get_task": {
+      const task = await findTask(ctx, owner, text(input, "task", 200), ["In progress", "Ready", "Blocked", "Done"]);
+      const project = task.projectId ? await ctx.db.get(task.projectId) : null;
+      const map = project && project.owner === owner ? await constellationFor(ctx, owner, project._id) : null;
+      let place: { code: string; milestone: string | null; phase: { num: string; name: string; goal: string; id: string } | null } | null = null;
+      if (map) {
+        for (const phase of map.phases) for (const m of phase.milestones) for (const t of m.tasks) if (String(t.id) === String(task._id)) place = { code: t.code, milestone: `${m.code} ${m.title}`, phase: { num: phase.num, name: phase.name, goal: phase.goal, id: String(phase.id) } };
+        for (const m of map.loose.milestones) for (const t of m.tasks) if (String(t.id) === String(task._id)) place = { code: t.code, milestone: `${m.code} ${m.title}`, phase: null };
+        for (const t of map.loose.tasks) if (String(t.id) === String(task._id)) place = { code: t.code, milestone: null, phase: null };
+      }
+      const docs = map && place?.phase ? map.docs.filter(d => d.phaseIds.includes(place!.phase!.id)).map(d => ({ code: d.code, title: d.title, link: d.link || null, written: d.writtenAt !== null })) : [];
+      const prerequisites = (await Promise.all(task.dependencies.map(id => ctx.db.get(id)))).flatMap(t => t && t.owner === owner ? [{ id: t._id, title: t.title, status: t.status }] : []);
+      const history = (await ctx.db.query("taskEvents").withIndex("by_task", q => q.eq("taskId", task._id)).order("desc").take(8))
+        .map(e => ({ kind: e.kind, at: iso(e.at), by: e.source === "app" ? "the user" : e.source, note: e.note ?? null }));
+      return {
+        id: task._id, title: task.title, status: task.status, lane: task.lane, minutes: task.minutes, energy: energyName[task.energy],
+        doneWhen: task.doneWhen || null, nextStep: task.nextStep || null, notes: task.notes || null, skills: task.skills ?? [],
+        code: place?.code ?? null, project: project && project.owner === owner ? { id: project._id, title: project.title } : null,
+        milestone: place?.milestone ?? null, phase: place?.phase ? { num: place.phase.num, name: place.phase.name, goal: place.phase.goal || null } : null,
+        builtFrom: docs, prerequisites, history,
+      };
+    }
+    case "get_activity": {
+      const beforeText = text(input, "before", 40, false);
+      const before = beforeText ? Date.parse(beforeText) : undefined;
+      if (beforeText && !Number.isFinite(before)) throw new ConvexError("before must be an ISO time.");
+      const feed = await feedFor(ctx, owner, { limit: int(input, "limit", 1, 60, 20), ...(before !== undefined ? { before } : {}) });
+      return {
+        items: feed.items.map(item => ({ kind: item.kind, at: iso(item.at), task: item.title, taskId: item.taskId, project: item.project, by: item.source === "app" ? "the user" : item.source, note: item.note, minutes: item.minutes, outcome: item.outcome, backfilled: item.backfilled })),
+        completed: feed.markers.map(m => ({ kind: m.kind, at: iso(m.at), title: m.title, project: m.project })),
+        nextBefore: feed.next ? iso(feed.next) : null,
+      };
+    }
     case "list_projects":
       return (await projectsFor(ctx, owner, "Active")).map(project => ({
         id: project._id, title: project.title, purpose: project.purpose, tasksDone: project.progress.done, tasksTotal: project.progress.total,
@@ -622,12 +695,54 @@ async function planFrom(ctx: Db, owner: string, input: Input): Promise<{ proposa
   return { proposal, projectTitle };
 }
 
-async function runPropose(ctx: MutationCtx, owner: string, source: string, tool: string, input: Input) {
-  const waiting = await ctx.db.query("inbox").withIndex("by_owner", q => q.eq("owner", owner)).take(inboxLimit);
-  if (waiting.length >= inboxLimit) throw new ConvexError(`The Inbox already has ${inboxLimit} items waiting. Ask the user to review it on Today first.`);
+async function runPropose(ctx: MutationCtx, owner: string, source: string, trust: Trust, tool: string, input: Input) {
   let proposal: Doc<"inbox">["proposal"];
   let summary: string;
   switch (tool) {
+    case "start_task": {
+      const task = await findTask(ctx, owner, text(input, "task", 200), ["Ready", "In progress", "Blocked", "Done"]);
+      const note = text(input, "next_step", 2000, false);
+      proposal = { kind: "move", taskId: task._id, status: "In progress", ...(note ? { note } : {}) };
+      summary = `Start "${task.title}".`;
+      break;
+    }
+    case "complete_task": {
+      const task = await findTask(ctx, owner, text(input, "task", 200), ["Ready", "In progress", "Blocked"]);
+      const note = text(input, "summary", 4000, false);
+      const evidence = text(input, "evidence_url", 2000, false);
+      if (evidence) httpUrl(evidence, "evidence_url must be an HTTP or HTTPS link.");
+      const skills = skillsOf(input.skills);
+      const minutes = optionalInt(input, "minutes", 1, 720);
+      if (minutes !== undefined) {
+        // With real minutes it's logged work too: a session, and the link becomes a Proof draft.
+        if (task.status === "Blocked") throw new ConvexError(`"${task.title}" is blocked. Unblock it with start_task first, or finish it without minutes.`);
+        if (!note) throw new ConvexError("Add a summary of what changed when you give minutes.");
+        proposal = { kind: "session", taskId: task._id, minutes, outcome: "Finished", contribution: note, nextStep: "", skills, evidence, endedAt: Date.now() };
+        summary = `Finish "${task.title}" (${minutes} min).`;
+      } else {
+        proposal = { kind: "move", taskId: task._id, status: "Done", ...(note || evidence ? { note: [note, evidence].filter(Boolean).join("\n") } : {}), ...(skills.length ? { skills } : {}) };
+        summary = `Finish "${task.title}".`;
+      }
+      break;
+    }
+    case "block_task": {
+      const task = await findTask(ctx, owner, text(input, "task", 200), ["Ready", "In progress"]);
+      const reason = text(input, "reason", 2000, false);
+      proposal = { kind: "move", taskId: task._id, status: "Blocked", ...(reason ? { note: reason } : {}) };
+      summary = `Block "${task.title}".`;
+      break;
+    }
+    case "update_task": {
+      const task = await findTask(ctx, owner, text(input, "task", 200), ["Ready", "In progress", "Blocked", "Done"]);
+      const edit = {
+        title: maybe(input, "title", 160), nextStep: maybe(input, "next_step", 2000, true), doneWhen: maybe(input, "done_when", 1000, true),
+        minutes: optionalInt(input, "minutes", 5, 240), notes: maybe(input, "notes", 10000, true),
+      };
+      if (Object.values(edit).every(value => value === undefined)) throw new ConvexError("Give at least one field to change: title, next_step, done_when, minutes or notes.");
+      proposal = { kind: "taskEdit", taskId: task._id, ...Object.fromEntries(Object.entries(edit).filter(([, value]) => value !== undefined)) };
+      summary = `Update "${task.title}".`;
+      break;
+    }
     case "log_session": {
       const outcome = outcomeOf(input.outcome);
       const minutes = int(input, "minutes", 1, 720);
@@ -755,6 +870,14 @@ async function runPropose(ctx: MutationCtx, owner: string, source: string, tool:
     }
     default: throw new ConvexError(`Unknown tool "${tool}".`);
   }
+  // Everyday work applies at once for a trusted assistant; plan changes, and everything from
+  // an assistant set to ask first, wait in the Inbox. Either way the app's own rules run.
+  if (trust === "all" || (trust === "work" && !planKinds.has(proposal.kind))) {
+    const applied = await applyProposal(ctx, owner, proposal, source, `mcp:${source}:${Date.now()}`);
+    return { status: "applied", summary, ...(applied.taskId ? { taskId: applied.taskId } : {}), note: "Done in Becoming. The user can undo a task's move from its history." };
+  }
+  const waiting = await ctx.db.query("inbox").withIndex("by_owner", q => q.eq("owner", owner)).take(inboxLimit);
+  if (waiting.length >= inboxLimit) throw new ConvexError(`The Inbox already has ${inboxLimit} items waiting. Ask the user to review it on Today first.`);
   await ctx.db.insert("inbox", { owner, source, proposal });
   return { status: "waiting for approval", summary, note: "Sent to the Becoming Inbox. It counts once the user approves it on Today." };
 }
@@ -765,7 +888,7 @@ export const ownerOfToken = internalQuery({
   args: { hash: v.string() },
   handler: async (ctx, args) => {
     const row = await ctx.db.query("apiTokens").withIndex("by_hash", q => q.eq("hash", args.hash)).unique();
-    return row ? { owner: row.owner, tokenId: row._id, name: row.name, lastUsedAt: row.lastUsedAt ?? 0 } : null;
+    return row ? { owner: row.owner, tokenId: row._id, name: row.name, lastUsedAt: row.lastUsedAt ?? 0, trust: trustOf(row.trust) } : null;
   },
 });
 
@@ -780,8 +903,8 @@ export const readTool = internalQuery({
 });
 
 export const proposeTool = internalMutation({
-  args: { owner: v.string(), source: v.string(), tool: v.string(), input: v.any() },
-  handler: (ctx, args) => runPropose(ctx, args.owner, args.source, args.tool, (args.input ?? {}) as Input),
+  args: { owner: v.string(), source: v.string(), trust: v.optional(v.string()), tool: v.string(), input: v.any() },
+  handler: (ctx, args) => runPropose(ctx, args.owner, args.source, trustOf(args.trust), args.tool, (args.input ?? {}) as Input),
 });
 
 // ---------- The endpoint ----------
@@ -822,11 +945,14 @@ export const endpoint = httpAction(async (ctx, request) => {
         }
         case "ping": return isNotification ? null : reply({});
         case "tools/list": return reply({ tools });
-        case "prompts/list": return reply({ prompts: prompts.map(({ name, title, description }) => ({ name, title, description })) });
+        case "prompts/list": return reply({ prompts: prompts.map(({ name, title, description, arguments: args }) => ({ name, title, description, ...(args ? { arguments: args } : {}) })) });
         case "prompts/get": {
           const prompt = prompts.find(item => item.name === params.name);
           if (!prompt) return failure(message.id, -32602, `Unknown prompt "${String(params.name)}".`);
-          return reply({ description: prompt.description, messages: [{ role: "user", content: { type: "text", text: prompt.text } }] });
+          const given = (params.arguments ?? {}) as Record<string, unknown>;
+          const task = typeof given.task === "string" && given.task.trim() ? given.task.trim().slice(0, 200) : "";
+          const filled = prompt.text.replace("{task}", task ? `Call get_task for "${task}".` : "Call list_tasks (open) and whats_next, and ask me which task to work on.");
+          return reply({ description: prompt.description, messages: [{ role: "user", content: { type: "text", text: filled } }] });
         }
         case "resources/list": return reply({ resources: [] });
         case "resources/templates/list": return reply({ resourceTemplates: [] });
@@ -837,7 +963,7 @@ export const endpoint = httpAction(async (ctx, request) => {
           try {
             const result = readTools.has(name)
               ? await ctx.runQuery(internal.mcp.readTool, { owner: who!.owner, tool: name, input })
-              : await ctx.runMutation(internal.mcp.proposeTool, { owner: who!.owner, source: who!.name, tool: name, input });
+              : await ctx.runMutation(internal.mcp.proposeTool, { owner: who!.owner, source: who!.name, trust: who!.trust, tool: name, input });
             return reply({ content: [{ type: "text", text: JSON.stringify(result, null, 2) }], structuredContent: Array.isArray(result) ? { items: result } : result });
           } catch (error) {
             // A refused tool call is a result the assistant can read and correct, not a protocol error.

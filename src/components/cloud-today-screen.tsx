@@ -18,6 +18,7 @@ import { Bone, Skeleton, TodaySkeleton } from "@/components/skeleton";
 import { Onboarding } from "@/components/today/onboarding";
 import { useTaskMove } from "@/components/tasks/use-task-move";
 import { InboxCard } from "@/components/today/inbox-card";
+import { AssistantBadge } from "@/components/assistants/assistant-badge";
 import { FocusOverlay, RecapOverlay, RewardOverlay, type Saved } from "@/components/today/session";
 
 // Today, as the owner's Ritual design: a greeting and one question, "What's on your mind
@@ -263,7 +264,7 @@ function Today() {
     {onboarding}
     <div className="r-col r-top r-rise t-open">
       <div>
-        <div className="r-date">{dateLine(now)}</div>
+        <div className="t-head"><div className="r-date">{dateLine(now)}</div><AssistantBadge /></div>
         <h1 className="r-greet">{greeting({ now, name, lastSessionAt: overview.lastWorkAt ?? null })}</h1>
         {profile?.motive && <p className="r-motive">{profile.motive}</p>}
       </div>

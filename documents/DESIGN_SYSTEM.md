@@ -62,6 +62,13 @@ Sizes follow the prototype and scale with the content column through container q
 | `r-cap*`, `r-toast` | Quick capture sheet and the toast (3.4s; 6.5–8s with actions, paused while pointed at or focused). A toast can carry `actions` (Undo, Start the next task), a `note` field (Add what changed, Say why) and a `body` (a finish's skills and milestone bar). Work's sheets (`Sheet` in task-forms.tsx) use the same parts and render through a portal into `.r-app`, because the animated page (`r-rise`) would otherwise pin a fixed sheet inside itself |
 | `r-embers`, `r-spark` (`ritual/embers.tsx`) | Behind every workspace screen and onboarding: a light breathing glow and embers drifting up, as on the sign-in screen; hidden with reduced motion |
 
+Connecting Claude Code (`src/components/assistants/`, `assistants.css`):
+
+- `ClaudeLoop` (`.cl`) is the motion graphic: one SVG (it scales with its box), an 8-second loop of a Claude Code terminal and a Becoming task card. `/becoming:next` types, a spark crosses, the task goes In progress; `/becoming:done` types, a spark crosses, it turns Done with a mint check, a glow, "via Claude Code", "+ Systems" and "PR #42". Every resting style is the last frame, so with reduced motion it shows the finished task.
+- `Glyph` (`.ab-glyph`): a tiny terminal, a wire with a spark running into the orb. Ember while inviting, mint and slower once connected.
+- `AssistantBadge` (`.ab`) sits beside the date on Today: an ember pill with a passing sheen ("Connect Claude Code · your work records itself", hideable), or a mint one once connected.
+- `ConnectSheet` (`.cn`, on the `r-cap` frame, opened with `openConnect()` from the Ritual context): steps with dots, the graphic, a terminal-style code block, a pulsing "waiting" line, and a mint check with two rings when connected.
+
 One tap (`src/components/tasks/`, `tasks.css`, `tk-` classes):
 
 The New project page (`src/components/new-project/`, `new-project.css`, scoped `.np`) follows the owner's Setup artboard: steps, a step card with a footer, and a live preview. Additions: milestone chips open an editor (`.mse`), and phases have optional details (`.phd`).

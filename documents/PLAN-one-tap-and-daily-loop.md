@@ -1,6 +1,6 @@
 # Plan: one tap, an app that records itself, and a daily loop
 
-Proposed 14 October 2026. **Decisions: all ten recommendations taken (owner, 14 October). Phase 1 built 14 October (uncommitted); Phases 2–5 next.**
+Proposed 14 October 2026. **Decisions: all ten recommendations taken (owner, 14 October). Phase 1 built 14 October; Phase 2 built 15 October (uncommitted); Phases 3–5 next.**
 
 - **Source:** the first-tier ideas in [IDEAS-flow-and-return.md](IDEAS-flow-and-return.md) (sections 3A–3G).
 - **Supersedes** Phases 3–5 of [PLAN-tasks-and-focus.md](PLAN-tasks-and-focus.md): focus decoupled, In progress on Today, and assistant status tools.
@@ -44,7 +44,7 @@ The goal of this plan is that **a normal evening needs no data entry**:
 4. **Undo.** A 6-second toast, plus "Undo" on the task's latest timeline entry until something else changes it.
 5. **Deleting tasks.** Only from Archived. That's where mistakes go first.
 6. **Swap reasons.** Remove them, from the schema use, Journey's stats and the docs, since nothing asks for them. The alternative is one tap on "Choose".
-7. **The check-in screen.** Replace it with remembered chips on Up next (time, energy, kind) that change the suggestion live.
+7. **The check-in screen.** Replace it with remembered chips on Up next (time, energy, kind) that change the suggestion live. **Withdrawn 15 October (owner):** the quick tiles and the check-in stay (see Phase 3, rethought).
 8. **Focus pause.** Yes. **Focus without a task:** later (4b), because sessions currently need a task.
 9. **The daily close.** Suggested on Today after 8 pm once something moved that day; never required, never nagging.
 10. **Text written by Claude** (review drafts, done-when suggestions). Only through MCP and Claude Code; no model API key in the app (keeps the PRD's choice).
@@ -129,9 +129,40 @@ The goal of this plan is that **a normal evening needs no data entry**:
 - Phones show the controls.
 - Every finish shows its skills, milestone progress and the next task.
 
-## Phase 2: The app records itself
+## Phase 2: The app records itself (built 15 October)
 
 *Work done in Claude Code lands in Becoming as it happens, with Undo, and with no approval for everyday moves.*
+
+**As built** (ASSISTANTS.md has the full reference):
+- **Trust per token** (`apiTokens.trust`, decision 1). New tokens and tokens without a value are "work" (Record my work):
+  - work applies at once: `start_task`, `complete_task`, `block_task`, `update_task`, `set_next_step`, `log_session`, `add_task`, `capture_idea`;
+  - plan changes still wait in the Inbox: milestones, phases, docs, research, reports, decisions and `import_plan`;
+  - "ask" sends everything to the Inbox; "all" applies everything.
+  - Settings → Assistants has the choice under each token (Ask first / Record my work / Everything), with one line saying what it means.
+- **One apply path.** `applyProposal` (convex/inbox.ts) is what both the Inbox's Approve and an applied tool call run, so the rules are the same either way. Two new Inbox kinds hold task work at "ask": `move` (start, finish, block) and `taskEdit`. Each result says `"applied"` or `"waiting for approval"`.
+- **New tools:** `start_task`, `complete_task`, `block_task`, `update_task` (title, next step, done-when, minutes, notes); reads `get_task` and `get_activity` (Journey's feed, through `journey.feedFor`). Older tool descriptions now say whether they apply or wait.
+- **Changed from the plan:**
+  - No separate `log_work`: `log_session` already does it, and `/becoming:log` uses it.
+  - Evidence without a session: `complete_task` without `minutes` puts the summary and link on the task's history (the "done" entry's note). With real minutes it logs a finished session, and the link becomes a Proof draft as the recap does. So `artifacts.taskId` wasn't needed.
+  - `activity.assistantRuns` moves to Phase 3, where Last time is its only reader.
+  - The plugin ships no `.mcp.json`: the token stays in your Claude Code config. The commands use the `becoming` or `becoming-prod` server, and `BECOMING_SERVER` picks one.
+- **The `work_on_task` prompt** takes an optional `task`; with one it starts from `get_task`, without one it lists the open tasks and asks.
+- **Front end:**
+  - **Undo on the latest history entry** in the task sheet, for your moves and an assistant's (shown "via Claude Code"). `constellation.taskStory` now returns each entry's id and whether it can be undone.
+  - **Work on this with Claude**, at the task sheet's foot and in the status menu: it copies a ready prompt (the task's id, done-when, next step and how to record the work). In the sheet it also shows the prompt to copy by hand, with `/becoming:next <id>`.
+  - **Inbox:** "Approve all N", oldest first, stopping at the first refusal; "Status" and "Task edit" items.
+- **Fixed on the way:** undoing a move put back the skills from before it, so skills added since were lost. Now only undoing a finish restores skills, since a finish is the only move that sets them.
+- **The Claude Code plugin** (`integrations/claude-code/`, local marketplace `.claude-plugin/marketplace.json`): `/becoming:next`, `/becoming:done`, `/becoming:log`, and a SessionStart hook that adds the tasks In progress to the session's context. Validated with `claude plugin validate`; the hook was run against the dev deployment.
+- **Tests:** `convex/assistantsWork.test.ts` (each trust level, start/update/complete/block, finishing with minutes making a session and a Proof draft, plan changes waiting, owner-only trust, approving a move, `get_task`, `get_activity`, the prompt, Undo of an assistant's move) and an Undo-keeps-skills case in `oneTap.test.ts`. The Inbox-flow tests in `assistants.test.ts` now use an "ask" token.
+
+**Follow-up, 15 October: connecting is easy.** The owner: connecting "sits in the settings and not an easy way to set up". Built:
+- **Today's badge** beside the date: "Connect Claude Code" until an assistant has connected (hideable on the device), then "Claude Code · connected · active today".
+- **A connect sheet** opened from the badge, onboarding and Settings: what it does (with a motion graphic), one command to copy (now `--scope user`), and "Connected", which appears by itself when Claude Code first calls. It ends with the trust choice and the plugin's install commands.
+- **Onboarding:** a fourth line on the intro ("Build with Claude Code, and your work records itself here.") and a new "Your assistant" step after the rhythm, with the graphic and "Connect it after setup" or "Not now".
+- **The plugin installs from GitHub:** the marketplace is now named `becoming`, so it's `claude plugin marketplace add VimalKManoj/becoming` then `claude plugin install becoming@becoming`.
+- No backend change.
+
+**The plan as written** (kept for reference):
 
 **Backend**
 - **New MCP tools** (in `convex/mcp.ts`). They apply at once through `setStatusFor` and `saveLoggedSession`, with `source` set to the token's name:
@@ -177,52 +208,50 @@ The goal of this plan is that **a normal evening needs no data entry**:
 - It's visible on Today within seconds, with Undo.
 - Nothing waits for approval.
 
-## Phase 3: Today becomes home
+## Phase 3: Today keeps its tiles, and gains two things (rethought 15 October)
 
-*Opening the app shows what you're on, what's next and what happened, and you act right there.*
+*Today stays as it is, with the greeting, the prompt card, the quick tiles and the week bar. It gains two compact blocks, so you can act on what you're doing and see what happened without leaving.*
+
+**Owner, 15 October:** "I like the way it is now with the quick tiles but maybe add something to it." Of the four additions offered, the owner chose **On it now** and **Last time**. The two not chosen were a "Suggested next" card up front and a near-finish nudge. Decision 7 (replacing the check-in with chips) is withdrawn: the tiles and the check-in stay.
 
 **Backend**
 - **`today.home`**, one query:
-  - `inProgress`: up to 5 tasks, with their milestone;
-  - `upNext`: up to 3 choices from `todayFor`, using the saved capacity and an optional kind filter;
-  - `lastTime`: the last active day's moves and assistant runs, plus the last next step (and tomorrow's line from Phase 5);
-  - `proposals`: how many items wait in the Inbox;
-  - `pinnedNote`: the reason the pinned task wasn't offered, already computed today.
-- **Capacity saved on the profile** (`capacity: { minutes, energy }`) instead of `sessionStorage`. Reminders use it too.
-- `todayFor` gains an optional kind filter (Build, Small piece, Writing) to replace the tiles' trips to Work.
+  - `inProgress`: up to 3 tasks In progress, each with its project and milestone code, sorted by most recently moved;
+  - `lastTime`: what moved since your previous visit (or on your last active day):
+    - finished, started and blocked tasks, grouped by who moved them (you, or an assistant such as Claude Code);
+    - the next step you left on the most recent one;
+    - (Phase 5) tomorrow's line.
+- When was the "previous visit"? It's the start of the current local day, or the last active day when nothing moved today. That needs no new table.
 
 **Front end**
-- **New Today layout:**
-  - the greeting and date;
-  - **On it now** (rows with Continue, Done and Focus);
-  - **Up next**, which shows each card's reason and has inline chips for time (15 / 30 / 45 / 60 / 90 / 2h+), energy and kind;
-  - **Last time** (with Undo on assistant moves);
-  - the Inbox, for plans only;
-  - the week bar.
-- **The tiles, the check-in screen and the which-project screen go** (decision 7). Catch an idea and New project stay on the rail and pill "+".
-- **Finish chains:** a finish on Today offers the `next` task in place, or the next milestone's first task when a milestone completes.
-- **The pinned note** shows under Up next when the pin isn't offered.
+- **On it now**, between the prompt card and the tiles. It shows only when something is In progress:
+  - up to 3 rows, each with the status circle (the same menu as everywhere), title, "Project · 0B", and ▶ Focus;
+  - clicking the title opens the task sheet;
+  - "+ N more in Work" when there are more.
+- **Last time**, one or two lines under the greeting, replacing the "A note from last time" card:
+  - for example "Yesterday: finished R1, started R2 · Claude Code finished 2";
+  - the next step you left, with **Pick up** (which opens that task);
+  - hidden on a first visit.
+- **The tiles stay.** Their subtitles get a little livelier where it's cheap. For example, Build reads "Next: R2 · 45 min" for the suggested project, and Small piece and Write show how many are open.
+- The away block (3+ days) stays as it is. When Last time has something to say, it takes over the away block's "where you were" part, so the two don't repeat each other.
 
-**Fixes folded in**
-- No 90-minute ceiling (2h+ chip); High-energy tasks visible with a note.
+**Fixes folded in** (unchanged from the first version)
+- No 90-minute ceiling in the check-in (a 2h+ chip); High-energy tasks visible with a note.
 - Swap reasons per decision 6.
 - The Sunday card counts days, not sessions.
-- Onboarding: no promised "mood", and "A project" creates a project with its first step.
+- Onboarding: no promised "mood", and "A project" opens the New project page.
 - Remove the unreachable `?intent=build` chips and stale comments.
 - `recommended` is false when you came from a specific task.
 - `NothingCard` uses the server's finer states (blocked-only, nothing open, waiting).
 
 **Tests**
-- `today.home` shape and limits.
-- Saved capacity.
-- Recommendations unchanged for the same inputs.
-- Kind filter.
+- `today.home`: in-progress limits and order; Last time grouping by source and its day window.
 - The existing recommend tests stay green.
 
 **Done when:**
-- Today shows On it now, Up next and Last time.
-- Every task action happens on Today.
-- Nothing on Today navigates away except opening a project, Journey or Settings on purpose.
+- With something In progress, Today shows it above the tiles, and it can be continued, finished or focused on right there.
+- Today says in a line what moved last time, including an assistant's work, and offers to pick up the last next step.
+- The tiles and the check-in work as before.
 
 ## Phase 4: Focus as a tool
 
@@ -324,8 +353,8 @@ The goal of this plan is that **a normal evening needs no data entry**:
 | Phase | Size | Depends on | Ships alone? |
 |---|---|---|---|
 | 1. One tap | Medium | – | Yes, and it changes the daily feel straight away |
-| 2. The app records itself | Medium | 1 (Undo, finish result) | Yes |
-| 3. Today becomes home | Large | 1, 2 (Last time uses assistant runs) | Yes |
+| 2. The app records itself (built 15 Oct) | Medium | 1 (Undo, finish result) | Yes |
+| 3. Today keeps its tiles, gains On it now and Last time | Small | 1 (Last time reads task events; richer with 2) | Yes |
 | 4. Focus as a tool | Medium | 1 | Yes; can run in parallel with 3 |
 | 5. The daily loop | Medium | 3 | Yes |
 
@@ -340,8 +369,8 @@ Docs are updated with each phase: this plan, PLAN.md, QA_PLAN, DATABASE, ASSISTA
 ## Data changes at a glance
 
 - `taskEvents.before` (Undo).
-- `apiTokens.trust`.
-- `artifacts.taskId` (optional).
+- `apiTokens.trust` (built 15 October).
+- `artifacts.taskId` (optional; not needed after Phase 2, see "Changed from the plan").
 - `profiles.capacity`, `profiles.momentsSeen`.
 - `activeSessions.pausedAt` and `pausedMs`.
 - New table `dayCloses`.

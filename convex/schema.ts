@@ -35,6 +35,10 @@ export const inboxProposal = v.union(
   v.object({ kind: v.literal("idea"), title: v.string(), lane, notes: v.string() }),
   v.object({ kind: v.literal("milestone"), projectId: v.id("projects"), title: v.string(), doneWhen: v.optional(v.string()) }),
   v.object({ kind: v.literal("nextStep"), taskId: v.id("tasks"), nextStep: v.string() }),
+  // A task moved by an assistant (start, finish, block) when its token asks first.
+  v.object({ kind: v.literal("move"), taskId: v.id("tasks"), status: v.union(v.literal("In progress"), v.literal("Done"), v.literal("Blocked")), note: v.optional(v.string()), skills: v.optional(v.array(v.string())) }),
+  // A task's fields changed by an assistant when its token asks first.
+  v.object({ kind: v.literal("taskEdit"), taskId: v.id("tasks"), title: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()), minutes: v.optional(v.number()), notes: v.optional(v.string()) }),
   // The project constellation (convex/constellation.ts, convex/genesis.ts).
   v.object({ kind: v.literal("phase"), projectId: v.id("projects"), name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()), skills: v.optional(v.array(v.string())) }),
   v.object({
@@ -227,7 +231,11 @@ export default defineSchema({
   }).index("by_task", ["taskId", "at"]).index("by_owner_at", ["owner", "at"]),
   // Access tokens for assistants (MCP), made in Settings. Only a SHA-256 hash is kept; the
   // token itself is shown once. Deleting the row revokes it.
-  apiTokens: defineTable({ owner: v.string(), name: v.string(), hash: v.string(), prefix: v.string(), lastUsedAt: v.optional(v.number()) })
+  // trust: what the assistant's changes do. "ask": every change waits in the Inbox. "work"
+  // (the default when absent): everyday work applies at once (task status, next steps, notes,
+  // logged work, new tasks and ideas) and plan changes wait. "all": everything applies at once.
+  // Changes that apply are undoable from the task's history.
+  apiTokens: defineTable({ owner: v.string(), name: v.string(), hash: v.string(), prefix: v.string(), lastUsedAt: v.optional(v.number()), trust: v.optional(v.union(v.literal("ask"), v.literal("work"), v.literal("all"))) })
     .index("by_hash", ["hash"]).index("by_owner", ["owner"]),
   // Phone and browser notifications (Web Push), one row per device that turned them on.
   pushSubscriptions: defineTable({ owner: v.string(), endpoint: v.string(), p256dh: v.string(), auth: v.string() })

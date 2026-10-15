@@ -272,12 +272,38 @@ Every task shows the same **status circle** (empty Ready, half In progress, ✓ 
 
 - [ ] Settings → **Assistants** → "Claude Code" → **Create a token**. **Expect:** the token and a ready-to-paste Claude Code command, shown once. After **Done**, only its first characters show in the list, with "not used yet".
 - [ ] Run the command in a terminal, start `claude`, and ask "what should I work on tonight? 45 minutes, steady energy". **Expect:** the same focus Today would give, with its reason. The token now shows "last used".
-- [ ] Ask Claude to log what you did. **Expect:** it says the session is waiting in your Inbox. Today shows "From your assistants · 1 waiting" with the session details. Journey and the week don't change yet.
+- [ ] (Since 15 October, set the token to **Ask first** in Settings for this and the next two checks; the default records work at once, see B8a-2.) Ask Claude to log what you did. **Expect:** it says the session is waiting in your Inbox. Today shows "From your assistants · 1 waiting" with the session details. Journey and the week don't change yet.
 - [ ] **Approve** it. **Expect:** "Logged to your Journey."; the task moves to In progress (or Done); Journey → All sessions shows "via Claude Code"; an evidence link becomes a Proof draft.
 - [ ] Ask it to capture an idea, then **Discard** it. **Expect:** nothing appears in Ideas.
 - [ ] Ask it to log work on a task that doesn't exist. **Expect:** a clear error, or a proposal with a new task if you said so.
 - [ ] **Revoke** the token in Settings. **Expect:** Claude Code's next call fails with "Missing or unknown Becoming access token".
 - [ ] In Account B, check that none of A's tasks show through a token made in A.
+
+### B8a-2. Assistants record the work (added 15 October, PLAN-one-tap-and-daily-loop Phase 2)
+
+- [ ] Settings → Assistants: under each token, **Ask first / Record my work / Everything**, with "Record my work" chosen for a new token. **Expect:** choosing another saves at once and the line under it changes.
+- [ ] At **Record my work**, ask Claude Code to start a task. **Expect:** it says "applied"; the task is In progress in Work and on Today within seconds; nothing waits in the Inbox.
+- [ ] Open that task. **Expect:** History shows "STARTED … via Claude Code" with an MCP badge and **Undo**. Click Undo. **Expect:** "Undone. That was Claude Code's change."; the task is back to Ready; Undo moves to the entry before, if that one can be undone.
+- [ ] Ask Claude to finish a task with a summary, skills and a PR link (no minutes). **Expect:** Done, with the skills; the history's "done" entry shows the summary and the link. With real minutes as well: Journey shows the session "via Claude Code" and Proof has a draft for the link.
+- [ ] Ask it to block a task, then to change a task's next step or notes. **Expect:** Blocked with the reason as "Blocked by"; the field changes in the sheet.
+- [ ] Ask it to add a phase or import a plan. **Expect:** "waiting for approval", in the Inbox. Set the token to **Everything** and ask again. **Expect:** it applies at once.
+- [ ] With two or more items waiting, **Approve all**. **Expect:** they apply oldest first; if one is refused, it stops there and says why.
+- [ ] Task sheet → **Work on this with Claude** (and the same item in the status menu). **Expect:** "Prompt copied."; the sheet shows the prompt with the task's id, done-when and next step. Paste it into Claude Code. **Expect:** Claude calls get_task, then start_task.
+- [ ] Add a skill to a task, then undo its latest move (not a finish). **Expect:** the skill stays.
+- [ ] **Plugin:** `claude plugin marketplace add VimalKManoj/becoming` (after the push), then `claude plugin install becoming@becoming`, then restart Claude Code. **Expect:** a new session knows the tasks In progress (ask "what's in progress in Becoming?"). `/becoming:next` lists or starts a task and explains the plan; `/becoming:done` finishes it with a summary, skills and the PR or commit link; `/becoming:log 30m` logs progress with a next step.
+- [ ] With the token revoked, start a session. **Expect:** one line saying Becoming's tasks couldn't be loaded; the session starts normally.
+
+### B8a-3. Connecting is easy (added 15 October)
+
+- [ ] On an account with no assistant connected, Today shows **Connect Claude Code · your work records itself** beside the date, with a sheen and a spark running into the orb. **Expect:** on a phone it sits under the date, with no sideways scroll.
+- [ ] Click it. **Expect:** the sheet's first step: the motion graphic loops (types /becoming:next, a spark, In progress; /becoming:done, a spark, Done with "+ Systems" and "PR #42"), then three short points and **Connect Claude Code**.
+- [ ] **Connect Claude Code.** **Expect:** step 2 with the command (it includes `--scope user`) and Copy, and "Waiting for Claude Code to connect…". Run it, then start `claude`. **Expect:** without touching anything, the sheet turns to **Connected** with a check and rings, then "What it can do" (Record my work chosen) and the plugin commands.
+- [ ] Close it. **Expect:** Today's badge now reads "Claude Code · connected · active today" in mint, and leads to Settings → Assistants.
+- [ ] On another account, hide the badge with ×. **Expect:** a toast pointing to Settings; the badge stays hidden on this device.
+- [ ] Close the sheet during step 2. **Expect:** "Not connected yet. Start again from Today whenever you like."
+- [ ] Settings → Assistants → **Set up step by step**. **Expect:** the same sheet; with an assistant already connected, it says so and that this makes a new token.
+- [ ] A new account's onboarding: the intro lists **04 Build with Claude Code, and your work records itself here.** with the moving glyph; after the rhythm step comes **Your assistant** with the motion graphic and "Connect it after setup" (chosen) or "Not now". Finish setup with it chosen. **Expect:** the connect sheet opens. With "Not now", it doesn't, and Today shows the badge.
+- [ ] With reduced motion on, the graphic shows the finished frame (Done, the chip and PR) and nothing moves.
 
 ### B8b. Evening reminders (added 9 October)
 

@@ -55,7 +55,7 @@ describe("assistants (MCP) and the Inbox", () => {
   it("sends changes to the Inbox, where approving applies the app's rules and discarding saves nothing", async () => {
     const { t, asA, asB } = setup();
     const taskId = await asA.mutation(api.tasks.create, task);
-    const token = await asA.action(api.assistants.createToken, { name: "Claude Code" });
+    const token = await asA.action(api.assistants.createToken, { name: "Claude Code", trust: "ask" });
     expect((await call(t, token, "log_session", { task: "wire", minutes: 50, outcome: "progress", what_changed: "Built the endpoint.", next_step: "Next.", skills: ["Cooking"] })).error).toContain("Unknown skill");
     expect((await call(t, token, "log_session", { task: "wire", minutes: 50, outcome: "progress", what_changed: "Built the endpoint." })).error).toContain("next_step");
     const logged = await call(t, token, "log_session", { task: "wire", minutes: 50, outcome: "progress", what_changed: "Built the endpoint.", next_step: "Add the Inbox card.", skills: ["systems", "Shipping"], evidence_url: "https://example.com/pr/1" });
@@ -83,7 +83,7 @@ describe("assistants (MCP) and the Inbox", () => {
 
   it("logs work on a new task in one approval, and refuses an approval the app would refuse", async () => {
     const { t, asA } = setup();
-    const token = await asA.action(api.assistants.createToken, { name: "Claude" });
+    const token = await asA.action(api.assistants.createToken, { name: "Claude", trust: "ask" });
     await call(t, token, "log_session", { new_task_title: "Draft the launch post", new_task_lane: "Writing", new_task_done_when: "400 words", minutes: 30, outcome: "finished", what_changed: "Wrote the draft." });
     const [item] = await asA.query(api.inbox.list, {});
     expect(item).toMatchObject({ kind: "session", title: "Draft the launch post (new task)" });

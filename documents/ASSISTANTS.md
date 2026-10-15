@@ -1,17 +1,41 @@
 # Assistants (MCP) and the Inbox
 
-Becoming is an **MCP server**, so an AI assistant can read your work and propose updates while you work elsewhere. Built 9 October 2026.
+Becoming is an **MCP server**, so an AI assistant can read your work and record it while you work elsewhere. Built 9 October 2026; since 15 October (PLAN-one-tap-and-daily-loop, Phase 2) everyday work applies at once.
 
-- **Reads answer directly:** tonight's focus, projects, tasks, this week, recent sessions, and a project's constellation.
-- **Every change is a proposal.** It waits in the **Inbox on Today** until you approve it. Approving runs exactly the same rules as the app, so an assistant can never write anything you couldn't. Nothing counts toward your Journey, bloom or week before you approve.
+- **Reads answer directly:** tonight's focus, projects, tasks, one task in full, this week, recent sessions, recent activity, and a project's constellation.
+- **Changes apply at once or wait in the Inbox on Today, by the token's trust** (below). Either way they run exactly the same rules as the app, so an assistant can never write anything you couldn't. Every result says which happened: status `"applied"` or `"waiting for approval"`.
+- **Anything applied can be undone.** A task's latest move, yours or an assistant's, has an Undo on its history in the task sheet.
+
+## Trust: what applies at once
+
+Each token has a trust level, chosen in Settings → Assistants under the token. New tokens start at **Record my work**.
+
+| Trust | Applies at once | Waits in the Inbox |
+|---|---|---|
+| **Ask first** (`ask`) | nothing | everything |
+| **Record my work** (`work`, the default) | `start_task`, `complete_task`, `block_task`, `update_task`, `set_next_step`, `log_session`, `add_task`, `capture_idea` | plan changes: `add_milestone`, `add_phase`, `add_doc`, `update_doc`, `add_research`, `write_report`, `record_decision`, `import_plan` |
+| **Everything** (`all`) | everything | nothing |
+
+A token made before 15 October has no trust stored and counts as **Record my work**. Change it in Settings if you want it to ask first.
 
 ## Connect Claude Code (works now)
 
+**The easy way** (15 October): the **Connect Claude Code** badge on Today, the "Your assistant" step in onboarding, or Settings → Assistants → **Set up step by step**. All three open the same sheet (`src/components/assistants/connect-sheet.tsx`), in three steps:
+
+1. **What it does**, with the motion graphic: Claude Code types `/becoming:next`, a spark crosses to a task that turns In progress; then `/becoming:done`, and it turns Done, with "via Claude Code", a skill and the PR.
+2. **Run one command.** "Connect Claude Code" makes a token (named Claude Code, trust Record my work) and shows the command with a Copy button. The sheet then waits, live: the moment Claude Code first reaches Becoming (the token's `lastUsedAt` is set), it moves on by itself.
+3. **Connected**, with a small celebration. Then: what it can do (the three trust levels), and the plugin's two install commands.
+
+Today's badge invites you until an assistant has connected (it can be hidden on that device with ×). After that it says "Claude Code · connected · active today" and leads to Settings → Assistants.
+
+**By hand:**
+
 1. Settings → **Assistants** → pick "Claude Code" → **Create a token**. Copy it right away; it's shown once.
-2. Run the command Settings shows, once:
-   `claude mcp add --transport http becoming https://<deployment>.convex.site/mcp --header "Authorization: Bearer <token>"`
-3. Ask Claude things like "what should I work on tonight? I have 45 minutes, steady energy", "log this to Becoming", or use the prompts `/mcp__becoming__log_this_conversation`, `evening_check_in`, `weekly_review` and `sync_project_from_docs` (read this repo's plan and docs, and propose them as the project's constellation).
-4. Approve or discard what it sends in the Inbox on Today.
+2. Run the command Settings shows, once. `--scope user` makes Becoming available in every project, not just the folder you run it in:
+   `claude mcp add --transport http --scope user becoming https://<deployment>.convex.site/mcp --header "Authorization: Bearer <token>"`
+3. Ask Claude things like "what should I work on tonight? I have 45 minutes, steady energy", "log this to Becoming", or use the prompts `/mcp__becoming__work_on_task` (optionally with a task), `log_this_conversation`, `evening_check_in`, `weekly_review` and `sync_project_from_docs` (read this repo's plan and docs, and propose them as the project's constellation).
+4. Everyday work shows up straight away. Approve or discard what waits in the Inbox on Today; **Approve all** takes them oldest first and stops at the first one refused.
+5. Optional: install the Claude Code plugin (below) for `/becoming:next`, `/becoming:done`, `/becoming:log` and the session-start summary.
 
 Other MCP clients (Cursor, VS Code) use the same URL and header.
 
@@ -26,15 +50,24 @@ The **Claude app** (web, desktop, phone) and **ChatGPT** need "Sign in with Beco
 | `list_tasks` | read | Open, blocked or done tasks, by lane or project. |
 | `get_week`, `recent_sessions` | read | This week's target, sessions, pause, intention and lined-up steps; the latest sessions. |
 | `list_inbox` | read | What's already waiting, so nothing is sent twice. |
-| `log_session` | proposal | Work done away from the timer, on an open task or on a new one created at approval. |
-| `add_task`, `capture_idea`, `add_milestone`, `set_next_step` | proposal | As named. |
+| `get_task` | read | One task in full: status, lane, estimate, done-when, next step, notes, skills, its code, project, milestone and phase (with its goal), the docs it's built from (with links), prerequisites and its last 8 history entries. |
+| `get_activity` | read | The Journey feed: recent moves, sessions and markers (`limit`, and `before` to page back), each with who made it. |
+| `start_task` | work | Mark a task In progress (also unblocks or reopens it), with an optional `next_step`. |
+| `complete_task` | work | Mark a task Done once its done-when is met, with `summary`, `skills` and `evidence_url`. Without `minutes`, the summary and link go on the task's history. With real `minutes`, it's also logged as a finished session and the link becomes a Proof draft (a summary is then required, and a blocked task is refused). |
+| `block_task` | work | Mark a task Blocked with a `reason`, which becomes its next step. |
+| `update_task` | work | Change a task's `title`, `next_step`, `done_when`, `minutes` or `notes`; only the fields given change. |
+| `log_session` | work | Work done away from the timer, on an open task or on a new one created with it. |
+| `add_task`, `capture_idea`, `set_next_step` | work | As named. |
+| `add_milestone` | plan | A new last milestone. |
 | `get_constellation` | read | One project's whole map: genesis (idea, research, report, decision), docs with the phases each feeds, phases with milestones and task codes and states, and totals. |
 | `get_phase` | read | One phase by number (`"05"`) or name: goal, next step, progress, the docs it's built from, and each milestone's tasks with status, estimate, next step and sessions ("2 of 5"). |
-| `add_phase` | proposal | A new last phase (name, goal, next step, done-when, and optional `skills`, the bloom's eight). A name the project already has is refused. |
-| `add_doc`, `update_doc` | proposal | A doc's details and link (a repo path such as `documents/PRD.md`, or an https address); the writing stays in the repo. `update_doc` finds the doc by code and changes only the fields given; `""` clears a text field and `feeds` replaces the phases it feeds (by number or name). |
-| `add_research` | proposal | A research thread behind an idea, with its sources (read, interview, tried, or **brief** for a summary the assistant wrote). Sources record the assistant as their author. A thread with the same title gets the new sources added. |
-| `write_report`, `record_decision` | proposal | The idea's report (findings, each with its basis), which replaces the earlier one, and the decision (verdict, rule, kept, dropped). |
-| `import_plan` | proposal | A whole plan as **one** Inbox item. See below. |
+| `add_phase` | plan | A new last phase (name, goal, next step, done-when, and optional `skills`, the bloom's eight). A name the project already has is refused. |
+| `add_doc`, `update_doc` | plan | A doc's details and link (a repo path such as `documents/PRD.md`, or an https address); the writing stays in the repo. `update_doc` finds the doc by code and changes only the fields given; `""` clears a text field and `feeds` replaces the phases it feeds (by number or name). |
+| `add_research` | plan | A research thread behind an idea, with its sources (read, interview, tried, or **brief** for a summary the assistant wrote). Sources record the assistant as their author. A thread with the same title gets the new sources added. |
+| `write_report`, `record_decision` | plan | The idea's report (findings, each with its basis), which replaces the earlier one, and the decision (verdict, rule, kept, dropped). |
+| `import_plan` | plan | A whole plan as **one** change (one Inbox item, approved once). See below. |
+
+"work" applies at once at the default trust; "plan" waits in the Inbox unless the token is trusted with everything.
 
 Tasks and projects can be named by id or by a distinctive part of the title. Several matches return a list to choose from. Genesis tools take `idea` (id or title) or `project` (the idea it grew from is used).
 
@@ -74,6 +107,38 @@ Tasks and projects can be named by id or by a distinctive part of the title. Sev
 - **Skills** (12 October): phases, milestones and tasks can carry `skills` (Frontend, Interaction, Motion, Visual, Writing, Research, Systems, Shipping). A finished task without its own counts for its milestone's, or else its phase's, in the Mind Bloom. Re-sending a plan adds skills to phases and milestones that have none (it never replaces ones they have), so an assistant can fill in skills for work already imported.
 - **Limits:** tasks that already exist aren't changed by a plan (use `set_next_step` or the app), and docs can't carry their original written date yet (they're dated at approval).
 
+## Work on this with Claude
+
+The task sheet (at its foot) and the status menu have **Work on this with Claude**. It copies a ready prompt: the task's title and id, its done-when and next step, and how to record the work (`get_task`, then `start_task`, `block_task` if something's in the way, and `complete_task` with a summary, skills and the PR or commit link). The sheet also shows the prompt, so it can be copied by hand when the browser refuses, with the plugin's `/becoming:next <id>` as the short way.
+
+The MCP prompt `work_on_task` does the same from inside Claude Code: with a `task`, it loads that task; without one, it lists the open tasks and asks which.
+
+## The Claude Code plugin
+
+In this repo: `integrations/claude-code/` (the plugin) and `.claude-plugin/marketplace.json` (a marketplace named `becoming` that lists it). The repo is public on GitHub, so anyone can install it from there.
+
+**It needs** the Becoming MCP server connected in Claude Code (step 2 above). It doesn't bring its own server, because the token belongs in your Claude Code config, not in a repo.
+
+**Install, once:**
+
+```
+claude plugin marketplace add VimalKManoj/becoming
+claude plugin install becoming@becoming
+```
+
+From your own checkout instead: `claude plugin marketplace add "D:\Dev\Full Stack Dev\form"`. Then restart Claude Code (or run `/reload-plugins`). `claude plugin validate integrations/claude-code` checks it.
+
+**Which server:** the commands use the tools of a server named `becoming` or `becoming-prod`. When both are connected, set `BECOMING_SERVER` (for example `"env": { "BECOMING_SERVER": "becoming-prod" }` in `~/.claude/settings.json`), and the session-start summary tells Claude which one to use.
+
+| Part | What it does |
+|---|---|
+| `/becoming:next [task]` | Finds the task you name, or lists the open ones and `whats_next` and asks; then `start_task` and `get_task`, reads the linked docs, and says the task, what done looks like, where to pick up and its plan. |
+| `/becoming:done [notes or 45m]` | Checks the done-when, writes a summary of the session's changes, picks the skills, finds the PR (`gh pr view`) or the latest commit's link, and calls `complete_task`. Minutes only if you give them. |
+| `/becoming:log <45m> [what changed]` | Logs an unfinished stretch with `log_session` (outcome progress or blocked, with the next step). Asks for the minutes if you don't give them. |
+| SessionStart hook | `hooks/session-start.mjs` calls `list_tasks` and adds the tasks In progress (id, project, next step, done-when) to the session's context, so Claude can match the work to them. It reads the server's address and token from `BECOMING_MCP_URL` and `BECOMING_MCP_TOKEN`, or from the server named `BECOMING_SERVER` (default `becoming`) in the project's `.mcp.json` or `~/.claude.json`. It only reads and never blocks a session (it always exits 0). It says so in one line when Becoming can't be reached, and stays quiet when no server is set up. |
+
+Only you run the commands (`disable-model-invocation`), and each is allowed just the Becoming tools it needs (plus read-only `git` and `gh pr view` for the evidence link).
+
 ## How it works
 
 - `convex/mcp.ts` is the endpoint: Streamable HTTP at `/mcp` on the deployment's `.convex.site` address, answered with plain JSON (protocol versions 2025-03-26 to 2025-11-25). No SDK or new package.
@@ -82,16 +147,17 @@ Tasks and projects can be named by id or by a distinctive part of the title. Sev
   - Only a SHA-256 hash is stored, with the first 12 characters for display.
   - At most 10 per account. Revoking deletes the row, and the token stops working at once.
 - **The owner comes only from the token.** Every read and proposal runs as an internal function with that owner. Reads reuse the app's own code (`todayFor`, `projectsFor`, `projectFor`).
-- **Proposals** are checked early, so the assistant gets a clear error to fix, and checked again at approval.
+- **Trust** is `apiTokens.trust` (`ask`, `work` or `all`; none counts as `work`). `runPropose` builds the proposal, then either applies it at once through `applyProposal` (convex/inbox.ts, the same function the Inbox's Approve uses) or puts it in the Inbox. Task moves go through `setStatusFor`, so an assistant's move records a `before` snapshot and `tasks.undo` can undo it like your own.
+- **Proposals** are checked early, so the assistant gets a clear error to fix, and checked again when they're applied.
   - The early checks cover lengths, the 8 skills, outcomes, a safe link, and whether the task is open.
   - Approval goes through `createTaskFor`, `createIdeaFor`, `addMilestoneFor` and `saveLoggedSession`. The last one follows the recap's rules: an open task, prerequisites done, a next step unless finished. It updates the task, the milestone, the pin and Proof the same way the recap does.
   - Constellation proposals go through `addPhaseFor`, `setMilestonePhaseFor`, `addDocFor` and `updateDocFor` (convex/constellation.ts), and `addResearchFor`, `addSourceFor`, `saveReportFor` and `setDecisionFor` (convex/genesis.ts). A plan is applied by `applyPlan` in convex/inbox.ts.
   - Each one records the assistant (the token's name) as its source: on tasks' events, docs, research sources and reports.
-- **The Inbox** (`convex/inbox.ts`, table `inbox`) holds at most 100 proposals. An approved session records `source` (the token's name), and Journey shows it as "via Claude Code".
+- **The Inbox** (`convex/inbox.ts`, table `inbox`) holds at most 100 proposals. Two kinds were added for task work at "Ask first": `move` (start, finish or block) and `taskEdit`. An approved session records `source` (the token's name), and Journey shows it as "via Claude Code".
 - **Your data:** export and restore keep `source`; "Delete workspace data" also removes tokens and the Inbox.
 
 ## Next
 
 1. **Sign in with Becoming (OAuth)** for the Claude app and ChatGPT, after the app is deployed. Better Auth's `mcp` plugin provides the endpoints. The Convex auth plugin already runs the same OIDC provider underneath, so it needs a careful spike, then root `/.well-known` routes on both the app and the Convex site.
-2. **A Claude Code plugin:** the MCP server, a skill, and an end-of-session hook that proposes a session automatically.
+2. **An end-of-session hook** that offers `/becoming:done` or `/becoming:log` when a session ends with work on a task still open.
 3. **GitHub webhook and short task IDs.**

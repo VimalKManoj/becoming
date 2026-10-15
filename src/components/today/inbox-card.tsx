@@ -8,20 +8,21 @@ import { api } from "../../../convex/_generated/api";
 import { useRitual } from "@/components/ritual/ritual-context";
 import { readableError } from "@/lib/errors";
 
-// The Inbox on Today: what your assistants proposed (convex/inbox.ts). Nothing counts
-// toward your Journey, bloom or week until you approve it here.
+// The Inbox on Today: what your assistants proposed (convex/inbox.ts): everything from a token
+// set to "ask first", and plan changes from one set to "apply work" (Settings → Assistants).
+// Nothing here counts until you approve it.
 
 type Item = FunctionReturnType<typeof api.inbox.list>[number];
 const kindLabel: Record<Item["kind"], string> = {
-  session: "Work done", task: "New task", idea: "Idea", milestone: "Milestone", nextStep: "Next step",
+  session: "Work done", task: "New task", idea: "Idea", milestone: "Milestone", nextStep: "Next step", move: "Status", taskEdit: "Task edit",
   phase: "New phase", doc: "New doc", docUpdate: "Doc update", research: "Research", report: "Report", decision: "Decision", plan: "Whole plan",
 };
 const kindColour: Record<Item["kind"], string> = {
-  session: "#FF8A3D", task: "#FF8A3D", idea: "#C9B8F0", milestone: "#86E3C3", nextStep: "#E9DFD6",
+  session: "#FF8A3D", task: "#FF8A3D", idea: "#C9B8F0", milestone: "#86E3C3", nextStep: "#E9DFD6", move: "#FF8A3D", taskEdit: "#E9DFD6",
   phase: "#86E3C3", doc: "#E9DFD6", docUpdate: "#E9DFD6", research: "#C9B8F0", report: "#C9B8F0", decision: "#86E3C3", plan: "#FF8A3D",
 };
 const approvedText: Record<Item["kind"], string> = {
-  session: "Logged to your Journey.", task: "Added to Work.", idea: "Saved to Ideas.", milestone: "Milestone added.", nextStep: "Next step updated.",
+  session: "Logged to your Journey.", task: "Added to Work.", idea: "Saved to Ideas.", milestone: "Milestone added.", nextStep: "Next step updated.", move: "Task moved.", taskEdit: "Task updated.",
   phase: "Phase added.", doc: "Doc added.", docUpdate: "Doc updated.", research: "Research added.", report: "Report saved.", decision: "Decision recorded.", plan: "Plan added to the project.",
 };
 const isWebLink = (link: string) => /^https?:\/\//i.test(link);
@@ -62,6 +63,18 @@ export function InboxCard({ now }: { now: number }) {
   if (!items?.length) return null;
   const shown = all ? items : items.slice(0, 3);
 
+  /** Approves every item, oldest first, stopping at the first one the app refuses. */
+  async function approveAll() {
+    let done = 0;
+    for (const item of [...items!].reverse()) {
+      setBusy(item._id);
+      try { await approve({ itemId: item._id }); done += 1; }
+      catch (caught) { showToast(`${done ? `Approved ${done}. ` : ""}"${item.title}": ${readableError(caught, "couldn't be saved.")}`, "alert"); setBusy(null); return; }
+    }
+    setBusy(null);
+    showToast(`Approved all ${done}.`);
+  }
+
   async function act(item: Item, keep: boolean) {
     setBusy(item._id);
     try {
@@ -74,7 +87,8 @@ export function InboxCard({ now }: { now: number }) {
   return <section className="r-col t-inbox" aria-labelledby="inbox-title">
     <div className="r-row r-between" style={{ gap: 10 }}>
       <h2 id="inbox-title" className="r-eyebrow-sm" style={{ color: "var(--r-ember-soft)" }}>From your assistants · {items.length} waiting</h2>
-      <span className="r-small" style={{ fontSize: 12 }}>Counts once you approve</span>
+      {items.length > 1 ? <button type="button" className="r-link" disabled={busy !== null} onClick={() => void approveAll()}>Approve all {items.length}</button>
+        : <span className="r-small" style={{ fontSize: 12 }}>Counts once you approve</span>}
     </div>
     <ul className="t-inbox-list">
       {shown.map(item => <li key={item._id} className="t-inbox-item">

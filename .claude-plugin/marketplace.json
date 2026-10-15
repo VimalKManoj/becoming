@@ -1,0 +1,16 @@
+{
+  "name": "becoming",
+  "owner": {
+    "name": "Vimal"
+  },
+  "metadata": {
+    "description": "Becoming's Claude Code plugin."
+  },
+  "plugins": [
+    {
+      "name": "becoming",
+      "source": "./integrations/claude-code",
+      "description": "Record your Claude Code work in Becoming: /becoming:next, /becoming:done, /becoming:log, and what's in progress at the start of each session."
+    }
+  ]
+}

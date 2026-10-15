@@ -7,12 +7,14 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useRitual } from "@/components/ritual/ritual-context";
 import { readableError } from "@/lib/errors";
+import { copyWorkPrompt } from "./work-prompt";
 import { useTaskMove, type MovableTask, type MoveTarget } from "./use-task-move";
 
 // The one way to move a task, the same on every screen (PLAN-one-tap-and-daily-loop,
 // Phase 1). The circle shows the status; clicking it opens a small menu that says what each
 // status means, with the current one ticked, so nothing changes until you choose. Below
-// that: a focus session, the pin, archive (and restore or delete for an archived task).
+// that: a focus session, the pin, "Work on this with Claude" (Phase 2), archive (and restore
+// or delete for an archived task).
 // Every choice applies at once, with an Undo in the toast.
 
 const statusClass: Record<string, string> = { "Ready": "ready", "In progress": "doing", "Blocked": "blocked", "Done": "done", "Archived": "archived" };
@@ -107,6 +109,7 @@ function StatusMenu({ task, anchor, moves, onClose, onDeleted }: { task: Movable
     { label: "Delete for good…", tone: "red", run: run(async () => { if (await moves.remove(task)) onDeleted?.(); }) },
   ] : [
     ...(open ? [{ label: "Start a focus session", href: `/today?task=${task._id}` }, { label: pinned ? "Unpin" : "Pin for tonight", run: run(togglePin) }] : []),
+    ...(task.status !== "Done" ? [{ label: "Work on this with Claude", run: run(() => copyWorkPrompt(task, showToast)) }] : []),
     { label: "Archive", run: run(() => moves.archive(task)) },
   ];
 

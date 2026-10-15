@@ -6,13 +6,14 @@ import type { ReactNode } from "react";
 import { useConvexAuth, useConvexConnectionState } from "convex/react";
 import { authClient } from "@/lib/auth-client";
 import { CaptureSheet } from "@/components/ritual/capture-sheet";
+import { ConnectSheet } from "@/components/assistants/connect-sheet";
 import { Embers } from "@/components/ritual/embers";
 import { RitualProvider, RitualToast } from "@/components/ritual/ritual-context";
 import { Skeleton, Bone } from "@/components/skeleton";
 import { Avatar, PillNav, Rail } from "@/components/workspace-nav";
 import { isWorkspaceSection, sectionDetails, type WorkspaceSection } from "@/components/workspace-sections";
 
-// The (workspace) layout renders this once, so navigation, the capture sheet and the
+// The (workspace) layout renders this once, so navigation, the capture and connect sheets and the
 // sign-in check survive moving between sections; only the page content changes.
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   const segment = usePathname().split("/")[1] ?? "";
@@ -32,6 +33,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
         <PillNav section={section} signedIn={isAuthenticated} />
       </div>
       {isAuthenticated && <CaptureSheet />}
+      {isAuthenticated && <ConnectSheet />}
       <RitualToast />
     </div>
   </RitualProvider>;

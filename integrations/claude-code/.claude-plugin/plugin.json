@@ -1,0 +1,7 @@
+{
+  "name": "becoming",
+  "version": "0.1.0",
+  "description": "Record your Claude Code work in Becoming as it happens: pick and start a task, finish it with a summary, skills and the PR link, and see what's in progress when a session starts.",
+  "author": { "name": "Vimal" },
+  "keywords": ["becoming", "tasks", "tracking", "mcp"]
+}

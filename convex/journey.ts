@@ -151,63 +151,65 @@ const feedKinds = new Set(["done", "started", "blocked", "unblocked", "reopened"
  */
 export const feed = query({
   args: { before: v.optional(v.number()), limit: v.optional(v.number()) },
-  handler: async (ctx, args) => {
-    const owner = await requireOwner(ctx);
-    const limit = Math.min(Math.max(args.limit ?? 30, 1), 60);
-    const before = args.before ?? Number.MAX_SAFE_INTEGER;
-    const [events, sessions] = await Promise.all([
-      ctx.db.query("taskEvents").withIndex("by_owner_at", q => q.eq("owner", owner).lt("at", before)).order("desc").take(limit * 4),
-      ctx.db.query("sessions").withIndex("by_owner_endedAt", q => q.eq("owner", owner).lt("endedAt", before)).order("desc").take(limit),
-    ]);
-    const moves = events.filter(event => feedKinds.has(event.kind));
-    const merged = [
-      ...moves.map(event => ({ type: "move" as const, at: event.at, event })),
-      ...sessions.map(session => ({ type: "session" as const, at: session.endedAt, session })),
-    ].sort((a, b) => b.at - a.at).slice(0, limit);
-    const more = merged.length === limit || events.length === limit * 4;
-    const floor = more && merged.length ? merged[merged.length - 1].at : 0;
-
-    const tasks = new Map<string, Doc<"tasks"> | null>();
-    const getTask = async (id: Id<"tasks">) => { if (!tasks.has(String(id))) tasks.set(String(id), await ctx.db.get(id)); const task = tasks.get(String(id)); return task && task.owner === owner ? task : null; };
-    const projects = new Map<string, string | null>();
-    const projectTitle = async (id: Id<"projects"> | undefined) => {
-      if (!id) return null;
-      if (!projects.has(String(id))) { const project = await ctx.db.get(id); projects.set(String(id), project && project.owner === owner ? project.title : null); }
-      return projects.get(String(id)) ?? null;
-    };
-
-    const items = [];
-    for (const entry of merged) {
-      if (entry.type === "move") {
-        const task = await getTask(entry.event.taskId);
-        if (!task) continue;
-        items.push({ key: String(entry.event._id), kind: entry.event.kind, at: entry.at, source: entry.event.source, backfilled: isBackfilled(entry.event), note: entry.event.note ?? null,
-          taskId: task._id, title: task.title, lane: task.lane, project: await projectTitle(task.projectId), minutes: null as number | null, outcome: null as string | null });
-      } else {
-        const s = entry.session;
-        const task = await getTask(s.taskId);
-        items.push({ key: String(s._id), kind: s.source ? "logged" : "focused", at: entry.at, source: s.source ?? "app", backfilled: false, note: s.contribution || null,
-          taskId: s.taskId, title: s.title, lane: s.lane, project: await projectTitle(s.projectId ?? task?.projectId),
-          minutes: s.startedAt !== undefined ? Math.round((s.endedAt - s.startedAt) / 60_000) : s.plannedMinutes ?? null, outcome: s.outcome as string | null });
-      }
-    }
-    // Milestones and phases completed inside this page's span of time.
-    const allMilestones = await ctx.db.query("milestones").withIndex("by_owner", q => q.eq("owner", owner)).take(2000);
-    const milestones = allMilestones.filter(m => m.completedAt !== undefined);
-    const markers: { key: string; kind: "milestone" | "phase"; at: number; title: string; project: string | null }[] = [];
-    for (const m of milestones) if (m.completedAt! < before && m.completedAt! >= floor) markers.push({ key: `m:${m._id}`, kind: "milestone", at: m.completedAt!, title: m.title, project: await projectTitle(m.projectId) });
-    const byPhase = new Map<string, Doc<"milestones">[]>();
-    for (const m of allMilestones) if (m.phaseId) byPhase.set(String(m.phaseId), [...(byPhase.get(String(m.phaseId)) ?? []), m]);
-    for (const [phaseId, list] of byPhase) {
-      if (!list.every(m => m.completedAt !== undefined)) continue;
-      const at = Math.max(...list.map(m => m.completedAt!));
-      if (at >= before || at < floor) continue;
-      const phase = await ctx.db.get(phaseId as Id<"phases">);
-      if (phase && phase.owner === owner) markers.push({ key: `p:${phase._id}`, kind: "phase", at, title: phase.name, project: await projectTitle(phase.projectId) });
-    }
-    return { items, markers, next: more && merged.length ? floor : null };
-  },
+  handler: async (ctx, args) => feedFor(ctx, await requireOwner(ctx), args),
 });
+
+/** The feed for one owner; shared with the assistants' get_activity tool. */
+export async function feedFor(ctx: QueryCtx, owner: string, args: { before?: number; limit?: number }) {
+  const limit = Math.min(Math.max(args.limit ?? 30, 1), 60);
+  const before = args.before ?? Number.MAX_SAFE_INTEGER;
+  const [events, sessions] = await Promise.all([
+    ctx.db.query("taskEvents").withIndex("by_owner_at", q => q.eq("owner", owner).lt("at", before)).order("desc").take(limit * 4),
+    ctx.db.query("sessions").withIndex("by_owner_endedAt", q => q.eq("owner", owner).lt("endedAt", before)).order("desc").take(limit),
+  ]);
+  const moves = events.filter(event => feedKinds.has(event.kind));
+  const merged = [
+    ...moves.map(event => ({ type: "move" as const, at: event.at, event })),
+    ...sessions.map(session => ({ type: "session" as const, at: session.endedAt, session })),
+  ].sort((a, b) => b.at - a.at).slice(0, limit);
+  const more = merged.length === limit || events.length === limit * 4;
+  const floor = more && merged.length ? merged[merged.length - 1].at : 0;
+
+  const tasks = new Map<string, Doc<"tasks"> | null>();
+  const getTask = async (id: Id<"tasks">) => { if (!tasks.has(String(id))) tasks.set(String(id), await ctx.db.get(id)); const task = tasks.get(String(id)); return task && task.owner === owner ? task : null; };
+  const projects = new Map<string, string | null>();
+  const projectTitle = async (id: Id<"projects"> | undefined) => {
+    if (!id) return null;
+    if (!projects.has(String(id))) { const project = await ctx.db.get(id); projects.set(String(id), project && project.owner === owner ? project.title : null); }
+    return projects.get(String(id)) ?? null;
+  };
+
+  const items = [];
+  for (const entry of merged) {
+    if (entry.type === "move") {
+      const task = await getTask(entry.event.taskId);
+      if (!task) continue;
+      items.push({ key: String(entry.event._id), kind: entry.event.kind, at: entry.at, source: entry.event.source, backfilled: isBackfilled(entry.event), note: entry.event.note ?? null,
+        taskId: task._id, title: task.title, lane: task.lane, project: await projectTitle(task.projectId), minutes: null as number | null, outcome: null as string | null });
+    } else {
+      const s = entry.session;
+      const task = await getTask(s.taskId);
+      items.push({ key: String(s._id), kind: s.source ? "logged" : "focused", at: entry.at, source: s.source ?? "app", backfilled: false, note: s.contribution || null,
+        taskId: s.taskId, title: s.title, lane: s.lane, project: await projectTitle(s.projectId ?? task?.projectId),
+        minutes: s.startedAt !== undefined ? Math.round((s.endedAt - s.startedAt) / 60_000) : s.plannedMinutes ?? null, outcome: s.outcome as string | null });
+    }
+  }
+  // Milestones and phases completed inside this page's span of time.
+  const allMilestones = await ctx.db.query("milestones").withIndex("by_owner", q => q.eq("owner", owner)).take(2000);
+  const milestones = allMilestones.filter(m => m.completedAt !== undefined);
+  const markers: { key: string; kind: "milestone" | "phase"; at: number; title: string; project: string | null }[] = [];
+  for (const m of milestones) if (m.completedAt! < before && m.completedAt! >= floor) markers.push({ key: `m:${m._id}`, kind: "milestone", at: m.completedAt!, title: m.title, project: await projectTitle(m.projectId) });
+  const byPhase = new Map<string, Doc<"milestones">[]>();
+  for (const m of allMilestones) if (m.phaseId) byPhase.set(String(m.phaseId), [...(byPhase.get(String(m.phaseId)) ?? []), m]);
+  for (const [phaseId, list] of byPhase) {
+    if (!list.every(m => m.completedAt !== undefined)) continue;
+    const at = Math.max(...list.map(m => m.completedAt!));
+    if (at >= before || at < floor) continue;
+    const phase = await ctx.db.get(phaseId as Id<"phases">);
+    if (phase && phase.owner === owner) markers.push({ key: `p:${phase._id}`, kind: "phase", at, title: phase.name, project: await projectTitle(phase.projectId) });
+  }
+  return { items, markers, next: more && merged.length ? floor : null };
+}
 
 /**
  * Finished tasks that count for no skill yet (none of their own, their milestone's or their

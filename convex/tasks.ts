@@ -235,25 +235,29 @@ export const edit = mutation({
     taskId: v.id("tasks"), title: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()),
     minutes: v.optional(v.number()), energy: v.optional(v.number()), skills: v.optional(v.array(v.string())), notes: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    const owner = await requireOwner(ctx);
-    const task = await ctx.db.get(args.taskId);
-    assertOwner(task, owner);
-    if (task.status === "Archived") throw new ConvexError(`"${task.title}" is archived. Restore it first.`);
-    const nextStep = args.nextStep?.trim();
-    if (nextStep !== undefined && nextStep.length > 2000) throw new ConvexError("Keep the next step under 2,000 characters.");
-    await ctx.db.patch(task._id, {
-      ...(args.title !== undefined ? { title: nonempty(args.title) } : {}),
-      ...(nextStep !== undefined ? { nextStep } : {}),
-      ...(args.doneWhen !== undefined ? { doneWhen: doneWhenValue(args.doneWhen) } : {}),
-      ...(args.minutes !== undefined || args.energy !== undefined ? effortValues(args.minutes ?? task.minutes, args.energy ?? task.energy) : {}),
-      ...(args.skills !== undefined ? { skills: skillValues(args.skills) } : {}),
-      // Empty notes clear them.
-      ...(args.notes !== undefined ? { notes: notesValue(args.notes) } : {}),
-    });
-    return task._id;
-  },
+  handler: async (ctx, args) => editTaskFor(ctx, await requireOwner(ctx), args),
 });
+
+export type TaskEdit = { taskId: Id<"tasks">; title?: string; nextStep?: string; doneWhen?: string; minutes?: number; energy?: number; skills?: string[]; notes?: string };
+
+/** The fields sent change, with the same rules wherever the edit comes from (the app, the Inbox, an assistant). */
+export async function editTaskFor(ctx: MutationCtx, owner: string, args: TaskEdit) {
+  const task = await ctx.db.get(args.taskId);
+  assertOwner(task, owner);
+  if (task.status === "Archived") throw new ConvexError(`"${task.title}" is archived. Restore it first.`);
+  const nextStep = args.nextStep?.trim();
+  if (nextStep !== undefined && nextStep.length > 2000) throw new ConvexError("Keep the next step under 2,000 characters.");
+  await ctx.db.patch(task._id, {
+    ...(args.title !== undefined ? { title: nonempty(args.title) } : {}),
+    ...(nextStep !== undefined ? { nextStep } : {}),
+    ...(args.doneWhen !== undefined ? { doneWhen: doneWhenValue(args.doneWhen) } : {}),
+    ...(args.minutes !== undefined || args.energy !== undefined ? effortValues(args.minutes ?? task.minutes, args.energy ?? task.energy) : {}),
+    ...(args.skills !== undefined ? { skills: skillValues(args.skills) } : {}),
+    // Empty notes clear them.
+    ...(args.notes !== undefined ? { notes: notesValue(args.notes) } : {}),
+  });
+  return task._id;
+}
 
 /** Adds "what changed" (or a blocker) to a move after it happened, from the toast that followed it. */
 export const noteOn = mutation({
@@ -300,7 +304,9 @@ export const undo = mutation({
     if (!before) throw new ConvexError("This change can't be undone.");
     await ctx.db.patch(task._id, {
       status: before.status, nextStep: before.nextStep, startedAt: before.startedAt, completedAt: before.completedAt,
-      archivedFrom: before.archivedFrom, archivedWithProject: before.archivedWithProject, skills: before.skills,
+      archivedFrom: before.archivedFrom, archivedWithProject: before.archivedWithProject,
+      // Only a finish sets skills, so only undoing one puts them back; skills added since stay.
+      ...(event.kind === "done" ? { skills: before.skills } : {}),
     });
     if (before.pinned) {
       const profile = await ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique();

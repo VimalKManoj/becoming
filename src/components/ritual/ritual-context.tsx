@@ -4,7 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useRouter } from "next/navigation";
 
 // App-wide pieces of the Ritual design that any screen can call on: the capture sheet, the
-// way to the New project page (Work → New project) and the toast. The shell renders them once.
+// way to the New project page (Work → New project), the connect-Claude-Code sheet and the
+// toast. The shell renders them once.
 
 export type CaptureMode = "idea" | "task" | "project" | "assignment";
 /** A button on a toast, such as Undo. Running it closes the toast unless it returns false. */
@@ -26,6 +27,10 @@ type RitualContextValue = {
   closeCapture: () => void;
   /** Opens the New project page; with an idea, it starts from that idea. */
   openNewProject: (ideaId?: string) => void;
+  /** The connect-Claude-Code sheet (components/assistants/connect-sheet.tsx). */
+  connecting: boolean;
+  openConnect: () => void;
+  closeConnect: () => void;
   toast: Toast | null;
   showToast: (text: string, tone?: "status" | "alert", options?: ToastOptions) => void;
   closeToast: () => void;
@@ -37,6 +42,7 @@ export function RitualProvider({ children }: { children: ReactNode }) {
   const [capture, setCapture] = useState<CaptureMode | null>(null);
   const router = useRouter();
   const [toast, setToast] = useState<Toast | null>(null);
+  const [connecting, setConnecting] = useState(false);
   const counter = useRef(0);
 
   const showToast = useCallback((text: string, tone: "status" | "alert" = "status", options: ToastOptions = {}) => {
@@ -50,6 +56,9 @@ export function RitualProvider({ children }: { children: ReactNode }) {
     openCapture: (mode = "idea") => setCapture(mode),
     closeCapture: () => setCapture(null),
     openNewProject: (ideaId?: string) => { setCapture(null); router.push(`/work?new=project${ideaId ? `&idea=${ideaId}` : ""}`); },
+    connecting,
+    openConnect: () => { setCapture(null); setConnecting(true); },
+    closeConnect: () => setConnecting(false),
     toast,
     showToast,
     closeToast,

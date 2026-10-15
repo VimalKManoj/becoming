@@ -19,8 +19,8 @@ Convex stores documents in tables. Each document has `_id` and `_creationTime`. 
 | weeklyCommitments | owner, week (Monday key), target, paused | by_owner_week: target in force from a week; a pause applies to its own week only |
 | reflections | owner, week, learning, intention | by_owner_week: one private reflection per week |
 | weekPlans | owner, week (Monday key), intention, taskIds | by_owner_week: the steps lined up in the weekly review, one plan per week |
-| apiTokens | owner, name, hash (SHA-256), prefix; optional lastUsedAt | by_hash: the MCP endpoint finds the owner; by_owner: Settings → Assistants |
-| inbox | owner, source (token name), proposal (session / task / idea / milestone / nextStep) | by_owner: the Inbox on Today; nothing counts until approved |
+| apiTokens | owner, name, hash (SHA-256), prefix; optional lastUsedAt, trust ("ask" / "work" / "all"; none means "work") | by_hash: the MCP endpoint finds the owner; by_owner: Settings → Assistants |
+| inbox | owner, source (token name), proposal (session / task / idea / milestone / nextStep / move / taskEdit, plus the constellation and plan kinds) | by_owner: the Inbox on Today; nothing counts until approved |
 | pushSubscriptions | owner, endpoint, p256dh, auth | by_owner: a person's devices; by_endpoint: one row per browser |
 | taskEvents | owner, taskId, kind, at, source; optional projectId, note, before (the task's status, next step, dates, skills and pin just before the move, for Undo) | by_task (taskId, at): a task's timeline; by_owner_at: the activity feed and deletion |
 
@@ -269,6 +269,14 @@ See [PLAN-project-constellation.md](PLAN-project-constellation.md) and, for the 
 - `tasks.noteOn` adds a note to a move afterwards; a blocker also becomes the next step.
 - `tasks.remove` deletes an archived task with its events, sessions and evidence, and unlinks it from prerequisites, ideas, week plans, the pin and the Inbox.
 - `createWithFirstStep` and `ideas.activate` now log "created".
+
+**Assistants record the work (15 October 2026, PLAN-one-tap-and-daily-loop Phase 2).**
+- `apiTokens.trust` (optional): "ask" sends every change to the Inbox, "work" (the default, and what no value means) applies task work at once and keeps plan changes for approval, "all" applies everything. `assistants.setTrust` changes it (owner only).
+- Two Inbox proposal kinds: `move` (taskId, status In progress / Done / Blocked, optional note and skills) and `taskEdit` (taskId and any of title, nextStep, doneWhen, minutes, notes).
+- An applied change goes through `inbox.applyProposal`, the same code as Approve: moves through `setStatusFor` (so they record `taskEvents.before` and can be undone), edits through `tasks.editTaskFor`, finished work with minutes through `saveLoggedSession`. The token's name is the `source`.
+- `constellation.taskStory` returns each entry's `id` and `undoable` (the latest entry, when it kept a snapshot), and now reads the latest 200 entries.
+- `tasks.undo` restores skills only when undoing a finish, so skills added after another move are kept.
+- No new tables; nothing to migrate.
 
 **New project page (15 October 2026).**
 - `newProject.create({ title, purpose, ideaId?, lane?, docs, phases })` makes a whole project in one transaction: docs (planned, not yet written, each feeding the phases whose `docCodes` name it); phases with goal, done-when and notes; their milestones (phase set, with done-when and notes); and tasks (30–90 min, steady, empty done-when, the given lane).

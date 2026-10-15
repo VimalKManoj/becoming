@@ -81,6 +81,18 @@ describe("one tap: moves, Undo and what a finish means", () => {
     expect(again.eventId).not.toBeNull();
   });
 
+  it("keeps skills added since a move when that move is undone; only undoing a finish restores them", async () => {
+    const { t, asA } = setup();
+    const taskId = await asA.mutation(api.tasks.create, task);
+    const started = await asA.mutation(api.tasks.setStatus, { taskId, status: "In progress" });
+    await asA.mutation(api.tasks.edit, { taskId, skills: ["Motion"] });
+    await asA.mutation(api.tasks.undo, { eventId: started.eventId! });
+    expect(await t.run(ctx => ctx.db.get(taskId))).toMatchObject({ status: "Ready", skills: ["Motion"] });
+    const done = await asA.mutation(api.tasks.setStatus, { taskId, status: "Done", skills: ["Systems"] });
+    await asA.mutation(api.tasks.undo, { eventId: done.eventId! });
+    expect(await t.run(ctx => ctx.db.get(taskId))).toMatchObject({ status: "Ready", skills: ["Motion"] });
+  });
+
   it("a finish reports its skills, the milestone's progress and what's next", async () => {
     const { asA } = setup();
     const { a, phaseId, a1, a2, b1 } = await plan(asA);

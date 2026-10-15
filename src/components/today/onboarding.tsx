@@ -9,10 +9,13 @@ import { Embers } from "@/components/ritual/embers";
 import { radioKeys } from "@/components/ritual/radio-keys";
 import { useModal } from "@/components/ritual/use-modal";
 import { readableError } from "@/lib/errors";
+import { ClaudeLoop } from "@/components/assistants/claude-loop";
+import { Glyph } from "@/components/assistants/assistant-badge";
 
-// First-time setup (Ritual design): what Becoming is, your motive, your rhythm, what's on
-// your plate, and one first step small enough to start. Every answer is saved for real;
-// "Skip setup" leaves everything as it is.
+// First-time setup (Ritual design): what Becoming is, your motive, your rhythm, your
+// assistant (connect Claude Code after setup, or not now), what's on your plate, and one
+// first step small enough to start. Every answer is saved for real; "Skip setup" leaves
+// everything as it is.
 
 type Lane = "Projects" | "Showcases" | "Writing";
 const motives = ["Ship things people can touch.", "Get a little better at my craft.", "Make one small thing better every week."];
@@ -23,9 +26,15 @@ const firsts: { title: string; detail: string; lane: Lane | null; example: { tit
   { title: "Some writing", detail: "A note or a post", lane: "Writing", example: { title: "Draft: what a recap form taught me", done: "400 rough words and one diagram idea.", minutes: 30 } },
   { title: "Just look around", detail: "Skip for now", lane: null, example: null },
 ];
+const features = ["Check in: time, energy, mood. About 10 seconds.", "Focus on one thing, then say how it went.", "Watch your Mind Bloom fill in, skill by skill."];
+const assistantChoices = [
+  { yes: true, title: "Connect it after setup", detail: "About a minute: one command to copy." },
+  { yes: false, title: "Not now", detail: "It waits on Today whenever you want it." },
+];
+const choiceStyle = { minHeight: 86, padding: 16, borderRadius: 20, flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", gap: 8, color: "var(--r-ink)" } as const;
 
 export function Onboarding({ onClose }: { onClose: () => void }) {
-  const { showToast } = useRitual();
+  const { showToast, openConnect } = useRitual();
   const saveMotive = useMutation(api.settings.saveMotive);
   const setRhythm = useMutation(api.rhythm.setRhythm);
   const savePreferences = useMutation(api.settings.savePreferences);
@@ -39,11 +48,12 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState("");
   const [done, setDone] = useState("");
   const [minutes, setMinutes] = useState(30);
+  const [connectAfter, setConnectAfter] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const pick = firsts[first];
   const dialog = useModal<HTMLDivElement>();
-  const last = pick.lane ? 4 : 3;
+  const last = pick.lane ? 5 : 4;
 
   async function finish(skip: boolean) {
     setBusy(true); setError("");
@@ -59,12 +69,13 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
       await complete({});
       onClose();
       if (!skip) showToast(pick.lane ? "You're set. Tonight's first focus is ready." : "You're set. Have a look around.");
+      if (!skip && connectAfter) openConnect();
     } catch (caught) { setError(readableError(caught, "Could not save your setup. Please try again.")); }
     finally { setBusy(false); }
   }
 
   function next() {
-    if (step === 3 && pick.example && !title) setMinutes(pick.example.minutes);
+    if (step === 4 && pick.example && !title) setMinutes(pick.example.minutes);
     if (step >= last) void finish(false); else setStep(step + 1);
   }
 
@@ -81,7 +92,8 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
         <h1 id="ob-title" style={{ font: "400 clamp(44px,9cqi,64px)/.98 var(--r-serif)" }}>A mind that <em style={{ color: "var(--r-ember-text)" }}>grows</em> one evening at a time.</h1>
         <p className="r-lede" style={{ fontSize: 15, lineHeight: 1.55, textWrap: "pretty" }}>Each evening you say how much you have. Becoming gives you one clear thing to do, then keeps proof of what you made.</p>
         <div className="r-stack" style={{ gap: 8 }}>
-          {["Check in: time, energy, mood. About 10 seconds.", "Focus on one thing, then say how it went.", "Watch your Mind Bloom fill in, skill by skill."].map((line, i) => <div key={line} className="t-ob-step"><span className="r-mono" style={{ font: "500 12px var(--r-mono)", color: "var(--r-ember-soft)" }}>0{i + 1}</span><span style={{ font: "400 14px var(--r-sans)" }}>{line}</span></div>)}
+          {features.map((line, i) => <div key={line} className="t-ob-step"><span className="r-mono" style={{ font: "500 12px var(--r-mono)", color: "var(--r-ember-soft)" }}>0{i + 1}</span><span style={{ font: "400 14px var(--r-sans)" }}>{line}</span></div>)}
+          <div className="t-ob-step t-ob-claude"><span className="r-mono" style={{ font: "500 12px var(--r-mono)", color: "var(--r-ember-soft)" }}>04</span><span style={{ font: "400 14px var(--r-sans)", flex: 1 }}>Build with Claude Code, and your work records itself here.</span><Glyph /></div>
         </div>
       </div>}
 
@@ -103,15 +115,25 @@ export function Onboarding({ onClose }: { onClose: () => void }) {
         </div>
       </div>}
 
-      {step === 3 && <div className="r-stack r-rise-6" style={{ gap: 18, paddingTop: "clamp(10px,4cqi,32px)" }}>
-        <div className="r-eyebrow">First thing</div>
-        <h1 id="ob-title" className="r-title-xl" style={{ fontSize: "clamp(36px,7cqi,52px)" }}>What&apos;s on your <em>plate?</em></h1>
-        <div className="t-ob-firsts" role="radiogroup" aria-label="What's on your plate" onKeyDown={radioKeys}>{firsts.map((item, i) => <button key={item.title} type="button" role="radio" aria-checked={first === i} className="r-chip" style={{ minHeight: 86, padding: 16, borderRadius: 20, flexDirection: "column", alignItems: "flex-start", justifyContent: "space-between", gap: 8, color: "var(--r-ink)" }} onClick={() => setFirst(i)}>
+      {step === 3 && <div className="r-stack r-rise-6" style={{ gap: 16, paddingTop: "clamp(10px,3cqi,24px)" }}>
+        <div className="r-eyebrow">Your assistant</div>
+        <h1 id="ob-title" className="r-title-xl" style={{ fontSize: "clamp(32px,6.5cqi,46px)" }}>Build with Claude. Let it <em>keep the record.</em></h1>
+        <div className="t-ob-art"><ClaudeLoop /></div>
+        <p className="r-lede" style={{ fontSize: 14, lineHeight: 1.55, textWrap: "pretty" }}>If you build with Claude Code, connect it once. It starts a task when you begin and finishes it with a summary and the PR link. It all shows up here in seconds, with an Undo.</p>
+        <div className="t-ob-firsts" role="radiogroup" aria-label="Connect Claude Code" onKeyDown={radioKeys}>{assistantChoices.map(item => <button key={item.title} type="button" role="radio" aria-checked={connectAfter === item.yes} className="r-chip" style={choiceStyle} onClick={() => setConnectAfter(item.yes)}>
           <span style={{ font: "500 15.5px var(--r-sans)" }}>{item.title}</span><span className="r-small">{item.detail}</span>
         </button>)}</div>
       </div>}
 
-      {step === 4 && pick.lane && <div className="r-stack r-rise-6" style={{ gap: 16, paddingTop: "clamp(10px,4cqi,32px)" }}>
+      {step === 4 && <div className="r-stack r-rise-6" style={{ gap: 18, paddingTop: "clamp(10px,4cqi,32px)" }}>
+        <div className="r-eyebrow">First thing</div>
+        <h1 id="ob-title" className="r-title-xl" style={{ fontSize: "clamp(36px,7cqi,52px)" }}>What&apos;s on your <em>plate?</em></h1>
+        <div className="t-ob-firsts" role="radiogroup" aria-label="What's on your plate" onKeyDown={radioKeys}>{firsts.map((item, i) => <button key={item.title} type="button" role="radio" aria-checked={first === i} className="r-chip" style={choiceStyle} onClick={() => setFirst(i)}>
+          <span style={{ font: "500 15.5px var(--r-sans)" }}>{item.title}</span><span className="r-small">{item.detail}</span>
+        </button>)}</div>
+      </div>}
+
+      {step === 5 && pick.lane && <div className="r-stack r-rise-6" style={{ gap: 16, paddingTop: "clamp(10px,4cqi,32px)" }}>
         <div className="r-eyebrow">First step</div>
         <h1 id="ob-title" className="r-title-xl" style={{ fontSize: "clamp(36px,7cqi,52px)" }}>Make it small enough to <em>start.</em></h1>
         <label className="r-field"><span className="r-row" style={{ gap: 8 }}>The first step {!title && <span className="r-example">EXAMPLE</span>}</span><input className="r-input" placeholder={pick.example?.title} value={title} onChange={event => setTitle(event.target.value)} maxLength={160} /></label>
