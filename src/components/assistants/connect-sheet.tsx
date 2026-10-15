@@ -70,14 +70,14 @@ function ConnectCard({ onClose }: { onClose: () => void }) {
         <h2 id="cn-title" className="cn-title">Let Claude <em>keep the record.</em></h2>
         <div className="cn-art"><ClaudeLoop /></div>
         <ul className="cn-points">
-          <li><span className="cn-num">01</span>You work in Claude Code. It starts the task when you begin, and finishes it with a summary, the skills and the PR link.</li>
-          <li><span className="cn-num">02</span>It shows up here in seconds, on Today and in Journey. Every move has an Undo.</li>
-          <li><span className="cn-num">03</span>New plans wait for your approval. You choose how much it can do.</li>
+          <li><span className="cn-num">01</span>Starts and finishes your tasks as you work, with the PR link.</li>
+          <li><span className="cn-num">02</span>Shows up here in seconds, with an Undo.</li>
+          <li><span className="cn-num">03</span>New plans wait for your approval.</li>
         </ul>
-        {already && <p className="r-small">{already.name} is already connected (active {lastHeard(already.lastUsedAt ?? 0)}). This makes a new token, for another computer for example.</p>}
+        {already && <p className="r-small cn-foot">Already connected (active {lastHeard(already.lastUsedAt ?? 0)}). This adds a token for another computer.</p>}
         {error && <p role="alert" className="r-small cn-error">{error}</p>}
         <button type="button" className="r-btn" disabled={busy} onClick={() => void begin()}>{busy ? "Getting it ready…" : "Connect Claude Code"}</button>
-        <p className="r-small cn-foot">Cursor or VS Code: Settings → Assistants has the address. The Claude app and ChatGPT come with “Sign in with Becoming”.</p>
+        {!already && <p className="r-small cn-foot">Cursor or VS Code? The address is in Settings → Assistants.</p>}
       </>}
 
       {step === "run" && token && <>

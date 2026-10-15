@@ -117,7 +117,8 @@
 .t-ob-claude{background:linear-gradient(120deg,rgba(255,138,61,.1),rgba(255,240,225,.03));border:1px solid rgba(255,170,110,.22)}
 
 /* ---------- The connect sheet ---------- */
-.r-cap-card.cn{max-width:600px;gap:16px;max-height:calc(100dvh - 64px);overflow-y:auto;scrollbar-width:thin}
+.r-cap-card.cn{max-width:580px;gap:14px;max-height:calc(100dvh - 48px);overflow-y:auto;scrollbar-width:none}
+.r-cap-card.cn::-webkit-scrollbar{display:none}
 .r-cap-card.cn>*{flex-shrink:0}
 @media(max-width:899px){.r-cap-card.cn{max-height:94dvh}}
 .cn-steps{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;padding:0;list-style:none;font:500 10.5px var(--r-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--r-muted)}
@@ -126,12 +127,13 @@
 .cn-steps .now{color:var(--r-ink)}
 .cn-steps .now .cn-dot{background:var(--r-ember);box-shadow:0 0 8px var(--r-ember)}
 .cn-steps .past .cn-dot{background:var(--r-mint)}
-.cn-title{margin:0;font:400 32px/1.05 var(--r-serif);color:var(--r-ink)}
+.cn-title{margin:0;font:400 30px/1.05 var(--r-serif);color:var(--r-ink)}
 .cn-title em{color:var(--r-ember-text);font-style:italic}
 .cn-title.center,.cn-lede.center{text-align:center}
-.cn-art{padding:10px 8px 6px;border-radius:20px;background:rgba(0,0,0,.22);border:1px solid var(--r-line-3)}
-.cn-points{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
-.cn-points li{display:flex;align-items:baseline;gap:12px;padding:10px 14px;border-radius:14px;background:rgba(255,240,225,.035);font:400 14px/1.45 var(--r-sans);color:var(--r-text)}
+.cn-art{padding:4px 8px 2px;border-radius:20px;background:rgba(0,0,0,.22);border:1px solid var(--r-line-3)}
+.cn-art .cl{max-height:min(230px,30dvh);margin:0 auto;width:auto;max-width:100%}
+.cn-points{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.cn-points li{display:flex;align-items:baseline;gap:12px;padding:8px 14px;border-radius:12px;background:rgba(255,240,225,.035);font:400 14px/1.4 var(--r-sans);color:var(--r-text)}
 .cn-num{flex:none;font:500 11.5px var(--r-mono);color:var(--r-ember-soft)}
 .cn-foot{text-align:center}
 .cn-error{color:var(--r-red-pale)}
