@@ -295,14 +295,16 @@ Every task shows the same **status circle** (empty Ready, half In progress, ✓ 
 
 ### B5b. Today: On it now and Last time (added 15 October, Phase 3)
 
-- [ ] With a task In progress, Today shows **On it now** just above the week bar, as a slim bar: the status circle, the title, "Project · 0A·2" and ▶ Focus. **Expect:** latest moved first, at most 3, "+ N more in Work" beyond that.
+- [ ] Below the tiles, one card turns every 6 seconds through **On it now**, **Last time · <day>** and **This week**; each tab's bar fills while it waits. Point at the card. **Expect:** it holds; letting go starts the wait again. Click a tab. **Expect:** that slide. With reduced motion on, it doesn't turn by itself.
+- [ ] With a task In progress, **On it now** shows the latest: the status circle, the title, "Project · 0A·2 · +N more" and ▶ Focus. With nothing In progress the tab isn't there.
 - [ ] Click a title. **Expect:** the task sheet opens on Today; close it and you're still on Today. Change its status from the circle. **Expect:** the bar updates at once (finishing removes it).
 - [ ] ▶ Focus on a task that needs more time or energy than you pick. **Expect:** the plan still offers it, saying it needs more than you said.
-- [ ] **Last time** sits between On it now and the week: "Last time · Yesterday" (or "Today so far") with what you finished, started and blocked, then what an assistant did. With an open task that has a next step: "You left off: …" and **Pick up**, which opens it. **Expect:** the question card no longer shows "A note from last time" when Last time shows a pick-up.
-- [ ] A new account with nothing moved: neither bar shows.
+- [ ] **Last time** reads "Yesterday · You finished … Claude Code finished …" (or "Today so far"). With an open task that has a next step, **Pick up** opens it.
+- [ ] **This week** shows the seven days as hexagons in their lane colours with the lane's letter, today ringed, then "1 of 6 evenings · …" and Journey →. **Expect:** the question card no longer shows "A note from last time" when Last time shows a pick-up.
+- [ ] A new account with nothing moved: only This week shows.
 - [ ] Tiles: Build reads "Next: <task> · N min"; Small piece and Write say how many are open.
 - [ ] The check-in has **2h+**; the plan header then reads "2h+".
-- [ ] On a phone, the bars stack above the week bar with no sideways scroll.
+- [ ] On a phone, the card fits the width (the project and code hide), with no sideways scroll.
 - [ ] Onboarding: "Check in: your time and energy"; choosing "A project" ends with "Set up my project" and opens the New project page.
 
 ### B8a-3. Connecting is easy (added 15 October)

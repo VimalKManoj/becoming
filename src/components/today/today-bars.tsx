@@ -1,50 +1,38 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState, type ReactNode } from "react";
 import type { FunctionReturnType } from "convex/server";
 import type { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import type { WeekSummary } from "@/components/ritual/week";
 import { StatusControl } from "@/components/tasks/status-control";
 
-// Today's two slim bars, just above the week (PLAN-one-tap-and-daily-loop, Phase 3, as the
-// owner placed them on 15 October): "On it now", the tasks In progress, each with its status
-// circle, opening its sheet, and ▶ Focus; and "Last time", what moved on your last active
-// day (or today so far), by you and by assistants, with where you left off. Data: today.home.
+// Where things stand, below the tiles (PLAN-one-tap-and-daily-loop, Phase 3, in the owner's
+// "Today · A" design, 15 October): one card that turns through up to three slides, "On it
+// now", "Last time" and "This week", every 6 seconds. Each tab's bar fills as it waits;
+// pointing at the card or focusing inside it holds it, and a tab picks a slide. With
+// reduced motion it never turns by itself. Data: today.home and the week summary.
 
 type Home = FunctionReturnType<typeof api.today.home>;
 type LastTime = NonNullable<Home["lastTime"]>;
 type Group = LastTime["groups"][number];
 
 const short = (title: string, max = 38) => `“${title.length > max ? `${title.slice(0, max - 1)}…` : title}”`;
+const ms = (key: string) => Date.UTC(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, Number(key.slice(8, 10)));
 
-export function OnItNow({ home, onOpenTask }: { home: Home; onOpenTask: (id: Id<"tasks">) => void }) {
-  if (!home.onItNow.length) return null;
-  return <section className="t-bar t-onit" aria-labelledby="onit-title">
-    <h2 id="onit-title" className="t-bar-k">On it now</h2>
-    <ul className="t-onit-list">
-      {home.onItNow.map(task => <li key={task.taskId} className="t-onit-row">
-        <StatusControl task={{ _id: task.taskId, title: task.title, status: task.status }} />
-        <button type="button" className="t-onit-title" onClick={() => onOpenTask(task.taskId)}>{task.title}</button>
-        {(task.project || task.code) && <span className="t-onit-meta">{[task.project?.title, task.code].filter(Boolean).join(" · ")}</span>}
-        <Link className="t-onit-focus" href={`/today?task=${task.taskId}`} aria-label={`Focus on ${task.title}`}>▶ Focus</Link>
-      </li>)}
-    </ul>
-    {home.moreInProgress > 0 && <Link className="t-bar-more" href="/work">+ {home.moreInProgress} more in Work →</Link>}
-  </section>;
-}
-
-/** "Today so far", "Yesterday", a weekday within the week, else "12 Oct". */
+/** The day Last time covers: { long: "Monday", short: "Mon" }, "Today so far", "Yesterday", or "12 Oct". */
 export function dayLabel(day: string, today: string) {
-  const ms = (key: string) => Date.UTC(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, Number(key.slice(8, 10)));
   const days = Math.round((ms(today) - ms(day)) / 86_400_000);
-  if (days <= 0) return "Today so far";
-  if (days === 1) return "Yesterday";
+  if (days <= 0) return { long: "Today so far", short: "Today" };
+  if (days === 1) return { long: "Yesterday", short: "Yesterday" };
   const date = new Date(ms(day));
-  if (days < 7) return date.toLocaleDateString("en-GB", { weekday: "long", timeZone: "UTC" });
-  return `${date.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })} · ${days} days ago`;
+  if (days < 7) return { long: date.toLocaleDateString("en-GB", { weekday: "long", timeZone: "UTC" }), short: date.toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" }) };
+  const dated = date.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+  return { long: dated, short: dated };
 }
 
-/** One person's moves as a phrase: "You finished “R1” and started “R2”", "Claude Code finished 3". */
+/** One person's moves as a phrase: "You finished “R1” and started “R2”.", "Claude Code finished “R3” and 6 more." */
 export function groupLine(group: Group) {
   const who = group.by === "you" ? "You" : group.by;
   const verbs: [string, { title: string }[]][] = [["finished", group.finished], ["started", group.started], ["blocked", group.blocked], ["worked on", group.logged]];
@@ -54,17 +42,95 @@ export function groupLine(group: Group) {
   return `${who} ${parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}` : parts[0]}.`;
 }
 
-export function LastTimeBar({ lastTime, today, onOpenTask }: { lastTime: LastTime; today: string; onOpenTask: (id: Id<"tasks">) => void }) {
-  const lines = lastTime.groups.map(groupLine).filter(Boolean);
-  if (!lines.length && !lastTime.pickUp) return null;
-  return <section className="t-bar t-last" aria-labelledby="last-title">
-    <div className="t-last-row">
-      <h2 id="last-title" className="t-bar-k">Last time · {dayLabel(lastTime.day, today)}</h2>
-      <p className="t-last-text">{lines.join(" ")}</p>
+type Slide = { id: string; tab: string; body: ReactNode };
+
+export function WhereThingsStand({ home, week, today, onOpenTask }: { home: Home | undefined; week: WeekSummary; today: string | null; onOpenTask: (id: Id<"tasks">) => void }) {
+  const [index, setIndex] = useState(0);
+  const [held, setHeld] = useState(false);
+  const [round, setRound] = useState(0);
+  const [still, setStill] = useState(false);
+
+  const slides: Slide[] = [];
+  const doing = home?.onItNow[0];
+  if (doing) {
+    const more = (home?.onItNow.length ?? 1) - 1 + (home?.moreInProgress ?? 0);
+    slides.push({
+      id: "now", tab: "On it now",
+      body: <>
+        <span className="t-car-what">
+          <StatusControl task={{ _id: doing.taskId, title: doing.title, status: doing.status }} />
+          <button type="button" className="t-car-tt" onClick={() => onOpenTask(doing.taskId)}>{doing.title}</button>
+          <span className="t-car-meta">{[doing.project?.title, doing.code, more > 0 ? `+${more} more` : null].filter(Boolean).join(" · ")}</span>
+        </span>
+        <Link className="t-car-focus" href={`/today?task=${doing.taskId}`} aria-label={`Focus on ${doing.title}`}>▶ Focus</Link>
+      </>,
+    });
+  }
+  const last = home?.lastTime;
+  const lines = last ? last.groups.map(groupLine).filter(Boolean) : [];
+  if (last && today && (lines.length || last.pickUp)) {
+    const day = dayLabel(last.day, today);
+    const text = lines.length ? lines.join(" ") : `You left off: ${last.pickUp!.nextStep}`;
+    slides.push({
+      id: "last", tab: `Last time · ${day.short}`,
+      body: <>
+        <span className="t-car-txt" title={text}><b>{day.long} ·</b> {text}</span>
+        {last.pickUp && <button type="button" className="t-car-pick" onClick={() => onOpenTask(last.pickUp!.taskId)} aria-label={`Pick up ${last.pickUp.title}: ${last.pickUp.nextStep}`}>Pick up →</button>}
+      </>,
+    });
+  }
+  const weekText = week.configured && week.target && !week.paused && week.count < week.target
+    ? <><b>{week.count} of {week.target}</b> evenings · {week.line}</> : <>{week.line}</>;
+  slides.push({
+    id: "week", tab: "This week",
+    body: <>
+      <span className="t-car-what">
+        <span className="t-hexes" aria-hidden="true">{week.days.map((day, i) => {
+          const lane = day.count > 0 && day.lane ? day.lane[0] : "";
+          return <span key={i} className={`t-hex${lane ? ` ${lane}` : day.today ? " today" : ""}`} title={day.name}><span className="t-hexl">{lane}</span></span>;
+        })}</span>
+        <span className="t-car-txt">{weekText}</span>
+      </span>
+      <Link className="t-car-pick" href="/journey">Journey →</Link>
+    </>,
+  });
+
+  const count = slides.length;
+  const current = Math.min(index, count - 1);
+
+  // Reduced motion: no turning by itself.
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setStill(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  useEffect(() => {
+    if (held || still || count < 2) return;
+    const timer = window.setTimeout(() => setIndex(i => (Math.min(i, count - 1) + 1) % count), 6000);
+    return () => window.clearTimeout(timer);
+  }, [held, still, count, current, round]);
+
+  const pick = (i: number) => { setIndex(i); setRound(r => r + 1); };
+  // Letting go starts the wait again, so the bar and the turn stay together.
+  const release = () => { setHeld(false); setRound(r => r + 1); };
+  const slot = (i: number) => (i === current ? "on" : i === (current + count - 1) % count && count > 1 ? "gone" : "");
+
+  return <section className={`t-car${held ? " held" : ""}${still ? " still" : ""}`} aria-roledescription="carousel" aria-label="Where things stand"
+    onMouseEnter={() => setHeld(true)} onMouseLeave={release}
+    onFocus={() => setHeld(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) release(); }}>
+    <div className="t-car-tabs" role="tablist" aria-label="Where things stand">
+      {slides.map((slide, i) => <button key={`${slide.id}-${i === current ? round : "x"}`} type="button" role="tab" id={`car-tab-${slide.id}`} aria-controls={`car-${slide.id}`} aria-selected={i === current}
+        className={`t-car-tab${i === current ? " on" : ""}`} onClick={() => pick(i)}>
+        <span className="t-car-k">{slide.tab}</span><span className="t-car-prog"><span /></span>
+      </button>)}
     </div>
-    {lastTime.pickUp && <div className="t-last-row t-last-pick">
-      <span className="t-last-left">You left off: <em>{lastTime.pickUp.nextStep}</em></span>
-      <button type="button" className="t-bar-more" onClick={() => onOpenTask(lastTime.pickUp!.taskId)} aria-label={`Pick up ${lastTime.pickUp.title}`}>Pick up →</button>
-    </div>}
+    <div className="t-car-slides">
+      {slides.map((slide, i) => <div key={slide.id} id={`car-${slide.id}`} role="tabpanel" aria-labelledby={`car-tab-${slide.id}`}
+        className={`t-car-slide ${slot(i)}`} aria-hidden={i !== current} inert={i !== current}>
+        {slide.body}
+      </div>)}
+    </div>
   </section>;
 }

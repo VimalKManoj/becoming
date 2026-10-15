@@ -24,25 +24,48 @@
 .t-intent-sub{display:block;font:400 12.5px/1.35 var(--r-sans);color:var(--r-muted);margin-top:3px}
 .t-weekbar{margin-top:22px;width:100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:18px;border:1px solid var(--r-line);background:transparent;cursor:pointer;color:var(--r-text);text-decoration:none}
 .t-weekbar:hover{border-color:rgba(255,235,215,.16);color:var(--r-ink);text-decoration:none}
-/* On it now and Last time (Phase 3): slim bars like the week below them. */
-.t-bar{width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;margin-top:10px;padding:12px 14px;border-radius:18px;border:1px solid var(--r-line);color:var(--r-text)}
-.t-intents+.t-bar{margin-top:22px}
-.t-bar+.t-weekbar{margin-top:10px}
-.t-bar-k{margin:0;font:500 10.5px var(--r-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--r-ember-soft)}
-.t-onit-list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
-.t-onit-row{display:flex;align-items:center;gap:10px;min-height:34px}
-.t-onit-title{flex:0 1 auto;min-width:0;padding:0;border:0;background:none;box-shadow:none;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;font:500 14px var(--r-sans);color:var(--r-ink)}
-.t-onit-title:hover{color:var(--r-ember-pale);filter:none}
-.t-onit-meta{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:400 11.5px var(--r-mono);color:var(--r-muted)}
-.t-onit-focus{flex:none;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,170,110,.3);font:500 12px var(--r-sans);color:var(--r-ember-soft);text-decoration:none}
-.t-onit-focus:hover{border-color:rgba(255,170,110,.6);color:var(--r-ember-pale);text-decoration:none}
-.t-bar-more{align-self:flex-start;padding:0;border:0;background:none;box-shadow:none;cursor:pointer;font:500 12.5px var(--r-sans);color:var(--r-ember-soft);text-decoration:none}
-.t-bar-more:hover{color:var(--r-ember-pale);filter:none;text-decoration:none}
-.t-last-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
-.t-last-text{flex:1 1 260px;margin:0;font:400 13px/1.45 var(--r-sans);color:var(--r-text)}
-.t-last-pick{align-items:center}
-.t-last-left{flex:1 1 220px;font:400 13px/1.45 var(--r-sans);color:var(--r-muted)}
-.t-last-left em{color:var(--r-ink-2)}
+/* Where things stand (Phase 3, the owner's "Today · A" design): one card below the tiles that
+   turns through On it now, Last time and This week. Each tab's bar fills over 6s; the slides
+   flip on a 3D axis with a blur. Held while pointed at or focused; still with reduced motion. */
+.t-car{margin-top:16px;padding:10px 12px 6px 16px;border-radius:20px;border:1px solid var(--r-line);background:linear-gradient(160deg,rgba(255,240,225,.035),rgba(255,240,225,.01));animation:r-rise .7s .15s both}
+.t-car-tabs{display:flex;gap:18px;min-width:0}
+.t-car-tab{flex:0 1 auto;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:30px;padding:4px 0 0;border:0;background:none;box-shadow:none;cursor:pointer;text-align:left}
+.t-car-tab:hover{filter:none}
+.t-car-k{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 10px var(--r-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--r-muted);transition:color .3s}
+.t-car-tab:hover .t-car-k{color:var(--r-ink-2)}
+.t-car-tab.on .t-car-k{color:var(--r-ember-soft)}
+.t-car-prog{display:block;width:100%;height:2px;border-radius:99px;background:rgba(255,235,215,.08);overflow:hidden}
+.t-car-prog span{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#F06A2A,#FFB27A)}
+.t-car-tab.on .t-car-prog span{animation:t-car-fill 6s linear forwards}
+.t-car.held .t-car-tab.on .t-car-prog span{animation-play-state:paused}
+.t-car.still .t-car-tab.on .t-car-prog span{animation:none;width:100%}
+@keyframes t-car-fill{from{width:0}to{width:100%}}
+.t-car-slides{position:relative;height:58px;perspective:700px}
+.t-car-slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;gap:14px;opacity:0;transform:translateY(55%) rotateX(-65deg);transform-origin:50% 50% -20px;filter:blur(6px);pointer-events:none;transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1),filter .7s ease}
+.t-car-slide.on{opacity:1;transform:none;filter:none;pointer-events:auto}
+.t-car-slide.gone{transform:translateY(-55%) rotateX(65deg)}
+.t-car.still .t-car-slide{transition:none}
+.t-car-what{flex:1;display:flex;align-items:center;gap:10px;min-width:0}
+.t-car-tt{min-width:0;padding:0;border:0;background:none;box-shadow:none;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;font:500 14px var(--r-sans);color:var(--r-ink)}
+.t-car-tt:hover{color:var(--r-ember-pale);filter:none}
+.t-car-meta{flex:none;white-space:nowrap;font:400 11.5px var(--r-mono);color:var(--r-muted)}
+.t-car-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:400 13px var(--r-sans);color:var(--r-text)}
+.t-car-txt b{font-weight:500;color:var(--r-ink-2)}
+.t-car-focus{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:99px;border:1px solid rgba(255,170,110,.35);background:rgba(255,138,61,.08);font:500 12.5px var(--r-sans);color:var(--r-ember-soft);text-decoration:none;white-space:nowrap}
+.t-car-focus:hover{border-color:rgba(255,170,110,.6);color:var(--r-ember-pale);text-decoration:none}
+.t-car-pick{flex:none;height:36px;padding:0 6px;border:0;background:none;box-shadow:none;cursor:pointer;display:inline-flex;align-items:center;font:500 12.5px var(--r-sans);color:var(--r-ember-soft);text-decoration:none;white-space:nowrap}
+.t-car-pick:hover{color:var(--r-ember-pale);filter:none;text-decoration:none}
+.t-hexes{flex:none;display:flex;gap:4px}
+.t-hex{position:relative;display:grid;place-items:center;width:18px;height:20.7px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(255,235,215,.18)}
+.t-hex::before{content:"";position:absolute;inset:1.5px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:#1A1311}
+.t-hexl{position:relative;font:600 8px var(--r-mono);color:#1B120D}
+.t-hex.P,.t-hex.P::before{background:linear-gradient(180deg,#FFC08F,#F06A2A)}
+.t-hex.S,.t-hex.S::before{background:var(--r-mint)}
+.t-hex.W,.t-hex.W::before{background:var(--r-lilac)}
+.t-hex.today{background:var(--r-ember);animation:t-hex-breathe 4s ease-in-out infinite}
+.t-hex.today::before{background:linear-gradient(180deg,#1A1311 55%,rgba(255,138,61,.35) 55%)}
+@keyframes t-hex-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@media(max-width:520px){.t-car-meta{display:none}.t-car-tabs{gap:12px}}
 
 /* Which project. */
 .t-project{display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:24px;cursor:pointer;text-align:left;color:var(--r-ink);background:var(--r-glass);border:1px solid rgba(255,235,215,.1);box-shadow:none;transition:all .25s;width:100%}

@@ -211,13 +211,14 @@ The goal of this plan is that **a normal evening needs no data entry**:
 ## Phase 3: Today keeps its tiles, and gains two things (rethought 15 October, built 15 October)
 
 **As built:**
-- **Placement (owner, while it was being built):** "make it small like the week streak at the bottom and add just above it". On it now and Last time are slim bars (`.t-bar`, the week bar's look) just above the week, below the tiles, rather than near the top.
+- **Placement (owner, while it was being built):** "make it small like the week streak at the bottom and add just above it". First shipped as two slim bars above the week bar (`39c2e88`).
+- **Redesign (owner's "Today · A" board, 15 October):** one card below the tiles, "where things stand", that turns through up to three slides every 6 seconds: **On it now** (the latest task In progress, its status circle, "Project · code · +N more", ▶ Focus), **Last time · Mon** ("Monday · You finished … Claude Code finished …", Pick up →) and **This week** (seven hexagon days in their lane colours, "1 of 6 evenings · …", Journey →). It replaces the week bar. Each tab's bar fills while it waits; pointing at the card or focusing inside it holds it; a tab picks a slide; slides flip on a 3D axis with a blur; with reduced motion it never turns by itself. Slides with nothing to say are left out. The board's streak ring around the rail's orb isn't in its current markup, so the rail is unchanged.
 - **`today.home({ today, timezone })`** (convex/today.ts), one query:
   - `onItNow`: up to 3 tasks In progress, latest moved first (by their latest task event), each with its project and plan code ("0A·2", the constellation's); `moreInProgress` counts the rest;
   - `lastTime`: the moves (finished, started, blocked, worked on) of today, or else of the last day something moved, in your timezone. One per task (its latest that day), grouped by who made them (you first, then each assistant), plus `pickUp`: the latest of those tasks still open with a next step;
   - `openByLane`: open tasks per lane, for the tiles.
-- **On it now:** each row has the status circle (the usual menu), the title (opens the task sheet right on Today; `TaskSheet` and `EditTaskSheet` are now exported from the Work screen), "Project · code" and ▶ Focus; "+ N more in Work".
-- **Last time:** "Last time · Yesterday: You finished “R1” and started “R2”. Claude Code finished “R3”." and "You left off: *next step*" with **Pick up**, which opens that task. With it, the prompt card drops "A note from last time", and the away block (3+ days) keeps its headline but leaves "where you were" to Last time.
+- **On it now:** the status circle (the usual menu), the title (opens the task sheet right on Today; `TaskSheet` and `EditTaskSheet` are now exported from the Work screen), "Project · code · +N more" and ▶ Focus.
+- **Last time:** "Yesterday · You finished “R1” and started “R2”. Claude Code finished “R3”." with **Pick up**, which opens the task you left off on. With it, the prompt card drops "A note from last time", and the away block (3+ days) keeps its headline but leaves "where you were" to Last time.
 - **Tiles:** Build reads "Next: <task> · 30 min" (the best Projects choice); Small piece and Write say how many are open.
 - **Fixes folded in:**
   - the check-in has **2h+** (240 minutes);

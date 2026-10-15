@@ -19,7 +19,7 @@ import { Onboarding } from "@/components/today/onboarding";
 import { useTaskMove } from "@/components/tasks/use-task-move";
 import { InboxCard } from "@/components/today/inbox-card";
 import { AssistantBadge } from "@/components/assistants/assistant-badge";
-import { LastTimeBar, OnItNow } from "@/components/today/today-bars";
+import { WhereThingsStand } from "@/components/today/today-bars";
 import { EditTaskSheet, TaskSheet } from "@/components/cloud-work-screen";
 import { dayKey } from "../../convex/lib/time";
 import { FocusOverlay, RecapOverlay, RewardOverlay, type Saved } from "@/components/today/session";
@@ -27,8 +27,8 @@ import { FocusOverlay, RecapOverlay, RewardOverlay, type Saved } from "@/compone
 // Today, as the owner's Ritual design: a greeting and one question, "What's on your mind
 // tonight?", a ten-second check-in, then one clear focus. After the session: the recap,
 // the bloom growing, and a calm "Tonight is done." Every number comes from your records.
-// Above the week (Phase 3 of PLAN-one-tap-and-daily-loop): "On it now" and "Last time",
-// whose tasks open their sheet right here.
+// Below the tiles (Phase 3 of PLAN-one-tap-and-daily-loop, the owner's "Today · A"): one card
+// turning through On it now, Last time and This week; its tasks open their sheet right here.
 
 type Overview = FunctionReturnType<typeof api.tasks.todayOverview>;
 type Choice = Overview["choices"][number];
@@ -299,9 +299,8 @@ function Today() {
         <span className="r-dot glow" style={{ "--dot": item.colour } as CSSProperties} aria-hidden="true" />
         <span><span className="t-intent-label">{item.label}</span><span className="t-intent-sub">{item.sub}</span></span>
       </button>)}</div>
-      {home && <OnItNow home={home} onOpenTask={id => setSheet({ kind: "task", id })} />}
-      {lastTime && todayKey && <LastTimeBar lastTime={lastTime} today={todayKey} onOpenTask={id => setSheet({ kind: "task", id })} />}
-      <Link href="/journey" className="t-weekbar"><WeekDots days={week.days} size={20} /><span style={{ font: "400 13px var(--r-sans)" }}>{week.line} →</span></Link>
+      {/* On it now, Last time and This week, turning in one card (the owner's "Today · A"). */}
+      <WhereThingsStand home={home} week={week} today={todayKey} onOpenTask={id => setSheet({ kind: "task", id })} />
     </div>
     {sheet?.kind === "task" && <TaskSheet key={sheet.id} taskId={sheet.id} onClose={() => setSheet(null)} onEdit={() => setSheet({ kind: "edit", id: sheet.id })}
       onOpenProject={id => { setSheet(null); router.push(`/work?view=projects&project=${id}`); }} />}
