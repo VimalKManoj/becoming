@@ -1,6 +1,6 @@
 # Plan: one tap, an app that records itself, and a daily loop
 
-Proposed 14 October 2026. **Decisions: all ten recommendations taken (owner, 14 October). Phase 1 built 14 October; Phase 2 shipped 15 October; Phase 3 built 15 October (uncommitted); Phases 4–5 next.**
+Proposed 14 October 2026. **Decisions: all ten recommendations taken (owner, 14 October). Phase 1 built 14 October; Phase 2 shipped 15 October; Phase 3 shipped 15 October; Phase 4 built 16 October (uncommitted); Phase 5 next.**
 
 - **Source:** the first-tier ideas in [IDEAS-flow-and-return.md](IDEAS-flow-and-return.md) (sections 3A–3G).
 - **Supersedes** Phases 3–5 of [PLAN-tasks-and-focus.md](PLAN-tasks-and-focus.md): focus decoupled, In progress on Today, and assistant status tools.
@@ -275,7 +275,22 @@ The goal of this plan is that **a normal evening needs no data entry**:
 - Today says in a line what moved last time, including an assistant's work, and offers to pick up the last next step.
 - The tiles and the check-in work as before.
 
-## Phase 4: Focus as a tool
+## Phase 4: Focus as a tool (built 16 October)
+
+**As built:**
+- **The focus layer** (`src/components/focus/focus-layer.tsx`, `FocusProvider` in the workspace shell, `useFocus()`) owns a running session everywhere: the chip, the full focus view, the recap, the reward and the switch prompt. Today no longer takes over the screen when a session runs.
+- **One tap.** ▶ Focus in the status menu, the task sheet, Today's card, Work's rows and the map panel calls `useFocus().start`: the session starts at once, with a toast saying the timer is in the corner. On the task you're focusing on, the button reads "◉ Focusing" (the menu offers "Open the focus view"). Starting from Today's plan opens the full view.
+- **Switching:** with a session running on another task, "Switch to this one?" offers **Save "…" first** (the recap; the reward then offers **Start "<the new one>"**), **Switch now** (nothing recorded for the current one; `startSession({ replace: true })`) and **Keep going**.
+- **The chip** (bottom right; above the pill on phones): the orb, the title, elapsed / planned, **Pause/Resume** and **Stop** (the recap); tapping it opens the full view, which now has **Minimise** (and Escape) and Pause. The tab title reads "24:10 · Wire the endpoint" ("⏸" while paused) and goes back to the page's own title when the session ends.
+- **Pause:** `activeSessions.pausedAt` and `pausedMs`; `focus.pause` and `focus.resume`; `focus.active` returns them. Saving moves the session's `startedAt` later by the paused time, so every "minutes" (endedAt − startedAt) leaves the pause out, as a logged session's start already is its end minus its minutes.
+- **Time's up:** once per session (per tab) a soft two-note chime made in the browser (`profiles.focusChime`, Settings → During focus, on by default), a notification only if notifications are already allowed, and the chip glows. Nothing stops the timer.
+- **Lighter recap:** "What changed" is optional (Journey then reads "Focused N min."), the next step starts as the task's current one, and the reward has **Start another** (Today's check-in) beside Done for tonight.
+- **Work:** moving a task with a session running shows "Finish it first" with **Finish the session**, which opens the recap.
+- **Any length:** `startSession` takes `minutes` (5–240). Today's "15 more minutes" starts a 15-minute session on the last task when it isn't finished.
+- **Not done:** focus without a task (4b) stays for later. Starting focus doesn't move a task to In progress; the recap does, as before.
+- **Tests:** `convex/focus.test.ts` (pause arithmetic, saved while paused, an empty "what changed", any task at any length, switching, the chime setting).
+
+**The plan as written:**
 
 *A timer on any task in one tap, visible everywhere, noticed when it ends.*
 
@@ -377,7 +392,7 @@ The goal of this plan is that **a normal evening needs no data entry**:
 | 1. One tap | Medium | – | Yes, and it changes the daily feel straight away |
 | 2. The app records itself (built 15 Oct) | Medium | 1 (Undo, finish result) | Yes |
 | 3. Today keeps its tiles, gains On it now and Last time (built 15 Oct) | Small | 1 (Last time reads task events; richer with 2) | Yes |
-| 4. Focus as a tool | Medium | 1 | Yes; can run in parallel with 3 |
+| 4. Focus as a tool (built 16 Oct) | Medium | 1 | Yes; can run in parallel with 3 |
 | 5. The daily loop | Medium | 3 | Yes |
 
 Each phase ships on its own:

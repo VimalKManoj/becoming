@@ -14,31 +14,47 @@ import { readableError } from "@/lib/errors";
 import { useNow, type Rhythm } from "@/lib/use-rhythm";
 
 // The evening's three full-screen moments (design 1b, 1c and the reward): the focus orb,
-// the outcome-first recap, and "That counts." with the bloom growing.
+// the outcome-first recap, and "That counts." with the bloom growing. Since Phase 4 of
+// PLAN-one-tap-and-daily-loop they belong to the focus layer (components/focus): the focus
+// view opens from the chip and minimises back to it, a session can be paused, "what
+// changed" is optional, and the reward offers another session.
 
-type Overview = FunctionReturnType<typeof api.tasks.todayOverview>;
-export type Active = NonNullable<Overview["active"]>;
+export type Active = NonNullable<FunctionReturnType<typeof api.focus.active>>;
 type Outcome = "Finished" | "Made progress" | "Blocked";
 export type Saved = { title: string; lane: string; taskTitle: string; skills: string[]; evidence: boolean };
 
 const quotes = ["Small, finished things compound.", "You chose this. That already counts.", "Stuck is information. Note it and keep going.", "Fifteen honest minutes beat an hour of tabs.", "Make it work, then make it lovely.", "Leave a breadcrumb for tomorrow-you."];
 const lofi = "https://www.youtube.com/watch?v=jfKfPfyJRdk";
-const clock = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+export const clock = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 
-function useElapsed(startedAt: number) {
-  const now = useNow(1000);
-  return now === null ? 0 : Math.max(0, Math.floor((now - startedAt) / 1000));
+/** Seconds focused so far, leaving out paused time. */
+export function elapsedSeconds(active: Pick<Active, "startedAt" | "pausedAt" | "pausedMs">, now: number) {
+  return Math.max(0, Math.floor(((active.pausedAt ?? now) - active.startedAt - active.pausedMs) / 1000));
 }
 
-export function FocusOverlay({ active, quotesOn, musicOn, onFinish }: { active: Active; quotesOn: boolean; musicOn: boolean; onFinish: () => void }) {
+function useElapsed(active: Active) {
+  const now = useNow(1000);
+  return now === null ? 0 : elapsedSeconds(active, now);
+}
+
+export function FocusOverlay({ active, quotesOn, musicOn, onFinish, onMinimise }: { active: Active; quotesOn: boolean; musicOn: boolean; onFinish: () => void; onMinimise: () => void }) {
   const { showToast } = useRitual();
   const cancel = useMutation(api.tasks.cancelSession);
+  const pause = useMutation(api.focus.pause);
+  const resume = useMutation(api.focus.resume);
   const [busy, setBusy] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const seconds = useElapsed(active.startedAt);
+  const seconds = useElapsed(active);
+  const paused = Boolean(active.pausedAt);
   const planned = Math.max(1, active.minutes) * 60;
   const over = Math.floor(seconds / 60) - active.minutes;
-  const dialog = useModal<HTMLDivElement>();
+  // Escape minimises to the chip; the session keeps running.
+  const dialog = useModal<HTMLDivElement>(onMinimise);
+
+  async function togglePause() {
+    try { await (paused ? resume : pause)({ activeSessionId: active._id }); }
+    catch (caught) { showToast(readableError(caught, paused ? "Could not resume." : "Could not pause."), "alert"); }
+  }
 
   async function stop() {
     setBusy(true);
@@ -55,7 +71,10 @@ export function FocusOverlay({ active, quotesOn, musicOn, onFinish }: { active: 
 
   return <div ref={dialog} className="r-overlay focus" role="dialog" aria-modal="true" aria-labelledby="focus-title">
     <div style={{ maxWidth: 980, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-      <span className="t-focusing"><span className="t-pulse" aria-hidden="true" />Focusing · saved as your active session</span>
+      <div className="t-focus-top">
+        <span className="t-focusing"><span className="t-pulse" aria-hidden="true" />{paused ? "Paused · the timer waits for you" : "Focusing · saved as your active session"}</span>
+        <button type="button" className="r-ghost xs" onClick={onMinimise}>Minimise ↘</button>
+      </div>
       <div style={{ textAlign: "center" }}>
         <div className="r-small" style={{ fontWeight: 500, fontSize: 12 }}>{active.lane} · {active.smaller ? `Smaller step of “${active.taskTitle}”` : active.taskTitle}</div>
         <h1 id="focus-title" style={{ font: "400 clamp(26px,4cqi,36px)/1.08 var(--r-serif)", marginTop: 6, maxWidth: 560, textWrap: "balance" }}>{active.title}</h1>
@@ -90,7 +109,10 @@ export function FocusOverlay({ active, quotesOn, musicOn, onFinish }: { active: 
             </div>
             <a href={lofi} target="_blank" rel="noopener noreferrer" className="r-ghost xs" style={{ height: 36, background: "transparent", color: "var(--r-ink-2)" }} aria-label="Open lo-fi stream (opens in a new tab)">Open ↗</a>
           </div>}
-          <button type="button" className="r-btn lg" style={{ marginTop: 6 }} disabled={busy} onClick={onFinish}>Finish &amp; reflect</button>
+          <div className="r-row" style={{ gap: 8, marginTop: 6, flexWrap: "nowrap" }}>
+            <button type="button" className="r-ghost" style={{ height: 56 }} disabled={busy} onClick={() => void togglePause()}>{paused ? "Resume" : "Pause"}</button>
+            <button type="button" className="r-btn lg" style={{ flex: 1 }} disabled={busy} onClick={onFinish}>Finish &amp; reflect</button>
+          </div>
           <div className="r-small" style={{ textAlign: "center" }}><button type="button" className="r-underline" disabled={busy} onClick={() => void stop()}>Cancel session</button> · records nothing</div>
         </div>
       </div>
@@ -123,7 +145,7 @@ export function RecapOverlay({ active, onBack, onSaved }: { active: Active; onBa
   const keep = (next: Draft) => writeDraft(active._id, { ...readDraft(active._id), ...next });
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
-  const seconds = useElapsed(active.startedAt);
+  const seconds = useElapsed(active);
   // A finished smaller step leaves its parent task in progress, so it needs a next step too.
   const needsNext = outcome !== "Finished" || active.smaller;
   const field = outcome === "Blocked" ? { label: "What's blocking it · and how to unblock", placeholder: "The mutation returns no error code. Ask in #backend." }
@@ -165,8 +187,8 @@ export function RecapOverlay({ active, onBack, onSaved }: { active: Active; onBa
           <span className="t-glyph" aria-hidden="true">{item.glyph}</span><span className="t-outcome-key">{item.key}</span><span className="t-outcome-desc">{item.desc}</span>
         </label>)}</div>
       </fieldset>
-      <label className="r-field">What changed<textarea name="contribution" className="r-textarea" rows={2} defaultValue={draft.contribution} required maxLength={4000} placeholder="Retry keeps the draft. Added a “Not saved yet” label." /></label>
-      <label className="r-field">{field.label}<input name="nextStep" defaultValue={draft.nextStep} className="r-input" style={{ height: 48, fontSize: 14, ...(outcome === "Blocked" ? { borderColor: "rgba(255,107,91,.45)" } : {}) }} required={needsNext} maxLength={2000} placeholder={field.placeholder} /></label>
+      <label className="r-field">What changed <span style={{ color: "var(--r-muted)", fontWeight: 400 }}>· optional, one line is plenty</span><textarea name="contribution" className="r-textarea" rows={2} defaultValue={draft.contribution} maxLength={4000} placeholder="Retry keeps the draft. Added a “Not saved yet” label." /></label>
+      <label className="r-field">{field.label}<input name="nextStep" defaultValue={draft.nextStep ?? (active.smaller ? "" : active.nextStep)} className="r-input" style={{ height: 48, fontSize: 14, ...(outcome === "Blocked" ? { borderColor: "rgba(255,107,91,.45)" } : {}) }} required={needsNext} maxLength={2000} placeholder={field.placeholder} /></label>
       <div role="group" aria-labelledby="skills-label">
         <div id="skills-label" className="r-label" style={{ marginBottom: 8 }}>Skills you practised <span style={{ color: "var(--r-muted)", fontWeight: 400 }}>· each one grows your Mind Bloom</span></div>
         <div className="r-row" style={{ gap: 6 }}>{bloomSkillList.map(skill => <button key={skill.name} type="button" className="r-chip round h34" style={{ padding: "0 13px", fontSize: 12.5 }} aria-pressed={skills.includes(skill.name)} onClick={() => toggle(skill.name)}>{skill.name}</button>)}</div>
@@ -178,7 +200,7 @@ export function RecapOverlay({ active, onBack, onSaved }: { active: Active; onBa
   </div>;
 }
 
-export function RewardOverlay({ saved, rhythm, week, onDone, onProof }: { saved: Saved; rhythm: Rhythm; week: WeekSummary; onDone: () => void; onProof: () => void }) {
+export function RewardOverlay({ saved, rhythm, week, onDone, onProof, onAnother, anotherLabel = "Start another" }: { saved: Saved; rhythm: Rhythm; week: WeekSummary; onDone: () => void; onProof: () => void; onAnother?: () => void; anotherLabel?: string }) {
   const since = zonedStartOfDay(`${rhythm.today.slice(0, 8)}01`, rhythm.timezone);
   const bloom = useQuery(api.journey.bloom, { since });
   const month = new Date(`${rhythm.today}T12:00:00Z`).toLocaleDateString("en-GB", { month: "long", timeZone: "UTC" });
@@ -195,7 +217,10 @@ export function RewardOverlay({ saved, rhythm, week, onDone, onProof }: { saved:
       <div style={{ animation: "r-rise .6s 1.4s both" }}><WeekDots days={week.days} size={34} /></div>
       <p className="r-body" style={{ fontSize: 15, lineHeight: 1.5, maxWidth: 380, animation: "r-rise .6s 1.5s both" }}>{week.line}</p>
       <div style={{ width: "100%", maxWidth: 420, display: "flex", flexDirection: "column", gap: 8, marginTop: 8, animation: "r-rise .6s 1.7s both" }}>
-        <button type="button" className="r-btn" onClick={onDone}>Done for tonight</button>
+        <div className="r-row" style={{ gap: 8, flexWrap: "nowrap" }}>
+          {onAnother && <button type="button" className="r-ghost" style={{ flex: 1 }} onClick={onAnother}>{anotherLabel}</button>}
+          <button type="button" className="r-btn" style={{ flex: 1 }} onClick={onDone}>Done for tonight</button>
+        </div>
         <button type="button" className="r-ghost" onClick={onProof}>{saved.evidence ? "See it in Proof" : "Open Proof"}</button>
       </div>
     </div>

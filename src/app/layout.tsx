@@ -15,6 +15,7 @@ import "../styles/work-overview.css";
 import "../styles/tasks.css";
 import "../styles/new-project.css";
 import "../styles/assistants.css";
+import "../styles/focus.css";
 
 // Three families (documents/DESIGN_SYSTEM.md): Bricolage Grotesque for intent (headlines,
 // questions, titles), Geist for the interface, Geist Mono for time, counts and dates. The

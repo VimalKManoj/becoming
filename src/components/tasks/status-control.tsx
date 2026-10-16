@@ -8,6 +8,7 @@ import { api } from "../../../convex/_generated/api";
 import { useRitual } from "@/components/ritual/ritual-context";
 import { readableError } from "@/lib/errors";
 import { copyWorkPrompt } from "./work-prompt";
+import { useFocus } from "@/components/focus/focus-layer";
 import { useTaskMove, type MovableTask, type MoveTarget } from "./use-task-move";
 
 // The one way to move a task, the same on every screen (PLAN-one-tap-and-daily-loop,
@@ -62,6 +63,7 @@ function StatusMenu({ task, anchor, moves, onClose, onDeleted }: { task: Movable
   const profile = useQuery(api.settings.getProfile);
   const pin = useMutation(api.tasks.pin);
   const { showToast } = useRitual();
+  const focus = useFocus();
   const box = useRef<HTMLDivElement>(null);
   const [blocking, setBlocking] = useState(false);
   const [place, setPlace] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
@@ -108,7 +110,7 @@ function StatusMenu({ task, anchor, moves, onClose, onDeleted }: { task: Movable
     { label: "Restore", run: run(() => moves.restore(task)) },
     { label: "Delete for good…", tone: "red", run: run(async () => { if (await moves.remove(task)) onDeleted?.(); }) },
   ] : [
-    ...(open ? [{ label: "Start a focus session", href: `/today?task=${task._id}` }, { label: pinned ? "Unpin" : "Pin for tonight", run: run(togglePin) }] : []),
+    ...(open ? [{ label: focus.active?.taskId === task._id ? "Open the focus view" : "Start a focus session", run: run(() => focus.active?.taskId === task._id ? focus.expand() : focus.start(task)) }, { label: pinned ? "Unpin" : "Pin for tonight", run: run(togglePin) }] : []),
     ...(task.status !== "Done" ? [{ label: "Work on this with Claude", run: run(() => copyWorkPrompt(task, showToast)) }] : []),
     { label: "Archive", run: run(() => moves.archive(task)) },
   ];

@@ -213,7 +213,9 @@ function SessionCard({ session }: { session: Session }) {
       <span className={`r-status ${outcomeClass}`} style={{ marginLeft: "auto" }}>{outcomeLabel}</span>
     </div>
     <h4 id={`${id}-title`} className="j-session-title">{session.title}{session.smaller && <span className="r-small"> · smaller step</span>}</h4>
-    <p className="r-body j-preserve">{session.contribution}</p>
+    {/* "What changed" is optional since Phase 4; without it, the session says how long it was. */}
+    {session.contribution ? <p className="r-body j-preserve">{session.contribution}</p>
+      : <p className="r-small">Focused {session.startedAt ? `${minutesBetween(session.startedAt, session.endedAt)} min` : "a while"}.</p>}
     {session.nextStep && <div className={session.outcome === "Blocked" ? "r-inset j-blocked" : "r-inset"}>
       <div className="r-eyebrow-sm">{session.outcome === "Blocked" ? "Blocked by" : "Next"}</div><p className="r-body j-preserve" style={{ marginTop: 4 }}>{session.nextStep}</p>
     </div>}

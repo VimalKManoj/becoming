@@ -521,7 +521,7 @@ export async function todayFor(ctx: QueryCtx, owner: string, args: TodayArgs) {
       lastFinish: finishedEvent && finishedTask && finishedTask.owner === owner ? { title: finishedTask.title, lane: finishedTask.lane, at: finishedEvent.at } : null,
       lastSession: last ? { title: last.title, lane: last.lane, outcome: last.outcome, contribution: last.contribution, nextStep: last.nextStep, endedAt: last.endedAt, startedAt: last.startedAt ?? null, taskId: last.taskId, projectId: last.projectId ?? null } : null,
       active: active ? {
-        _id: active._id, taskId: active.taskId, startedAt: active.startedAt,
+        _id: active._id, taskId: active.taskId, startedAt: active.startedAt, pausedAt: active.pausedAt ?? null, pausedMs: active.pausedMs ?? 0,
         title: active.focusTitle ?? activeTask?.title ?? "Focused work",
         taskTitle: active.taskTitle ?? activeTask?.title ?? "Focused work",
         lane: active.lane ?? activeTask?.lane ?? "Projects",
@@ -541,28 +541,33 @@ export async function assertPrerequisitesDone(ctx: Parameters<typeof refreshMile
   }
 }
 
+// Focus starts on any open task in one tap (Phase 4): no capacity gate. `minutes` sets the
+// planned length (5–240, else the task's estimate); `replace` switches from a session already
+// running on another task, which ends it without recording anything.
 export const startSession = mutation({
-  args: { taskId: v.id("tasks"), smaller: v.optional(v.boolean()), recommended: v.optional(v.boolean()) },
+  args: { taskId: v.id("tasks"), smaller: v.optional(v.boolean()), recommended: v.optional(v.boolean()), minutes: v.optional(v.number()), replace: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
     const owner = await requireOwner(ctx);
     const task = await ctx.db.get(args.taskId);
     assertOwner(task, owner);
     const smaller = args.smaller ?? false;
+    if (args.minutes !== undefined && (!Number.isInteger(args.minutes) || args.minutes < 5 || args.minutes > 240)) throw new ConvexError("Choose 5–240 minutes.");
     const current = await ctx.db.query("activeSessions").withIndex("by_owner", q => q.eq("owner", owner)).unique();
     if (current) {
       if (current.taskId === task._id && (current.smaller ?? false) === smaller) return current._id;
-      throw new ConvexError("Finish or cancel your current session first.");
+      if (!args.replace) throw new ConvexError("Finish or cancel your current session first.");
     }
     if (task.status !== "Ready" && task.status !== "In progress") throw new ConvexError("This task is not ready for a session.");
     if (!(await projectIsOpen(ctx, owner, task.projectId))) throw new ConvexError("This task belongs to a project that is done or archived.");
     if (smaller && (!task.smallerStep || !task.smallerDone || !task.smallerMinutes)) throw new ConvexError("Define a smaller step before starting it.");
     await assertPrerequisitesDone(ctx, owner, task.dependencies);
+    if (current) await ctx.db.delete(current._id);
     return ctx.db.insert("activeSessions", {
       owner, taskId: task._id, startedAt: Date.now(), smaller,
       taskTitle: task.title, lane: task.lane,
       focusTitle: smaller ? task.smallerStep : task.title,
       focusDoneWhen: smaller ? task.smallerDone : task.doneWhen,
-      focusMinutes: smaller ? task.smallerMinutes : task.minutes,
+      focusMinutes: args.minutes ?? (smaller ? task.smallerMinutes : task.minutes),
       recommended: args.recommended,
     });
   },
@@ -594,7 +599,9 @@ export const recordSession = mutation({
     const smaller = active.smaller ?? false;
     if (task.status !== "Ready" && task.status !== "In progress") throw new ConvexError("This task is not ready for a session.");
     await assertPrerequisitesDone(ctx, owner, task.dependencies);
-    const contribution = nonempty(args.contribution, 4000);
+    // "What changed" is optional (Phase 4); Journey then says "Focused N min".
+    const contribution = args.contribution.trim();
+    if (contribution.length > 4000) throw new ConvexError("Keep what changed under 4,000 characters.");
     const nextStep = args.nextStep.trim();
     // Unfinished work needs a way back in. A finished smaller step also leaves its parent
     // task in progress, so it asks for the parent's real next step instead of filler text.
@@ -603,9 +610,13 @@ export const recordSession = mutation({
     const evidence = args.evidence.trim() ? httpUrl(args.evidence, "Add a valid HTTP or HTTPS evidence link.") : "";
     const skills = skillValues(args.skills);
     const focusTitle = active.focusTitle ?? task.title;
+    const now = Date.now();
+    // Paused time doesn't count: the session's start moves later by it, as a logged session's
+    // start is its end minus its minutes, so every "minutes" stays endedAt − startedAt.
+    const startedAt = active.startedAt + pausedTotal(active, now);
     const id = await ctx.db.insert("sessions", {
       owner, taskId: task._id, key, outcome: args.outcome, contribution, nextStep, evidence, title: focusTitle,
-      lane: active.lane ?? task.lane, startedAt: active.startedAt, endedAt: Date.now(), smaller,
+      lane: active.lane ?? task.lane, startedAt, endedAt: now, smaller,
       doneWhen: active.focusDoneWhen ?? task.doneWhen, plannedMinutes: active.focusMinutes, projectId: task.projectId,
       recommended: active.recommended, swapReason: active.swapReason,
       ...(skills.length ? { skills } : {}),
@@ -619,7 +630,7 @@ export const recordSession = mutation({
       ...(status === "Done" ? { completedAt: Date.now() } : {}),
       ...(sameSmallerStep ? { smallerStep: undefined, smallerDone: undefined, smallerMinutes: undefined } : {}),
     });
-    await logEvent(ctx, owner, task, "focused", { note: contribution });
+    await logEvent(ctx, owner, task, "focused", { note: contribution || undefined });
     if (status !== task.status) await logEvent(ctx, owner, task, status === "Done" ? "done" : status === "Blocked" ? "blocked" : "started", { note: status === "Blocked" ? nextStep : undefined });
     await refreshMilestone(ctx, task.milestoneId);
     if (args.outcome === "Finished" && !smaller) await clearPinIf(ctx, owner, task._id);
@@ -628,6 +639,11 @@ export const recordSession = mutation({
     return id;
   },
 });
+
+/** Time a focus session has spent paused, up to `now`. */
+export function pausedTotal(active: Pick<Doc<"activeSessions">, "pausedAt" | "pausedMs">, now: number) {
+  return (active.pausedMs ?? 0) + (active.pausedAt ? Math.max(0, now - active.pausedAt) : 0);
+}
 
 /** Planned sessions: 1–100, or 0/absent for none. */
 export function plannedSessionsValue(value: number | undefined) {

@@ -7,6 +7,7 @@ import { useConvexAuth, useConvexConnectionState } from "convex/react";
 import { authClient } from "@/lib/auth-client";
 import { CaptureSheet } from "@/components/ritual/capture-sheet";
 import { ConnectSheet } from "@/components/assistants/connect-sheet";
+import { FocusProvider } from "@/components/focus/focus-layer";
 import { Embers } from "@/components/ritual/embers";
 import { RitualProvider, RitualToast } from "@/components/ritual/ritual-context";
 import { Skeleton, Bone } from "@/components/skeleton";
@@ -20,6 +21,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   const section = isWorkspaceSection(segment) ? segment : null;
   const { isAuthenticated } = useConvexAuth();
   return <RitualProvider>
+    <FocusProvider enabled={isAuthenticated}>
     <div className="r-app">
       <a className="skip-link" href="#main">Skip to content</a>
       <Rail section={section} signedIn={isAuthenticated} />
@@ -36,6 +38,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       {isAuthenticated && <ConnectSheet />}
       <RitualToast />
     </div>
+    </FocusProvider>
   </RitualProvider>;
 }
 

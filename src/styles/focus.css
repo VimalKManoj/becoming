@@ -1,0 +1,39 @@
+/* Focus as a tool (PLAN-one-tap-and-daily-loop, Phase 4): the chip that follows a running
+   session around the app (bottom right; above the pill on phones), its glow when the planned
+   time is up, and the "Switch to this one?" prompt. With reduced motion nothing pulses. */
+
+.fc{position:fixed;right:24px;bottom:24px;z-index:58;display:flex;align-items:center;gap:4px;max-width:min(380px,calc(100vw - 48px));padding:6px;border-radius:22px;background:rgba(36,27,23,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,170,110,.28);box-shadow:0 14px 40px rgba(0,0,0,.45);animation:r-rise .5s both}
+.fc-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:6px 10px 6px 8px;border:0;border-radius:16px;background:transparent;box-shadow:none;cursor:pointer;text-align:left;color:var(--r-ink)}
+.fc-main:hover{background:rgba(255,240,225,.05);filter:none}
+.fc-orb{flex:none;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFC08F,#F06A2A 60%,#7A2E0E);box-shadow:0 0 10px rgba(255,138,61,.6);animation:fc-pulse 2.4s ease-in-out infinite}
+.fc-text{min-width:0;display:flex;flex-direction:column;gap:2px}
+.fc-title{max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 13px var(--r-sans)}
+.fc-time{font:500 12px var(--r-mono);letter-spacing:.02em;color:var(--r-ember-soft);white-space:nowrap}
+.fc-of{font-weight:400;color:var(--r-muted)}
+.fc-expand{flex:none;margin-left:2px;color:var(--r-muted)}
+.fc-btn{flex:none;display:grid;place-items:center;width:40px;height:40px;padding:0;border-radius:14px;border:1px solid var(--r-line-3);background:rgba(255,240,225,.04);box-shadow:none;cursor:pointer;color:var(--r-ink-2)}
+.fc-btn:hover{background:rgba(255,240,225,.09);filter:none}
+.fc-btn.stop{color:var(--r-ember-soft)}
+.fc.paused .fc-orb{animation:none;opacity:.45;filter:grayscale(.6)}
+.fc.paused .fc-time{color:var(--r-muted)}
+.fc.over{border-color:rgba(255,170,110,.6);animation:r-rise .5s both,fc-glow 2.4s ease-in-out infinite}
+.fc.over .fc-time{color:var(--r-ember-pale)}
+@keyframes fc-pulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.25);opacity:1}}
+@keyframes fc-glow{0%,100%{box-shadow:0 14px 40px rgba(0,0,0,.45),0 0 0 0 rgba(255,138,61,0)}50%{box-shadow:0 14px 40px rgba(0,0,0,.45),0 0 26px 4px rgba(255,138,61,.45)}}
+/* Toasts rise above the chip. */
+body:has(.fc) .r-toast{bottom:96px}
+@media(max-width:899px){
+  .fc{left:16px;right:16px;bottom:calc(max(26px,env(safe-area-inset-bottom)) + 80px);max-width:none}
+  .fc-title{max-width:none}
+  body:has(.fc) .r-toast{bottom:186px}
+}
+
+/* The full focus view's top line: the state, and Minimise. */
+.t-focus-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+
+/* Switch to this one? */
+.r-cap-card.fs{max-width:460px;gap:12px}
+.fs-title{margin:0;font:400 28px/1.1 var(--r-serif);color:var(--r-ink)}
+.fs-title em{font-style:italic;color:var(--r-ember-text)}
+.fs-actions{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.fs-keep{align-self:center;margin-top:4px}

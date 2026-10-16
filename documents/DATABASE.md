@@ -13,7 +13,7 @@ Convex stores documents in tables. Each document has `_id` and `_creationTime`. 
 | milestones | owner, projectId, title, order; optional doneWhen, completedAt | by_project (projectId, order): ordered milestones; by_owner: firsts, export |
 | ideas | owner, title, notes, lane; optional taskId, archivedAt, brainstorm (problem, audience, hook, smallestBuild, skills, references, openQuestions, decisions) | by_owner: notebook and archived views |
 | tasks | owner, title, lane, status (Ready / In progress / Blocked / Done / Archived), minutes, energy, doneWhen, nextStep, dependencies; optional archivedFrom, archivedWithProject, projectId, milestoneId, ideaId, smaller action/done condition/minutes | by_owner; by_owner_status: Today candidates and Work views (Active is the "In progress"–"Ready" range); by_project; by_milestone |
-| activeSessions | owner, taskId, startedAt; optional chosen-focus snapshots, recommended, swapReason | by_owner: one active session per account |
+| activeSessions | owner, taskId, startedAt; optional chosen-focus snapshots, recommended, swapReason, pausedAt and pausedMs (pause) | by_owner: one active session per account |
 | sessions | owner, taskId, key, lane/title/done-condition snapshots, outcome, contribution, nextStep, evidence, endedAt; optional startedAt, plannedMinutes, projectId snapshot, recommended, swapReason | by_owner_endedAt: history and rhythm windows; by_owner_key: idempotency; by_task and by_owner_project: case studies |
 | artifacts | owner, sessionId, title, url, status (Draft / Ready to share / Published), portfolioCandidate; optional notes, skills, publishedUrl, publishedOn, imageId, candidateSince | by_owner; by_owner_status and by_owner_candidate: Proof views; by_session: Journey evidence; by_image: one owner per uploaded file |
 | weeklyCommitments | owner, week (Monday key), target, paused | by_owner_week: target in force from a week; a pause applies to its own week only |
@@ -277,6 +277,8 @@ See [PLAN-project-constellation.md](PLAN-project-constellation.md) and, for the 
 - `constellation.taskStory` returns each entry's `id` and `undoable` (the latest entry, when it kept a snapshot), and now reads the latest 200 entries.
 - `tasks.undo` restores skills only when undoing a finish, so skills added after another move are kept.
 - No new tables; nothing to migrate.
+
+**Focus as a tool (16 October 2026, PLAN-one-tap-and-daily-loop Phase 4).** `activeSessions.pausedAt`/`pausedMs` (`focus.pause`, `focus.resume`, `focus.active`); a saved session's `startedAt` is moved later by its paused time, so its minutes leave the pause out. `sessions.contribution` may be empty. `startSession` takes `minutes` (5–240) and `replace` (switch, recording nothing for the session it replaces). `profiles.focusChime` (optional, default on; backed up).
 
 **Today's bars (15 October 2026, PLAN-one-tap-and-daily-loop Phase 3).** `today.home({ today, timezone })` derives On it now (tasks In progress by their latest event, with plan codes), Last time (the day's moves from `taskEvents`, grouped by `source`) and open tasks per lane. A chosen task (`todayOverview` with `taskId`) is offered even when it doesn't fit, with a note. No new tables.
 

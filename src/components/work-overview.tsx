@@ -11,6 +11,7 @@ import { planSummary, words } from "@/components/project-list";
 import type { EditableTask, Lane } from "@/components/task-forms";
 import { StatusControl } from "@/components/tasks/status-control";
 import { QuickAdd } from "@/components/tasks/quick-add";
+import { useFocus } from "@/components/focus/focus-layer";
 
 // Work ("What you're building"): the owner's Work artboard (documents/design/work.dc.html).
 // Each active project is one row (where it stands in its plan, a hexagon per phase, what's
@@ -229,6 +230,7 @@ function IdeaRow({ idea: i }: { idea: Idea }) {
 
 /** A task outside any project. The circle moves it, the card opens it, and the play button starts a focus session on it. */
 function LooseTask({ task: t, onOpen }: { task: Loose; onOpen: () => void }) {
+  const focus = useFocus();
   const st = t.status === "In progress" ? "p" : t.status === "Blocked" ? "b" : "r";
   const meta = [`${t.minutes} min`, t.plannedSessions ? `${t.sessions} of ${t.plannedSessions} sessions` : null, t.status === "Blocked" && t.nextStep ? t.nextStep : null].filter(Boolean).join(" · ");
   return <div className="task">
@@ -237,9 +239,9 @@ function LooseTask({ task: t, onOpen }: { task: Loose; onOpen: () => void }) {
       <span className="tt">{t.title}</span>
       <span className="tm"><span>{meta}</span><span className={`pill ${st}`}>{words[st]}</span></span>
     </button>
-    {t.status !== "Blocked" && <Link className="play" href={`/today?task=${t._id}`} aria-label={`Start a focus session on ${t.title}`}>
+    {t.status !== "Blocked" && <button type="button" className="play" onClick={() => void focus.start(t)} aria-label={`Start a focus session on ${t.title}`}>
       <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 2.6v10.8c0 .6.6.9 1.1.6l8.4-5.4c.5-.3.5-.9 0-1.2L5.6 2c-.5-.3-1.1 0-1.1.6z" /></svg>
-    </Link>}
+    </button>}
   </div>;
 }
 

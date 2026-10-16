@@ -19,6 +19,7 @@ import { plural } from "@/lib/format";
 import { readableError } from "@/lib/errors";
 import { StatusControl } from "@/components/tasks/status-control";
 import { copyWorkPrompt, workPrompt } from "@/components/tasks/work-prompt";
+import { useFocus } from "@/components/focus/focus-layer";
 import { QuickAdd } from "@/components/tasks/quick-add";
 import { ChoiceField, InlineField } from "@/components/tasks/inline-field";
 import { useTaskMove, type MoveTarget } from "@/components/tasks/use-task-move";
@@ -47,7 +48,6 @@ const isOpen = (task: Pick<Task, "status">) => task.status === "Ready" || task.s
 const statusRank: Record<string, number> = { "In progress": 2, "Ready": 1, "Blocked": 0 };
 
 /** Today's check-in for exactly this task. */
-const startHref = (task: Pick<Task, "_id">) => `/today?task=${task._id}`;
 
 function placement(options: Options, task: Pick<Task, "projectId" | "milestoneId">): Placement {
   const project = options?.find(item => item._id === task.projectId);
@@ -233,6 +233,7 @@ export function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: 
   const pin = useMutation(api.tasks.pin);
   const undoMove = useMutation(api.tasks.undo);
   const moves = useTaskMove();
+  const focus = useFocus();
   const { showToast } = useRitual();
   const [skilling, setSkilling] = useState(false);
   const [allHistory, setAllHistory] = useState(false);
@@ -290,7 +291,7 @@ export function TaskSheet({ taskId, onClose, onEdit, onOpenProject }: { taskId: 
     <div className="tk-sheet-actions" role="group" aria-label={`Act on ${task.title}`}>
       <StatusControl task={task} variant="pill" onDeleted={onClose} />
       {primary && <button type="button" className={`${primary.className} tk-act`} disabled={busy} onClick={runPrimary}>{primary.label}</button>}
-      {open && <Link href={startHref(task)} className="r-ghost sm tk-act">▶ Focus</Link>}
+      {open && <button type="button" className="r-ghost sm tk-act" onClick={() => void focus.start(task)}>{focus.active?.taskId === task._id ? "◉ Focusing" : "▶ Focus"}</button>}
       {pinned && <span className="r-badge">Pinned for tonight</span>}
     </div>
 

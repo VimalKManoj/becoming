@@ -30,7 +30,7 @@ const sections = [
 type SectionId = typeof sections[number][0];
 
 // An account that has worked before but never saved a setting has no profile yet.
-const noProfile: Profile = { motive: "", laneFocus: null, pinnedTaskId: null, needsOnboarding: false, focusQuotes: true, focusMusic: true, reminderOn: false, reminderTime: "20:30", reminderDays: "weekdays", reminderEmail: true };
+const noProfile: Profile = { motive: "", laneFocus: null, pinnedTaskId: null, needsOnboarding: false, focusQuotes: true, focusMusic: true, focusChime: true, reminderOn: false, reminderTime: "20:30", reminderDays: "weekdays", reminderEmail: true };
 
 export function CloudSettingsScreen() {
   const profile = useQuery(api.settings.getProfile);
@@ -325,6 +325,10 @@ function FocusCard({ prefs }: { prefs: Profile }) {
     <div className="s-switch-row">
       <div className="s-switch-text"><p id="set-music-t" className="s-switch-title">Lo‑fi player</p><p id="set-music-d" className="r-small s-sub">A link to a lo‑fi stream. It opens in a new tab and never plays by itself.</p></div>
       <button type="button" role="switch" aria-checked={prefs.focusMusic} aria-labelledby="set-music-t" aria-describedby="set-music-d" className="r-toggle" onClick={() => save({ focusMusic: !prefs.focusMusic })} />
+    </div>
+    <div className="s-switch-row">
+      <div className="s-switch-text"><p id="set-chime-t" className="s-switch-title">A soft chime when time’s up</p><p id="set-chime-d" className="r-small s-sub">When a session reaches its planned time. The timer keeps going until you stop it, and a notification shows too if you allowed them.</p></div>
+      <button type="button" role="switch" aria-checked={prefs.focusChime} aria-labelledby="set-chime-t" aria-describedby="set-chime-d" className="r-toggle" onClick={() => save({ focusChime: !prefs.focusChime })} />
     </div>
     <p className="r-small">Motion follows your system’s reduce‑motion setting.</p>
   </section>;

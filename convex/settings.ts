@@ -15,7 +15,7 @@ export const getProfile = query({
     ]);
     const needsOnboarding = !profile?.onboardedAt && !anyTask && !anySession;
     const preferences = {
-      focusQuotes: profile?.focusQuotes ?? true, focusMusic: profile?.focusMusic ?? true,
+      focusQuotes: profile?.focusQuotes ?? true, focusMusic: profile?.focusMusic ?? true, focusChime: profile?.focusChime ?? true,
       reminderOn: profile?.reminderOn ?? false, reminderTime: profile?.reminderTime ?? "20:30", reminderDays: profile?.reminderDays ?? "weekdays",
       reminderEmail: profile?.reminderEmail ?? true,
     };
@@ -70,7 +70,7 @@ export const pinnedTask = query({
 // notifications on (convex/reminders.ts).
 export const savePreferences = mutation({
   args: {
-    focusQuotes: v.optional(v.boolean()), focusMusic: v.optional(v.boolean()), reminderOn: v.optional(v.boolean()),
+    focusQuotes: v.optional(v.boolean()), focusMusic: v.optional(v.boolean()), focusChime: v.optional(v.boolean()), reminderOn: v.optional(v.boolean()),
     reminderTime: v.optional(v.union(v.literal("19:30"), v.literal("20:30"), v.literal("21:30"))),
     reminderDays: v.optional(v.union(v.literal("weekdays"), v.literal("everyday"))),
     reminderEmail: v.optional(v.boolean()),

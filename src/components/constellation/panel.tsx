@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Bone } from "@/components/skeleton";
 import { StatusControl } from "@/components/tasks/status-control";
+import { useFocus } from "@/components/focus/focus-layer";
 import {
   ago, brainstormEntries, capital, dayMonth, dayRange, dayTime, duration, groupLabel, hours, numberWord, plural, splitTitle,
   type CDoc, type Constellation, type GTask, type GenStep, type GenesisLayout, type Group, type TaskState,
@@ -19,7 +20,7 @@ type Tone = "ember" | "lilac" | "mint";
 export type FeedItem = { who: string; initial: string; ai: boolean; what: string; when: string };
 export type PanelModel = {
   key: string; tone: Tone; eyebrow: string; a: string; em: string; status: string; scls: string; meta: string;
-  primary?: { label: string; href?: string; onClick?: () => void };
+  primary?: { label: string; href?: string; onClick?: () => void; focus?: { _id: Id<"tasks">; title: string } };
   /** A task, moved with the same status circle as everywhere else (one tap, with Undo). */
   move?: { _id: Id<"tasks">; title: string; status: string };
   stats?: { v: string | number; l: string }[];
@@ -113,7 +114,7 @@ export function buildPanel(c: PanelContext): PanelModel {
       return {
         key: `t:${task.id}`, tone: "ember", eyebrow: `Task ${task.code}${group.num ? ` · Phase ${group.num}` : ""}`, a: task.title, em: "", status, scls,
         meta: task.cur === "done" && task.completedAt ? `Done ${dayMonth(task.completedAt)}` : `${task.minutes} min`,
-        primary: real === "done" || real === "blocked" ? undefined : { label: "Start a focus session", href: `/today?task=${task.id}` },
+        primary: real === "done" || real === "blocked" ? undefined : { label: "Start a focus session", focus: { _id: task.id, title: task.title } },
         move: { _id: task.id, title: task.title, status: STATUS[real][0] },
         list: { k: "Details", items },
         chips: docChips(group),
@@ -232,6 +233,7 @@ export function buildPanel(c: PanelContext): PanelModel {
 
 export function Panel({ model }: { model: PanelModel }) {
   const story = useQuery(api.constellation.taskStory, model.story ? { taskId: model.story.taskId } : "skip");
+  const focus = useFocus();
   const d = model;
 
   const timeline: FeedItem[] | null = d.story ? (story ?? []).slice(-8).map(e => {
@@ -249,7 +251,8 @@ export function Panel({ model }: { model: PanelModel }) {
       </div>
 
       {d.primary && <div className="prim">
-        {d.primary.href ? <Link className="btn" href={d.primary.href}>{d.primary.label}</Link>
+        {d.primary.focus ? <button type="button" className="btn" onClick={() => void focus.start(d.primary!.focus!)}>{d.primary.label}</button>
+          : d.primary.href ? <Link className="btn" href={d.primary.href}>{d.primary.label}</Link>
           : <button type="button" className="btn" onClick={d.primary.onClick}>{d.primary.label}</button>}
       </div>}
 

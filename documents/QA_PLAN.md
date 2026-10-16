@@ -293,6 +293,18 @@ Every task shows the same **status circle** (empty Ready, half In progress, ✓ 
 - [ ] **Plugin:** `claude plugin marketplace add VimalKManoj/becoming` (after the push), then `claude plugin install becoming@becoming`, then restart Claude Code. **Expect:** a new session knows the tasks In progress (ask "what's in progress in Becoming?"). `/becoming:next` lists or starts a task and explains the plan; `/becoming:done` finishes it with a summary, skills and the PR or commit link; `/becoming:log 30m` logs progress with a next step.
 - [ ] With the token revoked, start a session. **Expect:** one line saying Becoming's tasks couldn't be loaded; the session starts normally.
 
+### B5c. Focus as a tool (added 16 October, Phase 4)
+
+- [ ] ▶ Focus on a task (its sheet, the status menu, Today's card, a Work row, the map panel). **Expect:** it starts at once; a toast says the timer is in the corner; a chip shows the task, 00:0x / its minutes, Pause and Stop; the tab title reads "00:0x · <task>". The task's button reads "◉ Focusing".
+- [ ] Go to Work, Ideas, Journey. **Expect:** the chip stays (above the pill on a phone) and the time keeps counting.
+- [ ] Pause. **Expect:** "Paused ·", the time stops, the tab title shows ⏸. Resume. **Expect:** it carries on from where it stopped.
+- [ ] Tap the chip. **Expect:** the full focus view with Minimise and Pause; Escape or Minimise brings the chip back.
+- [ ] Let the planned time pass (a 5-minute session from "15 more minutes" is slow; use a short task). **Expect:** one soft chime (unless turned off in Settings → During focus), a notification if they're allowed, and the chip glows "Time's up". The timer keeps going.
+- [ ] Stop. **Expect:** the recap with "What changed · optional" and the next step filled in. Save with "What changed" empty. **Expect:** the reward with **Start another** and Done for tonight; Journey shows the session as "Focused N min." with the paused time left out.
+- [ ] With a session running, ▶ Focus on another task. **Expect:** "Switch to this one?" Save first (the recap; then the reward offers "Start <the other>"), Switch now (nothing recorded), Keep going.
+- [ ] With a session running, move its task in Work. **Expect:** "Finish it first" with Finish the session, which opens the recap.
+- [ ] On "Tonight is done", **15 more minutes** with an unfinished last task. **Expect:** a 15-minute session on it, in the full view.
+
 ### B5b. Today: On it now and Last time (added 15 October, Phase 3)
 
 - [ ] Below the tiles, one card turns every 6 seconds through **On it now**, **Last time · <day>** and **This week**; each tab's bar fills while it waits. Point at the card. **Expect:** it holds; letting go starts the wait again. Click a tab. **Expect:** that slide. With reduced motion on, it doesn't turn by itself.

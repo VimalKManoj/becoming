@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as constellation from "../constellation.js";
 import type * as crons from "../crons.js";
 import type * as data from "../data.js";
+import type * as focus from "../focus.js";
 import type * as genesis from "../genesis.js";
 import type * as http from "../http.js";
 import type * as ideas from "../ideas.js";
@@ -59,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   constellation: typeof constellation;
   crons: typeof crons;
   data: typeof data;
+  focus: typeof focus;
   genesis: typeof genesis;
   http: typeof http;
   ideas: typeof ideas;

@@ -92,6 +92,8 @@ export default defineSchema({
     onboardedAt: v.optional(v.number()),
     focusQuotes: v.optional(v.boolean()),
     focusMusic: v.optional(v.boolean()),
+    // A soft chime when a focus session reaches its planned time (default on).
+    focusChime: v.optional(v.boolean()),
     reminderOn: v.optional(v.boolean()),
     reminderTime: v.optional(v.union(v.literal("19:30"), v.literal("20:30"), v.literal("21:30"))),
     reminderDays: v.optional(v.union(v.literal("weekdays"), v.literal("everyday"))),
@@ -176,6 +178,9 @@ export default defineSchema({
     focusTitle: v.optional(v.string()), focusDoneWhen: v.optional(v.string()), focusMinutes: v.optional(v.number()),
     // Whether this was Today's top recommendation, and if not, the optional reason.
     recommended: v.optional(v.boolean()), swapReason: v.optional(swapReason),
+    // Pause (Phase 4 of PLAN-one-tap-and-daily-loop): when the current pause began, and the
+    // paused time before it. Elapsed time leaves both out.
+    pausedAt: v.optional(v.number()), pausedMs: v.optional(v.number()),
   }).index("by_owner", ["owner"]),
   sessions: defineTable({
     owner: v.string(), taskId: v.id("tasks"), key: v.string(), lane, title: v.string(),

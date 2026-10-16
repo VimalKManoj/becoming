@@ -7,6 +7,7 @@ import type { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import type { WeekSummary } from "@/components/ritual/week";
 import { StatusControl } from "@/components/tasks/status-control";
+import { useFocus } from "@/components/focus/focus-layer";
 
 // Where things stand, below the tiles (PLAN-one-tap-and-daily-loop, Phase 3, in the owner's
 // "Today · A" design, 15 October): one card that turns through up to three slides, "On it
@@ -45,6 +46,7 @@ export function groupLine(group: Group) {
 type Slide = { id: string; tab: string; body: ReactNode };
 
 export function WhereThingsStand({ home, week, today, onOpenTask }: { home: Home | undefined; week: WeekSummary; today: string | null; onOpenTask: (id: Id<"tasks">) => void }) {
+  const focus = useFocus();
   const [index, setIndex] = useState(0);
   const [held, setHeld] = useState(false);
   const [round, setRound] = useState(0);
@@ -62,7 +64,7 @@ export function WhereThingsStand({ home, week, today, onOpenTask }: { home: Home
           <button type="button" className="t-car-tt" onClick={() => onOpenTask(doing.taskId)}>{doing.title}</button>
           <span className="t-car-meta">{[doing.project?.title, doing.code, more > 0 ? `+${more} more` : null].filter(Boolean).join(" · ")}</span>
         </span>
-        <Link className="t-car-focus" href={`/today?task=${doing.taskId}`} aria-label={`Focus on ${doing.title}`}>▶ Focus</Link>
+        <button type="button" className="t-car-focus" onClick={() => void focus.start({ _id: doing.taskId, title: doing.title })} aria-label={`Focus on ${doing.title}`}>{focus.active?.taskId === doing.taskId ? "◉ Focusing" : "▶ Focus"}</button>
       </>,
     });
   }

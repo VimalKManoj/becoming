@@ -46,7 +46,7 @@ export const exportAll = query({
     const profile = profiles[0];
     return {
       format: backupFormat, version: backupVersion,
-      profile: profile ? { motive: profile.motive, timezone: profile.timezone, weeklyTarget: profile.weeklyTarget, laneFocus: profile.laneFocus, pinnedTaskId: profile.pinnedTaskId, onboardedAt: profile.onboardedAt, focusQuotes: profile.focusQuotes, focusMusic: profile.focusMusic, reminderOn: profile.reminderOn, reminderTime: profile.reminderTime, reminderDays: profile.reminderDays, reminderEmail: profile.reminderEmail } : null,
+      profile: profile ? { motive: profile.motive, timezone: profile.timezone, weeklyTarget: profile.weeklyTarget, laneFocus: profile.laneFocus, pinnedTaskId: profile.pinnedTaskId, onboardedAt: profile.onboardedAt, focusQuotes: profile.focusQuotes, focusMusic: profile.focusMusic, focusChime: profile.focusChime, reminderOn: profile.reminderOn, reminderTime: profile.reminderTime, reminderDays: profile.reminderDays, reminderEmail: profile.reminderEmail } : null,
       projects: projects.map(p => ({ id: p._id, title: p.title, purpose: p.purpose, status: p.status, outcome: p.outcome, ideaId: p.ideaId, notes: p.notes })),
       milestones: milestones.map(m => ({ id: m._id, projectId: m.projectId, title: m.title, doneWhen: m.doneWhen, order: m.order, completedAt: m.completedAt, phaseId: m.phaseId, skills: m.skills, notes: m.notes })),
       ideas: ideas.map(i => ({ id: i._id, title: i.title, notes: i.notes, lane: i.lane, taskId: i.taskId, archivedAt: i.archivedAt, brainstorm: i.brainstorm })),
@@ -70,7 +70,7 @@ export const exportAll = query({
 const backup = v.object({
   format: v.string(), version: v.number(), exportedAt: v.optional(v.number()),
   profile: v.union(v.null(), v.object({ motive: v.string(), timezone: v.optional(v.string()), weeklyTarget: v.optional(v.number()), laneFocus: v.optional(lane), pinnedTaskId: v.optional(v.string()),
-    onboardedAt: v.optional(v.number()), focusQuotes: v.optional(v.boolean()), focusMusic: v.optional(v.boolean()), reminderOn: v.optional(v.boolean()),
+    onboardedAt: v.optional(v.number()), focusQuotes: v.optional(v.boolean()), focusMusic: v.optional(v.boolean()), focusChime: v.optional(v.boolean()), reminderOn: v.optional(v.boolean()),
     reminderTime: v.optional(v.union(v.literal("19:30"), v.literal("20:30"), v.literal("21:30"))), reminderDays: v.optional(v.union(v.literal("weekdays"), v.literal("everyday"))), reminderEmail: v.optional(v.boolean()) })),
   projects: v.array(v.object({ id: v.string(), title: v.string(), purpose: v.string(), status: projectStatus, outcome: v.optional(v.string()), ideaId: v.optional(v.string()), notes: v.optional(v.string()) })),
   milestones: v.array(v.object({ id: v.string(), projectId: v.string(), title: v.string(), doneWhen: v.optional(v.string()), order: v.number(), completedAt: v.optional(v.number()), phaseId: v.optional(v.string()), skills: v.optional(v.array(v.string())), notes: v.optional(v.string()) })),
@@ -319,7 +319,7 @@ export const importBackup = mutation({
     for (const r of data.reflections) await ctx.db.insert("reflections", { owner, week: r.week, learning: limited(r.learning, 2000, "a reflection"), intention: limited(r.intention, 2000, "a reflection") });
     if (data.profile) {
       const fields = { motive: limited(data.profile.motive, 1000, "the motive"), timezone: data.profile.timezone, weeklyTarget: data.profile.weeklyTarget, laneFocus: data.profile.laneFocus, pinnedTaskId: optional(ids.tasks, data.profile.pinnedTaskId, "pinned task"),
-        onboardedAt: data.profile.onboardedAt, focusQuotes: data.profile.focusQuotes, focusMusic: data.profile.focusMusic, reminderOn: data.profile.reminderOn, reminderTime: data.profile.reminderTime, reminderDays: data.profile.reminderDays, reminderEmail: data.profile.reminderEmail };
+        onboardedAt: data.profile.onboardedAt, focusQuotes: data.profile.focusQuotes, focusMusic: data.profile.focusMusic, focusChime: data.profile.focusChime, reminderOn: data.profile.reminderOn, reminderTime: data.profile.reminderTime, reminderDays: data.profile.reminderDays, reminderEmail: data.profile.reminderEmail };
       const existing = await ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique();
       if (existing) await ctx.db.patch(existing._id, fields);
       else await ctx.db.insert("profiles", { owner, ...fields });

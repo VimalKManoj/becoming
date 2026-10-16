@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type CSSProperties } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { authClient } from "@/lib/auth-client";
-import { readableError } from "@/lib/errors";
 import { dateLine, daysBetween, greeting, lastWorked, sessionLine } from "@/lib/ritual";
 import { useNow } from "@/lib/use-rhythm";
 import { useRitual } from "@/components/ritual/ritual-context";
@@ -22,13 +21,15 @@ import { AssistantBadge } from "@/components/assistants/assistant-badge";
 import { WhereThingsStand } from "@/components/today/today-bars";
 import { EditTaskSheet, TaskSheet } from "@/components/cloud-work-screen";
 import { dayKey } from "../../convex/lib/time";
-import { FocusOverlay, RecapOverlay, RewardOverlay, type Saved } from "@/components/today/session";
+import { tonightDoneKey, useFocus } from "@/components/focus/focus-layer";
 
 // Today, as the owner's Ritual design: a greeting and one question, "What's on your mind
 // tonight?", a ten-second check-in, then one clear focus. After the session: the recap,
 // the bloom growing, and a calm "Tonight is done." Every number comes from your records.
 // Below the tiles (Phase 3 of PLAN-one-tap-and-daily-loop, the owner's "Today · A"): one card
 // turning through On it now, Last time and This week; its tasks open their sheet right here.
+// A focus session no longer takes Today over: it belongs to the focus layer (Phase 4),
+// which keeps it in a chip across the app.
 
 type Overview = FunctionReturnType<typeof api.tasks.todayOverview>;
 type Choice = Overview["choices"][number];
@@ -48,7 +49,7 @@ const questions = ["What would make tonight feel worth it?", "What's one small t
 const laneColour = (lane: string) => ({ "--dot": lane === "Showcases" ? "#86E3C3" : lane === "Writing" ? "#C9B8F0" : "#FF8A3D" }) as CSSProperties;
 
 // Tonight's time and energy, and whether tonight is done, live in this tab only.
-const capacityKey = "becoming.today.capacity", doneKey = "becoming.today.done";
+const capacityKey = "becoming.today.capacity", doneKey = tonightDoneKey;
 function readCapacity(): Capacity {
   try {
     const stored = JSON.parse(sessionStorage.getItem(capacityKey) ?? "null") as Partial<Capacity> | null;
@@ -80,15 +81,13 @@ function Today() {
   const weekData = useWeek();
   const projects = useQuery(api.projects.list, {});
   const pipeline = useQuery(api.proof.pipeline);
-  const startSession = useMutation(api.tasks.startSession);
+  const focus = useFocus();
 
   const [capacity, setCapacity] = useState(readCapacity);
   const [screen, setScreen] = useState<Screen>("open");
   const [intent, setIntent] = useState<Intent | null>(null);
   const [resumeId, setResumeId] = useState<Id<"tasks"> | null>(null);
   const [chosenId, setChosenId] = useState<Id<"tasks"> | null>(null);
-  const [recapping, setRecapping] = useState(false);
-  const [saved, setSaved] = useState<Saved | null>(null);
   const [doneDay, setDoneDay] = useState(() => recall(doneKey));
   const [prompt, setPrompt] = useState(0);
   const [skipOnboarding, setSkipOnboarding] = useState(false);
@@ -102,6 +101,14 @@ function Today() {
     setHandled(address);
     const task = params.get("task");
     if (task) { setIntent("resume"); setResumeId(task as Id<"tasks">); setChosenId(null); setScreen("check"); }
+    // ?focus=1 (the reward's "Start another"): the check-in for a new focus.
+    else if (params.get("focus")) { setIntent("focus"); setChosenId(null); setScreen("check"); }
+  }
+  // "Done for tonight" on the reward (in the focus layer) brings Today to "Tonight is done".
+  const [seenTick, setSeenTick] = useState(focus.doneTick);
+  if (focus.doneTick !== seenTick) {
+    setSeenTick(focus.doneTick);
+    setDoneDay(recall(doneKey)); setScreen("open"); setIntent(null); setChosenId(null);
   }
   // The scope applies from the moment you pick an intent, so tonight's focus is already
   // loaded (and follows your time and energy) by the time you press "Show my focus".
@@ -123,12 +130,6 @@ function Today() {
   if (overview === undefined || profile === undefined || weekData === undefined || now === null) return <TodaySkeleton />;
   const { rhythm, week } = weekData;
 
-  // ----- Full-screen moments come first -----
-  if (saved) return <RewardOverlay saved={saved} rhythm={rhythm} week={week} onProof={() => { setSaved(null); router.push("/journey?tab=proof"); }}
-    onDone={() => { setSaved(null); setDoneDay(rhythm.today); remember(doneKey, rhythm.today); setScreen("open"); setIntent(null); }} />;
-  if (overview.active) return recapping
-    ? <RecapOverlay active={overview.active} onBack={() => setRecapping(false)} onSaved={value => { setRecapping(false); setSaved(value); setChosenId(null); }} />
-    : <FocusOverlay active={overview.active} quotesOn={profile?.focusQuotes ?? true} musicOn={profile?.focusMusic ?? true} onFinish={() => setRecapping(true)} />;
   const onboarding = profile?.needsOnboarding && !skipOnboarding ? <Onboarding onClose={() => setSkipOnboarding(true)} /> : null;
 
   function setCap(next: Partial<Capacity>) {
@@ -146,11 +147,11 @@ function Today() {
     setScreen(next === "publish" ? "plan" : "check");
   }
 
+  // Starting from Today's plan opens the full focus view; Today itself goes back to its start.
   async function start(choice: Choice) {
     setBusy(true);
-    try { await startSession({ taskId: choice.taskId, smaller: choice.smaller, recommended: !chosenId && intent !== "resume" }); }
-    catch (caught) { showToast(readableError(caught, "Could not start the session. Please try again."), "alert"); }
-    finally { setBusy(false); }
+    try { await focus.start({ _id: choice.taskId, title: choice.taskTitle }, { smaller: choice.smaller, recommended: !chosenId && intent !== "resume", expand: true }); }
+    finally { setBusy(false); setScreen("open"); setIntent(null); setChosenId(null); }
   }
 
   // ----- Tonight is done -----
@@ -168,7 +169,12 @@ function Today() {
       <p className="r-body" style={{ fontSize: 15, lineHeight: 1.5, color: "var(--r-text)" }}>Rest well. If something&apos;s still buzzing:</p>
       <div className="r-row" style={{ gap: 8 }}>
         <button type="button" className="r-ghost sm lilac" onClick={() => openCapture("idea")}>Catch an idea</button>
-        <button type="button" className="r-ghost sm" onClick={() => { setDoneDay(null); remember(doneKey, null); setCap({ minutes: 15 }); setScreen("open"); }}>15 more minutes</button>
+        <button type="button" className="r-ghost sm" onClick={() => {
+          setDoneDay(null); remember(doneKey, null);
+          // 15 more minutes on the last task, straight away, when it isn't finished.
+          if (lastSession && lastSession.outcome !== "Finished") void focus.start({ _id: lastSession.taskId, title: lastSession.title }, { minutes: 15, expand: true });
+          else { setCap({ minutes: 15 }); setScreen("open"); }
+        }}>15 more minutes</button>
         <Link className="r-ghost sm" href="/journey">See my bloom</Link>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useRitual, type ToastAction } from "@/components/ritual/ritual-context";
 import { readableError } from "@/lib/errors";
+import { useFocus } from "@/components/focus/focus-layer";
 
 // Every task move in the app goes through here (PLAN-one-tap-and-daily-loop, Phase 1): it
 // happens at once, the toast says what happened with an Undo, and a finish shows what it
@@ -28,8 +29,15 @@ export function useTaskMove() {
   const restoreTask = useMutation(api.tasks.restore);
   const removeTask = useMutation(api.tasks.remove);
   const [busy, setBusy] = useState<Id<"tasks"> | null>(null);
+  const focus = useFocus();
 
-  const fail = (error: unknown, fallback: string) => showToast(readableError(error, fallback), "alert");
+  // A task with a focus session running can't move until the session is saved (Phase 4):
+  // the toast offers to finish it rather than only saying no.
+  const fail = (error: unknown, fallback: string) => {
+    const text = readableError(error, fallback);
+    if (/focus session running/i.test(text) && focus.active) showToast("This task has a focus session running. Finish it first: the recap moves the task.", "alert", { actions: [{ label: "Finish the session", run: () => focus.openRecap() }] });
+    else showToast(text, "alert");
+  };
 
   /** Undo returns false so the toast it opens ("Undone.") isn't closed straight after. */
   const undo = (eventId: Id<"taskEvents">, done = "Undone."): ToastAction => ({
