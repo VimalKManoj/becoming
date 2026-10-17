@@ -36,7 +36,7 @@ The current primary routes are `/today`, `/work`, `/ideas`, `/journey` (with Pro
 
 | Area | User question | Main content and actions | Status |
 |---|---|---|---|
-| Account / welcome | Can I access my private work? | Sign up/in/out, identity state, first-run setup; later verification/recovery | Development sign-in and account deletion live cloud; guided onboarding and email recovery planned |
+| Account / welcome | Can I access my private work? | Sign up/in/out, identity state, first-run setup; later verification/recovery | Live: sign-up with email verification, password reset by email (mail.byvm.in, since 13 October), guided onboarding with an assistant step, and account deletion. Google sign-in is next |
 | Today | What should I do now? | Time and energy check-in, one explained recommendation, alternatives, start/resume, focused session, recap | Live cloud: honest empty states, last time, pick-up-here, pin, swap reasons, elapsed time, week strip |
 | Work | What have I committed to? | Projects, Showcases and Writing lanes; task list/detail; plan/edit; status and project context | Live cloud: task views and lifecycle, prerequisites, pin for Today, Projects with milestones and case-study draft |
 | Ideas | What might I build later? | Fast capture, pasted scheduled assignment, brainstorm, references, deliberate activation | Live cloud: structured brainstorm, stages, activation with project and smaller step, move back, archive |

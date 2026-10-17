@@ -293,6 +293,16 @@ Every task shows the same **status circle** (empty Ready, half In progress, ✓ 
 - [ ] **Plugin:** `claude plugin marketplace add VimalKManoj/becoming` (after the push), then `claude plugin install becoming@becoming`, then restart Claude Code. **Expect:** a new session knows the tasks In progress (ask "what's in progress in Becoming?"). `/becoming:next` lists or starts a task and explains the plan; `/becoming:done` finishes it with a summary, skills and the PR or commit link; `/becoming:log 30m` logs progress with a next step.
 - [ ] With the token revoked, start a session. **Expect:** one line saying Becoming's tasks couldn't be loaded; the session starts normally.
 
+### B5d. The daily loop (added 16 October, Phase 5)
+
+- [ ] Today: **Close the day** beside "What's on your mind tonight?". **Expect:** a sheet listing what moved today, "Tomorrow starts with…" and task chips. Save with nothing. **Expect:** "Write one line for tomorrow, or pick a task." Save a line. **Expect:** "Tonight is done" (when something moved today) with "Tomorrow starts with “…”"; the button reads "Day closed ✓"; opening it again edits the same day.
+- [ ] After 8 pm with something moved and the day not closed. **Expect:** the card leads with a **Tonight** slide and Close the day.
+- [ ] The next day. **Expect:** the card's Last time reads "Last night you said · “…”", with ▶ Start when you picked a task; once something moves today it goes back to today's moves.
+- [ ] Settings → Evening reminder on. **Expect:** "Tonight's would say:" with the real line: your line from last night, else "One task finishes …", else "One more day makes your week.", else tonight's task. The evening email uses the same words (subject included). With production push set up, the notification shows them too.
+- [ ] Finish a milestone's last task (or let Claude Code finish it), then open Today. **Expect:** the moment ("Milestone complete · Scaffold, done.", "finished by Claude Code" when it was), and the phase's too when it was its last milestone; That counts, and it never shows again. With the week's target met: "Your week is met."
+- [ ] Journey → the weekly review → Look back. **Expect:** What shipped by milestone, Stalled (In progress 7+ days), Where the time went, Skills that grew. On Friday evening Today offers the review too.
+- [ ] Ask Claude Code for the weekly review. **Expect:** it reads get_look_back and sends draft_week_review, which waits in the Inbox as "Weekly review"; approving it fills the week's "what I learned".
+
 ### B5c. Focus as a tool (added 16 October, Phase 4)
 
 - [ ] ▶ Focus on a task (its sheet, the status menu, Today's card, a Work row, the map panel). **Expect:** it starts at once; a toast says the timer is in the corner; a chip shows the task, 00:0x / its minutes, Pause and Stop; the tab title reads "00:0x · <task>". The task's button reads "◉ Focusing".

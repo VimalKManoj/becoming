@@ -33,6 +33,8 @@ export const inboxProposal = v.union(
   }),
   v.object({ kind: v.literal("task"), title: v.string(), lane, minutes: v.number(), energy: v.number(), doneWhen: v.string(), projectId: v.optional(v.id("projects")), milestoneId: v.optional(v.id("milestones")) }),
   v.object({ kind: v.literal("idea"), title: v.string(), lane, notes: v.string() }),
+  // A week's "what I learned", drafted by an assistant (draft_week_review, Phase 5).
+  v.object({ kind: v.literal("reflection"), week: v.string(), learning: v.string() }),
   v.object({ kind: v.literal("milestone"), projectId: v.id("projects"), title: v.string(), doneWhen: v.optional(v.string()) }),
   v.object({ kind: v.literal("nextStep"), taskId: v.id("tasks"), nextStep: v.string() }),
   // A task moved by an assistant (start, finish, block) when its token asks first.
@@ -100,6 +102,12 @@ export default defineSchema({
     // Reminder by email (default on while reminders are on), and the local day the last one went out.
     reminderEmail: v.optional(v.boolean()),
     lastReminderDay: v.optional(v.string()),
+    // What the latest reminder said, for the push notification to fetch (Phase 5).
+    lastReminderText: v.optional(v.string()),
+    // The latest check-in's time and energy, so the reminder suggests what fits (Phase 5).
+    capacity: v.optional(v.object({ minutes: v.number(), energy: v.number() })),
+    // Moments already shown ("m:<milestone>", "p:<phase>", "w:<week>"), the latest 200 (Phase 5).
+    momentsSeen: v.optional(v.array(v.string())),
   }).index("by_owner", ["owner"]),
   // Only Active projects feed Today. Done and Archived keep their tasks and history.
   projects: defineTable({
@@ -172,6 +180,11 @@ export default defineSchema({
     // Anything worth keeping about the task, in your own words (optional, edited in its sheet).
     notes: v.optional(v.string()),
   }).index("by_owner", ["owner"]).index("by_owner_status", ["owner", "status"]).index("by_project", ["projectId"]).index("by_milestone", ["milestoneId"]),
+  // The daily close (PLAN-one-tap-and-daily-loop, Phase 5): one line for tomorrow, saved at
+  // the end of a day ("YYYY-MM-DD" in the owner's timezone), optionally naming a task.
+  dayCloses: defineTable({
+    owner: v.string(), day: v.string(), tomorrow: v.string(), taskId: v.optional(v.id("tasks")), at: v.number(),
+  }).index("by_owner_day", ["owner", "day"]),
   activeSessions: defineTable({
     owner: v.string(), taskId: v.id("tasks"), startedAt: v.number(),
     smaller: v.optional(v.boolean()), taskTitle: v.optional(v.string()), lane: v.optional(lane),

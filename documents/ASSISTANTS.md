@@ -51,6 +51,8 @@ The **Claude app** (web, desktop, phone) and **ChatGPT** need "Sign in with Beco
 | `get_week`, `recent_sessions` | read | This week's target, sessions, pause, intention and lined-up steps; the latest sessions. |
 | `list_inbox` | read | What's already waiting, so nothing is sent twice. |
 | `get_task` | read | One task in full: status, lane, estimate, done-when, next step, notes, skills, its code, project, milestone and phase (with its goal), the docs it's built from (with links), prerequisites and its last 8 history entries. |
+| `get_look_back` | read | The week from records: what shipped (by milestone), what stalled, where the focused time went, the skills that grew (`week`: this or last). |
+| `draft_week_review` | plan | The weekly review's "what I learned", in the user's voice; waits in the Inbox, and approving fills the week's reflection. |
 | `get_activity` | read | The Journey feed: recent moves, sessions and markers (`limit`, and `before` to page back), each with who made it. |
 | `start_task` | work | Mark a task In progress (also unblocks or reopens it), with an optional `next_step`. |
 | `complete_task` | work | Mark a task Done once its done-when is met, with `summary`, `skills` and `evidence_url`. Without `minutes`, the summary and link go on the task's history. With real `minutes`, it's also logged as a finished session and the link becomes a Proof draft (a summary is then required, and a blocked task is refused). |

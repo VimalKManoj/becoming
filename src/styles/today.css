@@ -153,3 +153,39 @@
 .t-inbox-link{overflow-wrap:anywhere}
 .t-inbox-link a{color:var(--r-ember-text)}
 .t-focus-more{gap:8px;margin-top:10px;justify-content:center}
+
+/* Close the day (Phase 5 of PLAN-one-tap-and-daily-loop): the sheet, Today's quiet button
+   beside "What's on your mind tonight?", and the saved line on "Tonight is done". */
+.t-intents-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 12px;margin:0 2px 12px}
+.t-close-link{padding:0;border:0;background:none;box-shadow:none;cursor:pointer;font:500 12.5px var(--r-sans);color:var(--r-ember-soft)}
+.t-close-link:hover{color:var(--r-ember-pale);filter:none}
+.t-closed{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:12px 16px;border-radius:18px;border:1px dashed rgba(255,170,110,.35);background:transparent;box-shadow:none;cursor:pointer;text-align:left;color:var(--r-ink)}
+.t-closed:hover{border-color:rgba(255,170,110,.6);filter:none}
+.t-closed-line{font:italic 400 18px/1.3 var(--r-serif)}
+.r-cap-card.cd{max-width:520px;gap:14px;max-height:calc(100dvh - 48px);overflow-y:auto;scrollbar-width:none}
+.r-cap-card.cd::-webkit-scrollbar{display:none}
+.r-cap-card.cd>*{flex-shrink:0}
+.cd-eyebrow{font:500 10.5px var(--r-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--r-ember-soft)}
+.cd-title{margin:0;font:400 30px/1.05 var(--r-serif);color:var(--r-ink)}
+.cd-title em{font-style:italic;color:var(--r-ember-text)}
+.cd-moves{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.cd-moves li{padding:10px 14px;border-radius:12px;background:rgba(255,240,225,.04);font:400 13.5px/1.45 var(--r-sans);color:var(--r-text)}
+.cd-field textarea{font-size:15px}
+.cd-picks{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.cd-error{color:var(--r-red-pale)}
+
+/* Moments (Phase 5): a milestone, phase or week finished, shown once. */
+.mo{display:grid;place-items:center}
+.mo-body{max-width:520px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding-top:clamp(20px,8vh,90px)}
+.mo-burst{position:relative;display:grid;place-items:center;width:132px;height:132px;margin-bottom:6px}
+.mo-core{position:relative;display:grid;place-items:center;width:88px;height:88px;border-radius:50%;font:600 36px var(--r-sans);color:var(--r-on-ember);background:radial-gradient(circle at 35% 30%,#FFC08F,#F06A2A 60%,#7A2E0E);box-shadow:0 0 60px rgba(255,138,61,.55);animation:mo-pop .8s cubic-bezier(.2,1.4,.4,1) both}
+.mo-core.week{color:var(--r-on-mint);background:radial-gradient(circle at 35% 30%,#D8FFF0,var(--r-mint) 60%,#2F7A60);box-shadow:0 0 60px rgba(134,227,195,.5)}
+.mo-ring{position:absolute;inset:22px;border-radius:50%;border:2px solid var(--r-ember-soft);opacity:0;animation:mo-ring 1.6s ease-out .25s both}
+.mo-ring.two{animation-delay:.6s}
+.mo-eyebrow{letter-spacing:.14em;animation:r-rise .6s .3s both}
+.mo-title{margin:0;font:400 clamp(36px,7cqi,56px)/1.02 var(--r-serif);color:var(--r-ink);text-wrap:balance;animation:r-rise .6s .4s both}
+.mo-title em{font-style:italic;color:var(--r-ember-text)}
+.mo-sub{max-width:420px;color:var(--r-text);animation:r-rise .6s .5s both}
+.mo-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px;animation:r-rise .6s .65s both}
+@keyframes mo-pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes mo-ring{from{transform:scale(.8);opacity:.9}to{transform:scale(2.1);opacity:0}}

@@ -5,7 +5,9 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { bloomSkillList } from "./lib/bloom";
 import { skillsValue } from "./constellation";
 import { commitmentFor } from "./lib/rhythm";
-import { weekKey, weekRange } from "./lib/time";
+import { addDays, dayKey, weekKey, weekRange } from "./lib/time";
+import { progressKinds } from "./lib/work";
+import { lookBackFor } from "./moments";
 import { hashToken } from "./lib/tokens";
 import { httpUrl } from "./lib/validate";
 import { constellationFor, docCodeValue, linkValue } from "./constellation";
@@ -101,6 +103,12 @@ export const tools = [
   { name: "add_task", title: "Add a task", annotations: propose,
     description: "Add a new Ready task. Applies at once or waits for approval, by the assistant's trust.",
     inputSchema: { type: "object", properties: { title: { type: "string" }, lane: laneSchema, minutes: { type: "integer", minimum: 5, maximum: 240 }, energy: energySchema, done_when: { type: "string" }, project: { type: "string", description: "Project id or title" }, milestone: { type: "string", description: "Milestone title within the project" } }, required: ["title", "lane", "minutes", "energy", "done_when"] } },
+  { name: "get_look_back", title: "The week, looked back on", annotations: read,
+    description: "A week built from records: what shipped (grouped by milestone), what stalled (In progress 7+ days), where the focused time went (by project) and which skills grew. Default this week; \"last\" for last week.",
+    inputSchema: { type: "object", properties: { week: { type: "string", enum: ["this", "last"], description: "Default this" } } } },
+  { name: "draft_week_review", title: "Draft the week's reflection", annotations: propose,
+    description: "Propose the weekly review's \"what I learned\" for this week (or last), in the user's voice, from get_look_back and what they told you. Waits in the Inbox for approval, unless the assistant is trusted with everything.",
+    inputSchema: { type: "object", properties: { learning: { type: "string", description: "One to three honest sentences" }, week: { type: "string", enum: ["this", "last"], description: "Default this" } }, required: ["learning"] } },
   { name: "capture_idea", title: "Capture an idea", annotations: propose,
     description: "Capture an idea in the user's notebook (not a commitment; it never adds work to Today). Applies at once or waits for approval, by the assistant's trust.",
     inputSchema: { type: "object", properties: { title: { type: "string" }, lane: laneSchema, notes: { type: "string" } }, required: ["title", "lane"] } },
@@ -191,9 +199,9 @@ export const tools = [
     }, required: ["phases"] } },
 ] as const;
 
-const readTools = new Set(["whats_next", "list_projects", "get_project", "list_tasks", "get_week", "recent_sessions", "list_inbox", "get_constellation", "get_phase", "get_task", "get_activity"]);
+const readTools = new Set(["whats_next", "list_projects", "get_project", "list_tasks", "get_week", "recent_sessions", "list_inbox", "get_constellation", "get_phase", "get_task", "get_activity", "get_look_back"]);
 // Plan changes: they wait for approval unless the token trusts the assistant with everything.
-const planKinds = new Set(["milestone", "phase", "doc", "docUpdate", "research", "report", "decision", "plan"]);
+const planKinds = new Set(["milestone", "phase", "doc", "docUpdate", "research", "report", "decision", "plan", "reflection"]);
 export type Trust = "ask" | "work" | "all";
 export const trustOf = (value: string | undefined): Trust => value === "ask" || value === "all" ? value : "work";
 
@@ -207,7 +215,7 @@ const prompts: Prompt[] = [
   { name: "evening_check_in", title: "Evening check-in", description: "What to work on tonight.",
     text: "Ask me how many minutes I have tonight and my energy (low, steady or high), then call whats_next and tell me tonight's focus, why, and one alternative. Keep it short." },
   { name: "weekly_review", title: "Weekly review", description: "Look back at this week and shape the next.",
-    text: "Call get_week and recent_sessions, then help me look back on this week in three short parts: what I did, what I learned, and what to line up next. Propose follow-up tasks with add_task only if I agree." },
+    text: "Call get_week and get_look_back, then help me look back on this week in three short parts: what shipped and what stalled, what I learned, and what to line up next. When we agree on what I learned, send it with draft_week_review (it waits in my Inbox). Propose follow-up tasks with add_task only if I agree." },
   { name: "sync_project_from_docs", title: "Sync a project from its docs", description: "Read this repo's plan and docs, and propose them to Becoming as the project's constellation (sent to the Inbox).",
     text: "Sync this repo's plan into Becoming. 1) Call list_projects and find the project this repo belongs to; ask me if unsure, or whether it should be a new project. 2) Call get_constellation for it to see what's already there. 3) Read the repo's plan (PLAN.md or documents/PLAN*.md) and its docs (PRD, system design, API, schema, UI flow, design system). 4) Propose what's missing as ONE import_plan: the phases in order, their milestones and tasks (lane, minutes, energy, done-when; for work already done, its status and real dates from the plan or git history), and the docs with a short code, title, summary, section count, the repo path as link, and the phases each feeds. 5) For docs that already exist but changed, use update_doc. Never invent dates or progress; leave a task ready when unsure. Then tell me what's waiting in my Inbox." },
 ];
@@ -549,11 +557,19 @@ async function runRead(ctx: QueryCtx, owner: string, tool: string, input: Input)
       const sessions = await ctx.db.query("sessions").withIndex("by_owner_endedAt", q => q.eq("owner", owner).gte("endedAt", start).lt("endedAt", end)).take(100);
       const inForce = commitmentFor(week, commitments.map(c => ({ week: c.week, target: c.target, paused: c.paused })));
       const linedUp = plan ? (await Promise.all(plan.taskIds.map(id => ctx.db.get(id)))).flatMap(task => (task && task.owner === owner ? [{ id: task._id, title: task.title, status: task.status }] : [])) : [];
+      // The week counts days with progress (a session, or a task started, finished or logged), not sessions.
+      const moves = (await ctx.db.query("taskEvents").withIndex("by_owner_at", q => q.eq("owner", owner).gte("at", start).lt("at", end)).take(500)).filter(e => progressKinds.has(e.kind));
+      const days = new Set([...sessions.map(s => dayKey(s.endedAt, zone)), ...moves.map(e => dayKey(e.at, zone))]);
       return {
         week, timezone: profile?.timezone ?? null, weeklyTarget: inForce?.target ?? null, plannedPause: inForce?.paused ?? false,
-        sessionsThisWeek: sessions.length, sessions: sessions.map(s => ({ title: s.title, lane: s.lane, outcome: s.outcome, endedAt: iso(s.endedAt) })),
+        daysWithProgress: days.size, sessionsThisWeek: sessions.length, sessions: sessions.map(s => ({ title: s.title, lane: s.lane, outcome: s.outcome, endedAt: iso(s.endedAt) })),
         intention: plan?.intention || null, linedUp,
       };
+    }
+    case "get_look_back": {
+      const which = input.week === "last" ? addDays(weekKey(Date.now(), zone), -7) : weekKey(Date.now(), zone);
+      const { start, end } = weekRange(which, zone);
+      return { week: which, ...(await lookBackFor(ctx, owner, start, end)) };
     }
     case "recent_sessions": {
       const sessions = await ctx.db.query("sessions").withIndex("by_owner_endedAt", q => q.eq("owner", owner)).order("desc").take(int(input, "limit", 1, 30, 10));
@@ -777,6 +793,14 @@ async function runPropose(ctx: MutationCtx, owner: string, source: string, trust
       const milestone = milestoneRef && project ? await findMilestone(ctx, project._id, milestoneRef) : null;
       proposal = { kind: "task", title: text(input, "title", 160), lane: laneOf(input.lane)!, minutes: int(input, "minutes", 5, 240), energy: energyOf(input.energy), doneWhen: text(input, "done_when", 1000), ...(project ? { projectId: project._id } : {}), ...(milestone ? { milestoneId: milestone._id } : {}) };
       summary = `Task "${proposal.title}".`;
+      break;
+    }
+    case "draft_week_review": {
+      const profile = await ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique();
+      const zone = profile?.timezone ?? "UTC";
+      const week = input.week === "last" ? addDays(weekKey(Date.now(), zone), -7) : weekKey(Date.now(), zone);
+      proposal = { kind: "reflection", week, learning: text(input, "learning", 2000) };
+      summary = `What you learned, week of ${week}.`;
       break;
     }
     case "capture_idea":

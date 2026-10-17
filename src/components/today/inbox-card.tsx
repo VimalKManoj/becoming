@@ -15,15 +15,15 @@ import { readableError } from "@/lib/errors";
 type Item = FunctionReturnType<typeof api.inbox.list>[number];
 const kindLabel: Record<Item["kind"], string> = {
   session: "Work done", task: "New task", idea: "Idea", milestone: "Milestone", nextStep: "Next step", move: "Status", taskEdit: "Task edit",
-  phase: "New phase", doc: "New doc", docUpdate: "Doc update", research: "Research", report: "Report", decision: "Decision", plan: "Whole plan",
+  phase: "New phase", doc: "New doc", docUpdate: "Doc update", research: "Research", report: "Report", decision: "Decision", plan: "Whole plan", reflection: "Weekly review",
 };
 const kindColour: Record<Item["kind"], string> = {
   session: "#FF8A3D", task: "#FF8A3D", idea: "#C9B8F0", milestone: "#86E3C3", nextStep: "#E9DFD6", move: "#FF8A3D", taskEdit: "#E9DFD6",
-  phase: "#86E3C3", doc: "#E9DFD6", docUpdate: "#E9DFD6", research: "#C9B8F0", report: "#C9B8F0", decision: "#86E3C3", plan: "#FF8A3D",
+  phase: "#86E3C3", doc: "#E9DFD6", docUpdate: "#E9DFD6", research: "#C9B8F0", report: "#C9B8F0", decision: "#86E3C3", plan: "#FF8A3D", reflection: "#86E3C3",
 };
 const approvedText: Record<Item["kind"], string> = {
   session: "Logged to your Journey.", task: "Added to Work.", idea: "Saved to Ideas.", milestone: "Milestone added.", nextStep: "Next step updated.", move: "Task moved.", taskEdit: "Task updated.",
-  phase: "Phase added.", doc: "Doc added.", docUpdate: "Doc updated.", research: "Research added.", report: "Report saved.", decision: "Decision recorded.", plan: "Plan added to the project.",
+  phase: "Phase added.", doc: "Doc added.", docUpdate: "Doc updated.", research: "Research added.", report: "Report saved.", decision: "Decision recorded.", plan: "Plan added to the project.", reflection: "Saved to the week's review.",
 };
 const isWebLink = (link: string) => /^https?:\/\//i.test(link);
 const count = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;

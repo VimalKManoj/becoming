@@ -215,6 +215,8 @@ function LookBack({ rhythm, week, lookWeek, learning, onLearning, busy, onNext }
   const range = weekRange(lookWeek, rhythm.timezone);
   const bloom = useQuery(api.journey.bloom, { since: range.start, until: range.end });
   const pipeline = useQuery(api.proof.pipeline);
+  // The week built from records (Phase 5): what shipped, what stalled, where the time went.
+  const look = useQuery(api.moments.lookBack, { since: range.start, until: range.end });
   const sessions = rhythm.sessions.filter(session => session.endedAt >= range.start && session.endedAt < range.end);
   // Everything that moved forward that week, focus or not; the week counts its days.
   const work = rhythm.moments.filter(moment => moment.at >= range.start && moment.at < range.end);
@@ -243,6 +245,19 @@ function LookBack({ rhythm, week, lookWeek, learning, onLearning, busy, onNext }
       <div><dd>{growth === undefined ? "…" : `+${growth}`}</dd><dt>petal growth</dt></div>
     </dl>
     <p className="j-14">{laneStory(work.map(moment => moment.lane), which)}{ready ? ` “${ready}” is ready to share.` : ""}</p>
+    {look && (look.shipped.length > 0 || look.stalled.length > 0 || look.time.length > 0) && <div className="j-look">
+      {look.shipped.length > 0 && <section aria-labelledby="look-shipped"><h2 id="look-shipped" className="j-look-h">What shipped</h2>
+        <ul className="j-look-list">{look.shipped.map(group => <li key={group.group}><span className="j-look-group">{group.group}</span>{group.tasks.join(" · ")}</li>)}</ul></section>}
+      {look.stalled.length > 0 && <section aria-labelledby="look-stalled"><h2 id="look-stalled" className="j-look-h">Stalled</h2>
+        <ul className="j-look-list">{look.stalled.map(task => <li key={task.id}>{task.title}<span className="j-look-meta"> · In progress {task.days} days</span></li>)}</ul></section>}
+      {look.time.length > 0 && <section aria-labelledby="look-time"><h2 id="look-time" className="j-look-h">Where the time went</h2>
+        <ul className="j-look-bars">{look.time.slice(0, 5).map(row => <li key={row.label}>
+          <span className="j-look-label">{row.label}</span>
+          <span className="j-look-bar" aria-hidden="true"><span style={{ width: `${Math.max(6, Math.round((row.minutes / look.time[0].minutes) * 100))}%` }} /></span>
+          <span className="j-look-meta">{row.minutes} min</span>
+        </li>)}</ul></section>}
+      {look.skills.length > 0 && <p className="r-small">Skills that grew: {look.skills.map(skill => `${skill.name} +${skill.count}`).join(" · ")}</p>}
+    </div>}
     <label className="r-field">What did {which} teach you?
       <textarea className="r-textarea" rows={3} maxLength={2000} value={learning} onChange={event => onLearning(event.target.value)} placeholder="One honest sentence is plenty." />
     </label>

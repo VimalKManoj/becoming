@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { requireOwner } from "./lib/ownership";
+import { effortValues } from "./lib/taskRules";
 import { lane } from "./schema";
 
 export const getProfile = query({
@@ -81,6 +82,19 @@ export const savePreferences = mutation({
     const profile = await ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique();
     if (profile) await ctx.db.patch(profile._id, changes);
     else await ctx.db.insert("profiles", { owner, motive: "", ...changes });
+    return null;
+  },
+});
+
+// The check-in's time and energy, kept for the evening reminder's suggestion (Phase 5).
+export const saveCapacity = mutation({
+  args: { minutes: v.number(), energy: v.number() },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    const capacity = effortValues(args.minutes, args.energy);
+    const profile = await ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).unique();
+    if (profile) await ctx.db.patch(profile._id, { capacity });
+    else await ctx.db.insert("profiles", { owner, motive: "", capacity });
     return null;
   },
 });

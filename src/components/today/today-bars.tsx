@@ -45,7 +45,7 @@ export function groupLine(group: Group) {
 
 type Slide = { id: string; tab: string; body: ReactNode };
 
-export function WhereThingsStand({ home, week, today, onOpenTask }: { home: Home | undefined; week: WeekSummary; today: string | null; onOpenTask: (id: Id<"tasks">) => void }) {
+export function WhereThingsStand({ home, week, today, evening, onOpenTask, onCloseDay }: { home: Home | undefined; week: WeekSummary; today: string | null; evening: boolean; onOpenTask: (id: Id<"tasks">) => void; onCloseDay: () => void }) {
   const focus = useFocus();
   const [index, setIndex] = useState(0);
   const [held, setHeld] = useState(false);
@@ -53,6 +53,14 @@ export function WhereThingsStand({ home, week, today, onOpenTask }: { home: Home
   const [still, setStill] = useState(false);
 
   const slides: Slide[] = [];
+  // Phase 5: after 8 pm, once something moved and the day isn't closed yet, it leads with the close.
+  if (evening && home?.lastTime?.isToday && !home.closedToday) slides.push({
+    id: "close", tab: "Tonight",
+    body: <>
+      <span className="t-car-txt"><b>Close the day ·</b> what moved, and one line for tomorrow.</span>
+      <button type="button" className="t-car-focus" onClick={onCloseDay}>Close the day</button>
+    </>,
+  });
   const doing = home?.onItNow[0];
   if (doing) {
     const more = (home?.onItNow.length ?? 1) - 1 + (home?.moreInProgress ?? 0);
@@ -70,7 +78,22 @@ export function WhereThingsStand({ home, week, today, onOpenTask }: { home: Home
   }
   const last = home?.lastTime;
   const lines = last ? last.groups.map(groupLine).filter(Boolean) : [];
-  if (last && today && (lines.length || last.pickUp)) {
+  // The day after a close, Last time starts with your own words, until something moves today.
+  const night = home?.lastNight && today && !last?.isToday ? home.lastNight : null;
+  if (night && today) {
+    const day = dayLabel(night.day, today);
+    const when = day.long === "Yesterday" ? "Last night" : `${day.long} night`;
+    const task = night.task && (night.task.status === "Ready" || night.task.status === "In progress") ? night.task : null;
+    slides.push({
+      id: "last", tab: when,
+      body: <>
+        <span className="t-car-txt" title={night.tomorrow}><b>{when} you said ·</b> “{night.tomorrow}”</span>
+        {task
+          ? <button type="button" className="t-car-focus" onClick={() => void focus.start({ _id: task.id, title: task.title })} aria-label={`Start ${task.title}`}>▶ Start</button>
+          : last?.pickUp && <button type="button" className="t-car-pick" onClick={() => onOpenTask(last.pickUp!.taskId)} aria-label={`Pick up ${last.pickUp.title}`}>Pick up →</button>}
+      </>,
+    });
+  } else if (last && today && (lines.length || last.pickUp)) {
     const day = dayLabel(last.day, today);
     const text = lines.length ? lines.join(" ") : `You left off: ${last.pickUp!.nextStep}`;
     slides.push({

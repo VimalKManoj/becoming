@@ -1,14 +1,14 @@
 import { ConvexError, v } from "convex/values";
-import { query, type QueryCtx } from "./_generated/server";
+import { mutation, query, type QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
-import { requireOwner } from "./lib/ownership";
-import { dayKey } from "./lib/time";
+import { assertOwner, requireOwner } from "./lib/ownership";
+import { addDays, dayKey } from "./lib/time";
 
-// Today's two slim bars above the week (PLAN-one-tap-and-daily-loop, Phase 3, rethought
-// 15 October): "On it now" (tasks In progress, latest moved first) and "Last time" (what
-// moved today, or else on your last active day, by you and by assistants, and where you
-// left off). Plus open tasks per lane, for the tiles' subtitles. All derived from records;
-// nothing new is stored.
+// Today's "where things stand" (PLAN-one-tap-and-daily-loop, Phase 3): "On it now" (tasks In
+// progress, latest moved first) and "Last time" (what moved today, or else on your last
+// active day, by you and by assistants, and where you left off), plus open tasks per lane
+// for the tiles. Phase 5 adds the daily close: one line for tomorrow (dayCloses), which
+// tomorrow's Today ("Last night you said") and reminder open with.
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 /** The moves Last time reports. "unblocked" and "reopened" count as starting again. */
@@ -76,8 +76,44 @@ export async function homeFor(ctx: QueryCtx, owner: string, args: { today: strin
 
   const openByLane = { Projects: 0, Showcases: 0, Writing: 0 };
   for (const task of [...doing, ...ready]) openByLane[task.lane] += 1;
-  return { onItNow, moreInProgress: Math.max(0, doing.length - 3), lastTime, openByLane };
+  // ----- The daily close (Phase 5): last night's line, and whether today is closed -----
+  const closes = await ctx.db.query("dayCloses").withIndex("by_owner_day", q => q.eq("owner", owner).lte("day", args.today)).order("desc").take(2);
+  const closedToday = closes.find(close => close.day === args.today) ?? null;
+  const previous = closes.find(close => close.day < args.today);
+  let lastNight = null;
+  if (previous && previous.day >= addDays(args.today, -3)) {
+    const task = previous.taskId ? await ctx.db.get(previous.taskId) : null;
+    const own = task && task.owner === owner ? task : null;
+    lastNight = { day: previous.day, tomorrow: previous.tomorrow || own?.title || "", task: own ? { id: own._id, title: own.title, status: own.status } : null };
+  }
+
+  return { onItNow, moreInProgress: Math.max(0, doing.length - 3), lastTime, openByLane, lastNight, closedToday: closedToday ? { tomorrow: closedToday.tomorrow, taskId: closedToday.taskId ?? null } : null };
 }
+
+/**
+ * Close the day: one line for tomorrow (or a task to start with), saved for your local day.
+ * Saving again the same day replaces it. Tomorrow's Today and reminder open with it.
+ */
+export const close = mutation({
+  args: { day: v.string(), tomorrow: v.string(), taskId: v.optional(v.id("tasks")) },
+  handler: async (ctx, args) => {
+    const owner = await requireOwner(ctx);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(args.day)) throw new ConvexError("day must be a date like 2026-10-15.");
+    const tomorrow = args.tomorrow.trim();
+    if (tomorrow.length > 300) throw new ConvexError("Keep tomorrow's line under 300 characters.");
+    if (args.taskId) {
+      const task = await ctx.db.get(args.taskId);
+      assertOwner(task, owner);
+      if (task.status !== "Ready" && task.status !== "In progress" && task.status !== "Blocked") throw new ConvexError("Pick a task that's still open.");
+    }
+    if (!tomorrow && !args.taskId) throw new ConvexError("Write one line for tomorrow, or pick a task.");
+    const existing = await ctx.db.query("dayCloses").withIndex("by_owner_day", q => q.eq("owner", owner).eq("day", args.day)).unique();
+    const values = { tomorrow, taskId: args.taskId, at: Date.now() };
+    if (existing) await ctx.db.patch(existing._id, values);
+    else await ctx.db.insert("dayCloses", { owner, day: args.day, ...values });
+    return null;
+  },
+});
 
 /** A task's code in its project's plan ("0B·2"), the same as the constellation's, or null. */
 async function codeOf(ctx: QueryCtx, owner: string, task: Doc<"tasks">) {

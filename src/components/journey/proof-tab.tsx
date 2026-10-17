@@ -211,7 +211,7 @@ function EmptyView({ view, draft, ready, total, onView }: { view: ProofView; dra
   const go = (target: ProofView, n: number, word: string) => <button type="button" className="r-ghost sm" onClick={() => onView(target)}>See {shown(n)} {word}</button>;
   const drafts = draft === 1 ? "draft" : "drafts";
   const content: Record<ProofView, { title: string; detail: string; action: ReactNode }> = {
-    "all": { title: "Your first proof belongs here.", detail: "Add an evidence link when you finish a session in Today, or add one to a past session under Progress → All sessions. It arrives here as a private draft.",
+    "all": { title: "Your first proof belongs here.", detail: "Add an evidence link when you finish a focus session, or when an assistant finishes a task with its PR link. You can also add one to a past session under Recent work → Everything → Focus sessions. It arrives here as a private draft.",
       action: <Link className="r-ghost sm" href="/today">Go to Today</Link> },
     "Draft": { title: "No drafts right now.", detail: "New evidence starts here, from the evidence link in a recap.",
       action: ready > 0 ? go("Ready to share", ready, "ready to share") : null },

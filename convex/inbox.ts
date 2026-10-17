@@ -93,6 +93,7 @@ export async function describeItem(ctx: Db, owner: string, item: Doc<"inbox">) {
       return { ...base, title: p.title, details: [p.lane, `${p.minutes} min`, `${energyName[p.energy]} energy`, ...(project ? [project] : [])], body: `Done when: ${p.doneWhen}` };
     }
     case "idea": return { ...base, title: p.title, details: [p.lane], body: p.notes.length > 400 ? `${p.notes.slice(0, 400)}…` : p.notes || null };
+    case "reflection": return { ...base, title: `What you learned, week of ${p.week}`, details: ["Weekly review"], body: p.learning.length > 400 ? `${p.learning.slice(0, 400)}…` : p.learning };
     case "milestone": return { ...base, title: p.title, details: [await titleOf(ctx, owner, p.projectId) ?? gone("project")], body: p.doneWhen ? `Done when: ${p.doneWhen}` : null };
     case "nextStep": return { ...base, title: await titleOf(ctx, owner, p.taskId) ?? gone("task"), details: ["New next step"], body: null, next: p.nextStep };
     case "move": {
@@ -272,6 +273,13 @@ export async function applyProposal(ctx: MutationCtx, owner: string, p: Proposal
     }
     case "task": return { taskId: await createTaskFor(ctx, owner, p, source) };
     case "idea": await createIdeaFor(ctx, owner, p); break;
+    case "reflection": {
+      // Fills the week's "what I learned", keeping any intention already written.
+      const existing = await ctx.db.query("reflections").withIndex("by_owner_week", q => q.eq("owner", owner).eq("week", p.week)).unique();
+      if (existing) await ctx.db.patch(existing._id, { learning: p.learning });
+      else await ctx.db.insert("reflections", { owner, week: p.week, learning: p.learning, intention: "" });
+      break;
+    }
     case "milestone": await addMilestoneFor(ctx, owner, p); break;
     case "nextStep": {
       const task = await ctx.db.get(p.taskId);

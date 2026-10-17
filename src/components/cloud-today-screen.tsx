@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type CSSProperties } from "react";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -19,6 +19,8 @@ import { useTaskMove } from "@/components/tasks/use-task-move";
 import { InboxCard } from "@/components/today/inbox-card";
 import { AssistantBadge } from "@/components/assistants/assistant-badge";
 import { WhereThingsStand } from "@/components/today/today-bars";
+import { CloseDaySheet } from "@/components/today/close-day";
+import { MomentOverlay } from "@/components/today/moment";
 import { EditTaskSheet, TaskSheet } from "@/components/cloud-work-screen";
 import { dayKey } from "../../convex/lib/time";
 import { tonightDoneKey, useFocus } from "@/components/focus/focus-layer";
@@ -82,6 +84,7 @@ function Today() {
   const projects = useQuery(api.projects.list, {});
   const pipeline = useQuery(api.proof.pipeline);
   const focus = useFocus();
+  const saveCapacity = useMutation(api.settings.saveCapacity);
 
   const [capacity, setCapacity] = useState(readCapacity);
   const [screen, setScreen] = useState<Screen>("open");
@@ -92,6 +95,7 @@ function Today() {
   const [prompt, setPrompt] = useState(0);
   const [skipOnboarding, setSkipOnboarding] = useState(false);
   const [sheet, setSheet] = useState<{ kind: "task" | "edit"; id: Id<"tasks"> } | null>(null);
+  const [closing, setClosing] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // /today?task=… (▶ Focus on a task, here or in Work) opens the check-in for that task.
@@ -131,6 +135,10 @@ function Today() {
   const { rhythm, week } = weekData;
 
   const onboarding = profile?.needsOnboarding && !skipOnboarding ? <Onboarding onClose={() => setSkipOnboarding(true)} /> : null;
+  // Close the day (Phase 5): one line for tomorrow; saving it shows "Tonight is done".
+  const closeSheet = closing && home && todayKey ? <CloseDaySheet home={home} today={todayKey} onClose={() => setClosing(false)}
+    onSaved={() => { setClosing(false); setDoneDay(rhythm.today); remember(doneKey, rhythm.today); setScreen("open"); setIntent(null); }} /> : null;
+  const evening = new Date(now).getHours() >= 20;
 
   function setCap(next: Partial<Capacity>) {
     const value = { ...capacity, ...next };
@@ -162,10 +170,14 @@ function Today() {
     : lastSession ? { title: lastSession.title, line: `${lastSession.lane} · ${lastSession.outcome} · saved to Journey`, at: lastSession.endedAt } : null;
   if (screen === "open" && doneDay === rhythm.today && tonight && daysBetween(tonight.at, now) === 0) return <>
     {onboarding}
+    {closeSheet}
     <div className="r-col r-rise" style={{ gap: 22, paddingTop: "clamp(8px,6cqi,64px)" }}>
       <div><div className="r-date">{dateLine(now)}</div><h1 className="r-greet">Tonight is <em>done.</em></h1></div>
       <div className="t-done-card"><span className="t-check" aria-hidden="true">✓</span><div style={{ minWidth: 0 }}><div style={{ font: "500 15px/1.3 var(--r-sans)" }}>{tonight.title}</div><div className="r-small" style={{ marginTop: 3 }}>{tonight.line}</div></div></div>
       <div className="r-row" style={{ gap: 12, padding: "0 4px" }}><WeekDots days={week.days} size={24} /><span className="r-body" style={{ fontSize: 13.5, color: "var(--r-text)" }}>{week.line}</span></div>
+      {home?.closedToday
+        ? <button type="button" className="t-closed" onClick={() => setClosing(true)}><span className="r-eyebrow-sm">Tomorrow starts with</span><span className="t-closed-line">“{home.closedToday.tomorrow || "the task you picked"}”</span></button>
+        : <button type="button" className="r-btn sm" style={{ alignSelf: "flex-start" }} onClick={() => setClosing(true)}>Close the day · one line for tomorrow</button>}
       <p className="r-body" style={{ fontSize: 15, lineHeight: 1.5, color: "var(--r-text)" }}>Rest well. If something&apos;s still buzzing:</p>
       <div className="r-row" style={{ gap: 8 }}>
         <button type="button" className="r-ghost sm lilac" onClick={() => openCapture("idea")}>Catch an idea</button>
@@ -213,7 +225,7 @@ function Today() {
     <div><div className="r-label" style={{ font: "500 13px var(--r-sans)", margin: "0 0 10px 2px" }}>And your energy?</div>
       <div className="t-energies" role="radiogroup" aria-label="Your energy" onKeyDown={radioKeys}>{energyNames.map((label, i) => <button key={label} type="button" role="radio" aria-checked={capacity.energy === i + 1} className="r-chip t-energy" onClick={() => setCap({ energy: i + 1 })}><Bars level={i} />{label}</button>)}</div>
     </div>
-    <button type="button" className="r-btn lg" onClick={() => { setChosenId(null); setScreen("plan"); }}>Show my focus →</button>
+    <button type="button" className="r-btn lg" onClick={() => { setChosenId(null); setScreen("plan"); void saveCapacity(capacity).catch(() => undefined); }}>Show my focus →</button>
     <p className="r-small" style={{ textAlign: "center" }}>Only shapes tonight&apos;s suggestion. Nothing is saved.</p>
   </div></>;
 
@@ -298,16 +310,23 @@ function Today() {
         <span className="r-small" style={{ fontSize: 13, padding: "0 6px" }}>{lastSession.outcome === "Finished" ? "It's finished. Choose what's next below." : "or choose something else below"}</span>
       </div></>}
     </section>}
-    {week.isSunday && week.configured && <SundayCard week={week} />}
+    {/* The weekly review: offered on Sunday, and on Friday evening too (Phase 5). */}
+    {(week.isSunday || (new Date(now).getDay() === 5 && new Date(now).getHours() >= 18)) && week.configured && <SundayCard week={week} friday={!week.isSunday} />}
     <div className="r-col t-intents-wrap">
-      <h2 className="r-label" style={{ font: "500 15px var(--r-sans)", color: "var(--r-ink-2)", margin: "0 0 12px 2px" }}>What&apos;s on your mind tonight?</h2>
+      <div className="t-intents-head">
+        <h2 className="r-label" style={{ font: "500 15px var(--r-sans)", color: "var(--r-ink-2)", margin: 0 }}>What&apos;s on your mind tonight?</h2>
+        <button type="button" className="t-close-link" onClick={() => setClosing(true)}>{home?.closedToday ? "Day closed ✓" : "Close the day"}</button>
+      </div>
       <div className="t-intents">{intents.map(item => <button key={item.id} type="button" className="r-tile t-intent" onClick={() => go(item.id)}>
         <span className="r-dot glow" style={{ "--dot": item.colour } as CSSProperties} aria-hidden="true" />
         <span><span className="t-intent-label">{item.label}</span><span className="t-intent-sub">{item.sub}</span></span>
       </button>)}</div>
       {/* On it now, Last time and This week, turning in one card (the owner's "Today · A"). */}
-      <WhereThingsStand home={home} week={week} today={todayKey} onOpenTask={id => setSheet({ kind: "task", id })} />
+      <WhereThingsStand home={home} week={week} today={todayKey} evening={evening} onOpenTask={id => setSheet({ kind: "task", id })} onCloseDay={() => setClosing(true)} />
     </div>
+    {closeSheet}
+    {/* A milestone, phase or week finished since you last looked (Phase 5): shown once. */}
+    {!onboarding && !closing && !sheet && !focus.active && <MomentOverlay />}
     {sheet?.kind === "task" && <TaskSheet key={sheet.id} taskId={sheet.id} onClose={() => setSheet(null)} onEdit={() => setSheet({ kind: "edit", id: sheet.id })}
       onOpenProject={id => { setSheet(null); router.push(`/work?view=projects&project=${id}`); }} />}
     {sheet?.kind === "edit" && <EditTaskSheet key={sheet.id} taskId={sheet.id} onDone={() => setSheet({ kind: "task", id: sheet.id })} />}
@@ -401,7 +420,7 @@ function NothingCard({ title, text, onBack, onAdd }: { title: string; text: stri
   </section>;
 }
 
-function SundayCard({ week }: { week: WeekSummary }) {
+function SundayCard({ week, friday = false }: { week: WeekSummary; friday?: boolean }) {
   if (week.nextPlan) return <section className="t-sunday done">
     <span className="t-check" aria-hidden="true">✓</span>
     <div style={{ flex: "1 1 220px", minWidth: 0 }}>
@@ -412,7 +431,7 @@ function SundayCard({ week }: { week: WeekSummary }) {
   </section>;
   return <section className="t-sunday">
     <div style={{ flex: "1 1 240px" }}>
-      <div className="r-eyebrow-sm" style={{ color: "var(--r-mint-text)" }}>Sunday · Week {week.weekNumber}</div>
+      <div className="r-eyebrow-sm" style={{ color: "var(--r-mint-text)" }}>{friday ? "Friday" : "Sunday"} · Week {week.weekNumber}</div>
       <h2 style={{ font: "400 24px/1.1 var(--r-serif)", marginTop: 6 }}>Look back, then shape next week.</h2>
       <div className="r-small" style={{ fontSize: 13, color: "var(--r-text)", marginTop: 6 }}>{week.count} of {week.target ?? "–"} days{week.target && week.count >= week.target ? " · target met" : ""}{week.streak ? ` · ${week.streak} ${week.streak === 1 ? "week" : "weeks"} in a row` : ""}</div>
     </div>

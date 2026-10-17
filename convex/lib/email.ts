@@ -39,14 +39,14 @@ export function resetMessage(name: string, url: string): Message {
 }
 
 /** The evening reminder: tonight's suggested step, or a plain nudge when nothing fits. */
-export function reminderMessage(name: string, focus: { title: string; minutes: number } | null, siteUrl: string): Message {
+/** The evening reminder. Its words (your line from last night, a near finish, the week, or a task) come from reminders.reminderContent. */
+export function reminderMessage(name: string, content: { subject: string; heading: string; line: string }, siteUrl: string): Message {
   const hello = first(name) ? `Hi ${first(name)}. ` : "";
-  const line = focus ? `Tonight's next step: ${focus.title} (${focus.minutes} min).` : "Your evening is ready when you are.";
   const today = `${siteUrl.replace(/\/$/, "")}/today`;
   return {
-    subject: focus ? `Tonight: ${focus.title}` : "Your evening is ready",
-    text: `${hello}${line} Even 15 minutes counts.\n\n${today}\n\nYou get this because evening reminders are on. Turn them off in Becoming → Settings.`,
-    html: layout(focus ? "Tonight's next step" : "Your evening is ready", `${escape(hello)}${escape(line)} Even 15 minutes counts.`, "Open Today", today, "You get this because evening reminders are on. Turn them off in Becoming → Settings."),
+    subject: content.subject,
+    text: `${hello}${content.line} Even 15 minutes counts.\n\n${today}\n\nYou get this because evening reminders are on. Turn them off in Becoming → Settings.`,
+    html: layout(content.heading, `${escape(hello)}${escape(content.line)} Even 15 minutes counts.`, "Open Today", today, "You get this because evening reminders are on. Turn them off in Becoming → Settings."),
   };
 }
 

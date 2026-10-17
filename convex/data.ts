@@ -27,7 +27,7 @@ export const exportAll = query({
   args: {},
   handler: async ctx => {
     const owner = await requireOwner(ctx);
-    const [profiles, projects, milestones, ideas, tasks, sessions, artifacts, commitments, reflections, plans, phases, docs, research, reports] = await Promise.all([
+    const [profiles, projects, milestones, ideas, tasks, sessions, artifacts, commitments, reflections, plans, phases, docs, research, reports, closes] = await Promise.all([
       ctx.db.query("profiles").withIndex("by_owner", q => q.eq("owner", owner)).take(1),
       ctx.db.query("projects").withIndex("by_owner", q => q.eq("owner", owner)).take(tableLimit),
       ctx.db.query("milestones").withIndex("by_owner", q => q.eq("owner", owner)).take(tableLimit),
@@ -42,6 +42,7 @@ export const exportAll = query({
       ctx.db.query("projectDocs").withIndex("by_owner", q => q.eq("owner", owner)).take(tableLimit),
       ctx.db.query("research").withIndex("by_owner", q => q.eq("owner", owner)).take(tableLimit),
       ctx.db.query("reports").withIndex("by_owner", q => q.eq("owner", owner)).take(tableLimit),
+      ctx.db.query("dayCloses").withIndex("by_owner_day", q => q.eq("owner", owner)).take(tableLimit),
     ]);
     const profile = profiles[0];
     return {
@@ -56,6 +57,7 @@ export const exportAll = query({
       weeklyCommitments: commitments.map(c => ({ week: c.week, target: c.target, paused: c.paused })),
       reflections: reflections.map(r => ({ week: r.week, learning: r.learning, intention: r.intention })),
       weekPlans: plans.map(p => ({ week: p.week, intention: p.intention, taskIds: p.taskIds })),
+      dayCloses: closes.map(c => ({ day: c.day, tomorrow: c.tomorrow, taskId: c.taskId })),
       // The project constellation: phases, docs, and each idea's research, report and decision.
       phases: phases.map(p => ({ id: p._id, projectId: p.projectId, order: p.order, name: p.name, goal: p.goal, nextStep: p.nextStep, doneWhen: p.doneWhen, skills: p.skills, notes: p.notes })),
       projectDocs: docs.map(d => ({ projectId: d.projectId, code: d.code, title: d.title, summary: d.summary, sections: d.sections, link: d.link, phaseIds: d.phaseIds, nextEdit: d.nextEdit, doneWhen: d.doneWhen, writtenAt: d.writtenAt, updatedAt: d.updatedAt, source: d.source })),
@@ -95,6 +97,7 @@ const backup = v.object({
   weeklyCommitments: v.array(v.object({ week: v.string(), target: v.number(), paused: v.boolean() })),
   reflections: v.array(v.object({ week: v.string(), learning: v.string(), intention: v.string() })),
   weekPlans: v.optional(v.array(v.object({ week: v.string(), intention: v.string(), taskIds: v.array(v.string()) }))),
+  dayCloses: v.optional(v.array(v.object({ day: v.string(), tomorrow: v.string(), taskId: v.optional(v.string()) }))),
   // The constellation tables are optional, so backups made before them still restore.
   phases: v.optional(v.array(v.object({ id: v.string(), projectId: v.string(), order: v.number(), name: v.string(), goal: v.optional(v.string()), nextStep: v.optional(v.string()), doneWhen: v.optional(v.string()), skills: v.optional(v.array(v.string())), notes: v.optional(v.string()) }))),
   projectDocs: v.optional(v.array(v.object({
@@ -293,6 +296,10 @@ export const importBackup = mutation({
       if (!isWeekKey(p.week) || p.taskIds.length > 12) throw invalid("an invalid weekly plan");
       await ctx.db.insert("weekPlans", { owner, week: p.week, intention: limited(p.intention, 120, "an intention"), taskIds: [...new Set(p.taskIds)].map(id => need(ids.tasks, id, "lined-up step")) });
     }
+    for (const c of data.dayCloses ?? []) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(c.day)) throw invalid("an invalid daily close");
+      await ctx.db.insert("dayCloses", { owner, day: c.day, tomorrow: limited(c.tomorrow, 300, "a line for tomorrow"), ...(c.taskId ? { taskId: need(ids.tasks, c.taskId, "tomorrow's task") } : {}), at: Date.now() });
+    }
     for (const d of docs) {
       await ctx.db.insert("projectDocs", {
         owner, projectId: need(ids.projects, d.projectId, "project"), code: docCodeValue(d.code), title: nonempty(d.title, 120), summary: optionalText(d.summary, 2000, "a doc summary"),
@@ -355,6 +362,7 @@ export const deleteBatch = mutation({
       () => ctx.db.query("ideas").withIndex("by_owner", q => q.eq("owner", owner)).take(take(budget)),
       () => ctx.db.query("reflections").withIndex("by_owner_week", q => q.eq("owner", owner)).take(take(budget)),
       () => ctx.db.query("weekPlans").withIndex("by_owner_week", q => q.eq("owner", owner)).take(take(budget)),
+      () => ctx.db.query("dayCloses").withIndex("by_owner_day", q => q.eq("owner", owner)).take(take(budget)),
       // Assistant access goes with the data: pending proposals and every access token.
       () => ctx.db.query("inbox").withIndex("by_owner", q => q.eq("owner", owner)).take(take(budget)),
       () => ctx.db.query("apiTokens").withIndex("by_owner", q => q.eq("owner", owner)).take(take(budget)),

@@ -278,6 +278,8 @@ See [PLAN-project-constellation.md](PLAN-project-constellation.md) and, for the 
 - `tasks.undo` restores skills only when undoing a finish, so skills added after another move are kept.
 - No new tables; nothing to migrate.
 
+**The daily loop (16 October 2026, PLAN-one-tap-and-daily-loop Phase 5).** New table `dayCloses` (owner, day "YYYY-MM-DD", tomorrow, optional taskId, at; by_owner_day), backed up and deleted with the workspace. `profiles` gains `capacity` (the last check-in's minutes and energy, for the reminder), `lastReminderText` (what the latest reminder said, for push) and `momentsSeen` (moment keys already shown, the latest 200). The Inbox gains a `reflection` proposal (week, learning). HTTP: `POST /reminder-line { endpoint }`.
+
 **Focus as a tool (16 October 2026, PLAN-one-tap-and-daily-loop Phase 4).** `activeSessions.pausedAt`/`pausedMs` (`focus.pause`, `focus.resume`, `focus.active`); a saved session's `startedAt` is moved later by its paused time, so its minutes leave the pause out. `sessions.contribution` may be empty. `startSession` takes `minutes` (5–240) and `replace` (switch, recording nothing for the session it replaces). `profiles.focusChime` (optional, default on; backed up).
 
 **Today's bars (15 October 2026, PLAN-one-tap-and-daily-loop Phase 3).** `today.home({ today, timezone })` derives On it now (tasks In progress by their latest event, with plan codes), Last time (the day's moves from `taskEvents`, grouped by `source`) and open tasks per lane. A chosen task (`todayOverview` with `taskId`) is offered even when it doesn't fit, with a note. No new tables.

@@ -1,6 +1,6 @@
 # Plan: one tap, an app that records itself, and a daily loop
 
-Proposed 14 October 2026. **Decisions: all ten recommendations taken (owner, 14 October). Phase 1 built 14 October; Phase 2 shipped 15 October; Phase 3 shipped 15 October; Phase 4 built 16 October (uncommitted); Phase 5 next.**
+Proposed 14 October 2026. **Decisions: all ten recommendations taken (owner, 14 October). Phase 1 built 14 October; Phase 2 shipped 15 October; Phase 3 shipped 15 October; Phase 4 shipped 16 October; Phase 5 built 16 October (uncommitted). All five phases built.**
 
 - **Source:** the first-tier ideas in [IDEAS-flow-and-return.md](IDEAS-flow-and-return.md) (sections 3A–3G).
 - **Supersedes** Phases 3–5 of [PLAN-tasks-and-focus.md](PLAN-tasks-and-focus.md): focus decoupled, In progress on Today, and assistant status tools.
@@ -330,7 +330,24 @@ The goal of this plan is that **a normal evening needs no data entry**:
 - The end of the planned time is noticed.
 - Stopping and saving takes two taps.
 
-## Phase 5: The daily loop
+## Phase 5: The daily loop (built 16 October)
+
+**As built** (in two parts):
+- **5a, the close and your words:**
+  - `dayCloses` (`{ owner, day, tomorrow, taskId?, at }`, by_owner_day) and `today.close({ day, tomorrow, taskId? })`: one line for tomorrow or a task (at least one), up to 300 characters, replaced when saved again the same day. `today.home` adds `lastNight` (the latest earlier close within 3 days, named by its task when the line is empty) and `closedToday`. The close's list of moves is Last time's own (today's), so no separate `today.moves`.
+  - **Close the day** (`src/components/today/close-day.tsx`): what moved today, "Tomorrow starts with…", or a task chip (in progress or where you left off), Save → "Tonight is done", which then shows "Tomorrow starts with “…”". Always available beside "What's on your mind tonight?" (it reads "Day closed ✓" once saved) and on "Tonight is done"; after 8 pm, once something moved and the day isn't closed, Today's card leads with a **Tonight** slide.
+  - **The next day:** the card's Last time slide reads "Last night you said · “…”" with **▶ Start** when it names an open task, until something moves that day.
+  - **The reminder's words** (`reminders.reminderContent`): your line from last night, else "One task finishes <milestone>: <task>.", else "One more day makes your week.", else tonight's task for the time and energy of your last check-in (`profiles.capacity`, saved by **Show my focus**). The email's subject and heading follow it. Push: the service worker posts its endpoint to `/api/reminder-line`, which asks Convex (`/reminder-line`) for the line stored at send time (`profiles.lastReminderText`); no payload encryption. Production push still needs the VAPID keys (your ops step).
+  - **Settings → Evening reminder** shows "Tonight's would say:" with the real line (`reminders.preview`), and its note says any move counts and that it opens with your close.
+- **5b, moments and the look-back:**
+  - **Moments** (`convex/moments.ts` `list` and `see`, `profiles.momentsSeen`): a milestone finished, a phase finished (its last milestone), or the week met, in the last 7 days, each shown once on Today (`src/components/today/moment.tsx`), with who finished it ("finished by Claude Code") and **See it on the map**. Not while focusing, onboarding or a sheet is open. Changed from the plan: no Proof draft from a moment (a Proof draft needs a session), and no "a new first" (left for later).
+  - **The look-back** (`moments.lookBack`, `lookBackFor`): what shipped by milestone, what stalled (In progress 7+ days), where the focused time went by project, and the skills that grew; shown in the weekly review's Look back. The review is offered on Friday evening (after 6 pm) as well as Sunday.
+  - **Assistants:** `get_look_back` (read) and `draft_week_review` (a "reflection" proposal; it waits in the Inbox at "Record my work" and fills the week's "what I learned", keeping the intention). The `weekly_review` prompt uses both. `get_week` now gives `daysWithProgress`.
+- **Fixes folded in:** the Settings reminder copy; `get_week` counts days; Proof's empty state (no more "Progress → All sessions"); EXPERIENCE_MAP's identity line. The Done view's hint was already right.
+- **Backups and deletion** carry and remove `dayCloses`.
+- **Tests:** `convex/close.test.ts` (the close, last night's line, backup and deletion, the reminder's order, the push line) and `convex/moments.test.ts` (a milestone and its phase finished by an assistant shown once, the week met, the look-back, the draft review and day counting).
+
+**The plan as written:**
 
 *Each day ends with one line that starts the next. The reminders speak in your words. Big finishes feel big.*
 
@@ -393,7 +410,7 @@ The goal of this plan is that **a normal evening needs no data entry**:
 | 2. The app records itself (built 15 Oct) | Medium | 1 (Undo, finish result) | Yes |
 | 3. Today keeps its tiles, gains On it now and Last time (built 15 Oct) | Small | 1 (Last time reads task events; richer with 2) | Yes |
 | 4. Focus as a tool (built 16 Oct) | Medium | 1 | Yes; can run in parallel with 3 |
-| 5. The daily loop | Medium | 3 | Yes |
+| 5. The daily loop (built 16 Oct) | Medium | 3 | Yes |
 
 Each phase ships on its own:
 1. dev first;

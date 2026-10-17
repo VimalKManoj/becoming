@@ -285,6 +285,8 @@ const reminderDays = [["weekdays", "Weekdays"], ["everyday", "Every day"]] as co
 function ReminderCard({ prefs }: { prefs: Profile }) {
   const save = usePreferences();
   const on = prefs.reminderOn;
+  // What tonight’s reminder would say (Phase 5): your line from last night, a near finish, the week, or a task.
+  const preview = useQuery(api.reminders.preview, on ? {} : "skip");
   const time = reminderTimes.find(([value]) => value === prefs.reminderTime)?.[1] ?? "8:30 pm";
   return <section id="set-reminder" tabIndex={-1} className="s-card" aria-labelledby="set-reminder-h">
     <div className="s-switch-row">
@@ -302,15 +304,16 @@ function ReminderCard({ prefs }: { prefs: Profile }) {
           <button key={value} type="button" className="r-chip h38 round" aria-pressed={prefs.reminderDays === value} onClick={() => save({ reminderDays: value })}>{label}</button>)}</div>
       </div>
       <ReminderChannels emailOn={prefs.reminderEmail} onEmail={on => save({ reminderEmail: on })} />
+      <p className="r-small">Tonight’s would say:</p>
       <figure className="s-notif" aria-label="Reminder preview">
         <span className="s-notif-icon" aria-hidden="true" />
         <div className="s-notif-body">
           <div className="s-notif-head"><span>Becoming</span><span className="r-mono">{time}</span></div>
-          <p className="s-notif-text">Tonight’s next step is ready when you are. Even 15 minutes counts.</p>
+          <p className="s-notif-text">{preview ? `${preview.line} Even 15 minutes counts.` : "Tonight’s next step is ready when you are. Even 15 minutes counts."}</p>
         </div>
       </figure>
     </div>}
-    <p className="r-small s-note">It only comes on evenings you haven’t saved a session yet, and never during a planned pause.</p>
+    <p className="r-small s-note">It only comes on evenings when nothing has moved yet (a session, or a task started, finished or logged), and never during a planned pause. It opens with the line you left when you closed the day.</p>
   </section>;
 }
 
